@@ -23,7 +23,7 @@
          "uuid" : "e3bd2dd1-1bb0-4964-b46c-d4d58cfec074"
       },
       {
-         "name" : "Laser Pistol",
+         "name" : "Laser Katana",
          "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
          "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
          "script" : {
