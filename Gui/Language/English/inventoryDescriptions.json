@@ -1,0 +1,14 @@
+{
+    "99c5dde3-1c24-41f4-9fc0-fd183c88673e": {
+        "title": "Laser Cutter",
+        "description": "Cut anything to your heart's desires! Robots are also vulnerable to the laser beam."
+    },
+    "7b39bac2-a64c-4256-b530-e2e3fd611e24": {
+        "title": "Mountable Laser Cutter",
+        "description": "The mountable version of the Laser Cutter! You can adjust the range and damage dealt to bots by interacting with the part."
+    },
+    "e3bd2dd1-1bb0-4964-b46c-d4d58cfec074": {
+        "title": "Laser Pistol",
+        "description": "Shoots piercing projectiles of death! This bad boy is also capable of firing a higly explosive projectile! Press 'R' to activate overdrive!"
+    }
+}

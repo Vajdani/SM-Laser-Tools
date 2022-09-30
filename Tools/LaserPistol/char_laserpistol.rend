@@ -1,0 +1,58 @@
+{
+	"lodList": [
+		{
+			"mesh": "$CONTENT_DATA/Tools/LaserPistol/Laser_Pistol.dae",
+			"includes": [ "POSITION", "UV0", "NORMAL", "TANGENTS", "BLEND_INDICES", "BLEND_WEIGHTS" ],
+			"subMeshList": [
+				{
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_dif.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_asg.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_nor.tga"
+               ]
+            },
+            {
+               "material": "Glass",
+               "textureList": [
+                  "$SURVIVAL_DATA/Objects/Textures/consumable/obj_consumable_milk_dif.tga",
+                  "$SURVIVAL_DATA/Objects/Textures/consumable/obj_consumable_milk_asg.tga",
+                  "$SURVIVAL_DATA/Objects/Textures/consumable/obj_consumable_milk_nor.tga"
+               ]
+            },
+            {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$SURVIVAL_DATA/Objects/Textures/resource/obj_resource_cuircuitboard_dif.tga",
+                  "$SURVIVAL_DATA/Objects/Textures/resource/obj_resource_cuircuitboard_asg.tga",
+                  "$SURVIVAL_DATA/Objects/Textures/resource/obj_resource_cuircuitboard_nor.tga"
+               ]
+            },
+            {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_dif.tga",
+                  "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_asg.tga",
+                  "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_nor.tga"
+               ]
+            },
+            {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Textures/Default/default_dif.tga",
+                  "$CONTENT_DATA/Objects/obj_atlas_generic_asg.tga",
+                  "$GAME_DATA/Textures/Default/default_dif.tga"
+               ]
+            },
+            {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_dif.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_asg.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_nor.tga"
+               ]
+            }
+			]
+		}
+	]
+}

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position_real="0 0 0.27083333333333331 0.43518518518518517" name="BackPanel">
+        <Widget type="Widget" skin="BackgroundEngineNoUpgrade" position_real="0.019230769230769232 0.021276595744680851 0.96153846153846156 0.95744680851063835">
+            <Widget type="TextBox" skin="TextBox" position_real="0.20000000000000001 0.055555555555555552 0.80000000000000004 0.22222222222222221">
+                <Property key="Caption" value="Mountable Laser Cutter"/>
+                <Property key="TextAlign" value="Left VCenter"/>
+                <Property key="FontName" value="SM_HeaderLarge_Medium"/>
+                <Property key="FontHeight" value="20"/>
+            </Widget>
+            <Widget type="ImageBox" skin="ImageBox" position_real="0.040000000000000001 0.084444444444444447 0.14999999999999999 0.16666666666666666" name="icon"/>
+            <Widget type="Widget" skin="PanelEmpty" position_real="0 0.31111111111111112 1 0.66666666666666663">
+                <Widget type="TextBox" skin="TextBox" position_real="0.34999999999999998 0.033333333333333333 0.29999999999999999 0.16666666666666666" name="header_dmg">
+                    <Property key="Caption" value="Laser Damage"/>
+                    <Property key="TextAlign" value="Center"/>
+                    <Property key="FontName" value="SM_ItemTitle"/>
+                    <Property key="FontHeight" value="15"/>
+                </Widget>
+                <Widget type="TextBox" skin="TextBox" position_real="0.34999999999999998 0.40000000000000002 0.29999999999999999 0.16666666666666666" name="header_range">
+                    <Property key="Caption" value="Laser Range"/>
+                    <Property key="TextAlign" value="Center"/>
+                    <Property key="FontName" value="SM_ItemTitle"/>
+                    <Property key="FontHeight" value="15"/>
+                </Widget>
+                <Widget type="Canvas" skin="LiftInput" position_real="0.34999999999999998 0.20000000000000001 0.29999999999999999 0.16666666666666666" name="input_dmg">
+                    <Widget type="EditBox" skin="EditBoxEmpty" position_real="0.033333333333333333 0.10000000000000001 0.93333333333333335 0.80000000000000004" name="input_dmg">
+                        <Property key="TextAlign" value="Center"/>
+                        <Property key="FontName" value="SM_HeaderTiny"/>
+                    </Widget>
+                </Widget>
+                <Widget type="Canvas" skin="LiftInput" position_real="0.34999999999999998 0.56666666666666665 0.29999999999999999 0.16666666666666666" name="input_range">
+                    <Widget type="EditBox" skin="EditBoxEmpty" position_real="0.033333333333333333 0.10000000000000001 0.93333333333333335 0.80000000000000004" name="input_range">
+                        <Property key="TextAlign" value="Center"/>
+                        <Property key="FontName" value="SM_HeaderTiny"/>
+                    </Widget>
+                </Widget>
+            </Widget>
+            <Widget type="Canvas" skin="WhiteSkin" position_real="0.01 0.28888888888888886 0.97999999999999998 0.011111111111111112">
+                <Property key="Colour" value="0.392157 0.392157 0.392157"/>
+            </Widget>
+        </Widget>
+    </Widget>
+    <CodeGeneratorSettings/>
+</MyGUI>

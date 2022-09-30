@@ -1,0 +1,37 @@
+{
+   "toolList" : [
+      {
+         "name" : "Laser Cutter",
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserCutter/cutter_preview.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 0, -1, 0, 1, 0 ],
+         "script" : {
+            "class" : "Cutter",
+            "data" : {},
+            "file" : "$CONTENT_DATA/Scripts/LaserCutter.lua"
+         },
+         "uuid" : "99c5dde3-1c24-41f4-9fc0-fd183c88673e"
+      },
+      {
+         "name" : "Laser Pistol",
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
+         "script" : {
+            "class" : "Pistol",
+            "data" : {},
+            "file" : "$CONTENT_DATA/Scripts/LaserPistol.lua"
+         },
+         "uuid" : "e3bd2dd1-1bb0-4964-b46c-d4d58cfec074"
+      },
+      {
+         "name" : "Laser Pistol",
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
+         "script" : {
+            "class" : "Katana",
+            "data" : {},
+            "file" : "$CONTENT_DATA/Scripts/LaserKatana.lua"
+         },
+         "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf"
+      }
+   ]
+}

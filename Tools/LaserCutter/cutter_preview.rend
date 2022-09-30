@@ -1,0 +1,65 @@
+{
+   "lodList" : [
+      {
+         "mesh" : "$CONTENT_DATA/Tools/LaserCutter/cutter_preview.obj",
+         "subMeshList" : [
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$SURVIVAL_DATA/Objects/Textures/fittings/obj_fittings_pipesbig2_dif.tga",
+                  "$SURVIVAL_DATA/Objects/Textures/fittings/obj_fittings_pipesbig2_asg.tga",
+                  "$SURVIVAL_DATA/Objects/Textures/fittings/obj_fittings_pipesbig2_nor.tga"
+               ]
+            },
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_dif.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_asg.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_nor.tga"
+               ]
+            },
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$CONTENT_DATA/Tools/LaserCutter/char_spudgun_base_dif.tga",
+                  "$CONTENT_DATA/Tools/LaserCutter/char_spudgun_base_asg.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Base/char_spudgun_base_nor.tga"
+               ]
+            },
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Sight/Sight_basic/char_spudgun_sight_basic_screw_dif.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Sight/Sight_basic/char_spudgun_sight_basic_screw_asg.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Sight/Sight_basic/char_spudgun_sight_basic_screw_nor.tga"
+               ]
+            },
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_dif.tga",
+                  "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_asg.tga",
+                  "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_nor.tga"
+               ]
+            },
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$CONTENT_DATA/Tools/LaserCutter/obj_fittings_pipes_dif.tga",
+                  "$GAME_DATA/Objects/Textures/fittings/obj_fittings_pipes_asg.tga",
+                  "$GAME_DATA/Objects/Textures/fittings/obj_fittings_pipes_nor.tga"
+               ]
+            },
+            {
+               "material" : "DifAsgNor",
+               "textureList" : [
+                  "$CONTENT_DATA/Tools/LaserCutter/obj_industrial_satellite_dif.tga",
+                  "$GAME_DATA/Objects/Textures/industrial/obj_industrial_satellite_asg.tga",
+                  "$GAME_DATA/Objects/Textures/industrial/obj_industrial_satellite_nor.tga"
+               ]
+            }
+         ]
+      }
+   ]
+}

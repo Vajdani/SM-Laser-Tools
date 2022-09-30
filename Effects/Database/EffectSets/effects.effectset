@@ -1,0 +1,58 @@
+{
+	"Cutter_beam_sound" : {
+		"effectList" : [
+			{
+				"audio" : [ "event:/tools/connectiontool/connectiontool_fire" ],
+				"delay" : 0.0,
+				"offset" : [ 0.0, 0.0, 0.0 ],
+				"type" : "audio"
+			}
+		]
+	},
+	"Cutter_active_sound" : {
+		"effectList" : [
+			{
+				"audio" : [ "event:/tools/weldtool/wt_object" ],
+				"delay" : 0.0,
+				"offset" : [ 0.0, 0.0, 0.0 ],
+				"type" : "audio",
+				"parameters": [ "weld=1" ]
+			}
+		],
+		"parameterList": {
+			"weld=1": 0
+		}
+	},
+	"Pistol_shoot":
+	{
+		"effectList":
+		[
+			{
+				"type": "particle",
+				"name": "p_pistol_shoot",
+				"offset": { "x": 0.0, "y": 0.0, "z": 0.0 },
+				"direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
+				"attached": true,
+				"delay": 0.0
+			},
+			{
+				"type": "audio",
+				"name": "event:/props/installations/powercore_insert",
+				"offset": { "x": 0.0, "y": 0.0, "z": 0.0 },
+				"delay": 0.0
+			}
+		]
+	},
+	"Pistol_overdrive_on":
+	{
+		"effectList":
+		[
+			{
+				"type": "audio",
+				"name": "event:/props/installations/downedship_poweron",
+				"offset": { "x": 0.0, "y": 0.0, "z": 0.0 },
+				"delay": 0.0
+			}
+		]
+	}
+}

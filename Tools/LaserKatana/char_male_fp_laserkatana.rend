@@ -1,0 +1,35 @@
+{
+	"lodList": [{
+		"animationList" : [
+			{ "name" : "sledgehammer_idle", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_idle.dae" },
+
+			{ "name" : "sledgehammer_attack1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1.dae" },
+			{ "name" : "sledgehammer_exit1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1_exit.dae" },
+
+			{ "name" : "sledgehammer_attack2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2.dae" },
+			{ "name" : "sledgehammer_exit2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2_exit.dae" },
+
+			{ "name" : "sledgehammer_pickup", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_pickup.dae" },
+			{ "name" : "sledgehammer_putdown", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_putdown.dae" },
+
+			{ "name" : "sledgehammer_guard_into", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_guard_into.dae" },
+			{ "name" : "sledgehammer_guard_exit", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_guard_exit.dae" },
+			{ "name" : "sledgehammer_guard_idle", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_guard_idle.dae" },
+			{ "name" : "sledgehammer_guard_hit", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_guard_hit.dae" },
+			{ "name" : "sledgehammer_guard_break", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_guard_break.dae" },
+
+			{ "name" : "sledgehammer_sprint_into", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_sprint_into.dae" },
+			{ "name" : "sledgehammer_sprint_exit", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_sprint_exit.dae" },
+			{ "name" : "sledgehammer_sprint_idle", 		"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_sprint_idle.dae" },
+
+
+
+			{ "name" : "sledgehammer_attack_heavy1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1.dae" },
+			{ "name" : "sledgehammer_exit_heavy1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1_exit.dae" },
+
+			{ "name" : "sledgehammer_attack_heavy2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2.dae" },
+			{ "name" : "sledgehammer_exit_heavy2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2_exit.dae" }
+		],
+		"maxViewDistance": 1000.0
+	}]
+} 

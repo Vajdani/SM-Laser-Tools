@@ -1,0 +1,6 @@
+{
+   "particleSystemList" : [
+      "cutter_block_destroy.json",
+      "p_pistol_shoot.json"
+   ]
+}
