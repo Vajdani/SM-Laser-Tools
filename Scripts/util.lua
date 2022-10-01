@@ -27,6 +27,11 @@ function AbsVector( vector )
     return sm.vec3.new(math.abs(vector.x), math.abs(vector.y), math.abs(vector.z))
 end
 
+---@param bool boolean
+---@return integer
+function BoolToVal( bool )
+    return bool and 1 or 0
+end
 
 --thanks QMark
 ---@param vector Vec3

@@ -1,6 +1,18 @@
+--please never make me destroy multiple blocks at once ever again
+--I hate this
+
+
+
 dofile("$GAME_DATA/Scripts/game/AnimationUtil.lua")
 dofile("$SURVIVAL_DATA/Scripts/util.lua")
 dofile("$SURVIVAL_DATA/Scripts/game/survival_meleeattacks.lua")
+
+dofile "$CONTENT_DATA/Scripts/util.lua"
+
+local vec3_zero = sm.vec3.zero()
+local vec3_one = sm.vec3.one()
+local vec3_up = sm.vec3.new(0,0,1)
+local vec3_x = sm.vec3.new(1,0,0)
 
 ---@class Katana : ToolClass
 ---@field isLocal boolean
@@ -16,9 +28,21 @@ Katana.bladeModeDirData = {
 	{
 		name = "Horizontal",
 		dir = calculateRightVector,
+		---@param dir Vec3
+		---@return Vec3
 		transformNormal = function( dir )
-			if (dir.x ~= 0 or dir.y ~= 0) and dir.z ~= 0 then
-				return sm.vec3.new(0,0,dir.z)
+			local x, y, z = dir.x, dir.y, dir.z
+			local xyDiffer = (x ~= 0 or y ~= 0)
+			local zDiffer = z ~= 0
+
+			if xyDiffer then
+				if zDiffer then
+					return sm.vec3.new(0,0,z)
+				elseif x == -1 and y == -1 then
+					return dir + vec3_x
+				elseif math.abs(x) == 1 and math.abs(y) == 1 then
+					return dir - vec3_x
+				end
 			end
 
 			return dir
@@ -27,9 +51,22 @@ Katana.bladeModeDirData = {
 	{
 		name = "Vertical",
 		dir = calculateUpVector,
+		---@param dir Vec3
+		---@return Vec3
 		transformNormal = function( dir )
-			if (dir.y ~= 0 or dir.z ~= 0) and dir.x ~= 0 then
-				return sm.vec3.new(dir.x,0,0)
+			print(dir)
+			local x, y, z = dir.x, dir.y, dir.z
+			local yzDiffer = (y ~= 0 or z ~= 0)
+			local xDiffer = x ~= 0
+
+			if yzDiffer then
+				if xDiffer then
+					return sm.vec3.new(x,0,0)
+				elseif y == -1 and z == -1 then
+					return dir + vec3_up
+				elseif math.abs(y) == 1 and math.abs(z) == 1 then
+					return dir - vec3_up
+				end
 			end
 
 			return dir
@@ -54,13 +91,9 @@ sm.tool.preloadRenderables(renderables)
 sm.tool.preloadRenderables(renderablesTp)
 sm.tool.preloadRenderables(renderablesFp)
 
-local Range = 6 --3.0
+local Range = 7.5 --3.0
 local SwingStaminaSpend = 1.5
 local Damage = 45
-
-local vec3_zero = sm.vec3.zero()
-local vec3_one = sm.vec3.one()
-local vec3_up = sm.vec3.new(0,0,1)
 
 Katana.swingCount = 2
 Katana.mayaFrameDuration = 1.0 / 30.0
@@ -102,30 +135,20 @@ function Katana:client_onDestroy()
 end
 
 function Katana.init(self)
-
 	self.attackCooldownTimer = 0.0
 	self.freezeTimer = 0.0
 	self.pendingRaycastFlag = false
 	self.nextAttackFlag = false
 	self.currentSwing = 1
 
-	self.swingCooldowns = {}
-	for i = 1, self.swingCount do
-		self.swingCooldowns[i] = 0.0
-	end
+	self.swingCooldowns = {
+		{ 0.6, 0.6, holdTime = 0.125 },
+		{ 0.6, 0.6, holdTime = 0.125 } --{ 1, 1, holdTime = 0.25 }
+	}
 
 	self.dispersionFraction = 0.001
-
 	self.blendTime = 0.2
 	self.blendSpeed = 10.0
-
-	self.sharedCooldown = 0.0
-	self.hitCooldown = 1.0
-	self.blockCooldown = 0.5
-	self.swing = false
-	self.block = false
-
-	self.wantBlockSprint = false
 
 	if self.animationsLoaded == nil then
 		self.animationsLoaded = false
@@ -141,7 +164,6 @@ function Katana.client_onUpdate(self, dt)
 
 	updateTpAnimations(self.tpAnimations, self.equipped, dt)
 	if self.isLocal then
-		-- #region Blade Mode visuals
 		local shouldStopPlain = true
 		if self.isInBladeMode then
 			local start = sm.localPlayer.getRaycastStart()
@@ -150,22 +172,29 @@ function Katana.client_onUpdate(self, dt)
 
 			if not shouldStopPlain then
 				local data = self.bladeModeDirData[self.bladeMode]
-				local normal = data.transformNormal(RoundVector(ray.normalWorld))
+				local normal = data.transformNormal(RoundVector(ray.normalLocal))
 				local dir = RoundVector(data.dir(normal))
 
-				local size = sm.vec3.one() * ((normal + dir) * self.bladeModeCutSize)
-				size.x = sm.util.clamp( math.abs(size.x), 1, self.bladeModeCutSize )
-				size.y = sm.util.clamp( math.abs(size.y), 1, self.bladeModeCutSize )
-				size.z = sm.util.clamp( math.abs(size.z), 1, self.bladeModeCutSize )
+				local cutSize = self.bladeModeCutSize
+				local size = sm.vec3.one() * ((normal + dir) * cutSize)
+				size.x = sm.util.clamp( math.abs(size.x), 1, cutSize )
+				size.y = sm.util.clamp( math.abs(size.y), 1, cutSize )
+				size.z = sm.util.clamp( math.abs(size.z), 1, cutSize )
 
+				--TODO: make plain snap to blocks
+				--[[
 				local pointLocal = ray.pointWorld --+ normal
 				local a = pointLocal * sm.construction.constants.subdivisions
 				local gridPos = sm.vec3.new( math.floor( a.x ), math.floor( a.y ), math.floor( a.z ) ) - vec3_one
 				local worldPos = gridPos * sm.construction.constants.subdivideRatio + ( vec3_one * 3 * sm.construction.constants.subdivideRatio ) * 0.5
+				]]
+
+				local target = ray:getShape()
+				local worldPos = ray.pointWorld --target:transformLocalPoint( target:getClosestBlockLocalPosition( ray.pointWorld ) )
 
 				self.cutPlain:setPosition(worldPos)
-				self.cutPlain:setScale(size / 4)
-				self.cutPlain:setRotation(ray:getShape().worldRotation)
+				self.cutPlain:setScale(size / 32)
+				self.cutPlain:setRotation(target.worldRotation)
 
 				if not self.cutPlain:isPlaying() then
 					self.cutPlain:start()
@@ -176,13 +205,18 @@ function Katana.client_onUpdate(self, dt)
 		if shouldStopPlain and self.cutPlain:isPlaying() then
 			self.cutPlain:stop()
 		end
-		-- #endregion
 
 
-		if self.fpAnimations.currentAnimation == self.swings[self.currentSwing] then
-			self:updateFreezeFrame(self.swings[self.currentSwing], dt)
-		elseif self.fpAnimations.currentAnimation == self.swings_heavy[self.currentSwing] then
-			self:updateFreezeFrame(self.swings_heavy[self.currentSwing], dt)
+		local swing = self.currentSwing
+		local lightAnim = self.swings[swing]
+		local heavyAnim = self.swings_heavy[swing]
+		local lightAnim_exit = self.swingExits[swing]
+		local heavyAnim_exit = self.swingExits_heavy[swing]
+
+		if self.fpAnimations.currentAnimation == lightAnim then
+			self:updateFreezeFrame(lightAnim, dt)
+		elseif self.fpAnimations.currentAnimation == heavyAnim then
+			self:updateFreezeFrame(heavyAnim, dt)
 		end
 
 		local preAnimation = self.fpAnimations.currentAnimation
@@ -190,22 +224,26 @@ function Katana.client_onUpdate(self, dt)
 
 		if preAnimation ~= self.fpAnimations.currentAnimation then
 			local keepBlockSprint = false
-			local endedSwing = (preAnimation == self.swings[self.currentSwing] and
-				self.fpAnimations.currentAnimation == self.swingExits[self.currentSwing]) or
-				(preAnimation == self.swings_heavy[self.currentSwing] and
-				self.fpAnimations.currentAnimation == self.swingExits_heavy[self.currentSwing])
+			local isLightExit = self.fpAnimations.currentAnimation == lightAnim_exit
+			local endedSwing = (preAnimation == lightAnim and isLightExit) or
+				(preAnimation == heavyAnim and self.fpAnimations.currentAnimation == heavyAnim_exit)
 
 			if self.nextAttackFlag == true and endedSwing == true then
-				self.currentSwing = self.currentSwing < self.swingCount and self.currentSwing + 1 or 1
-
-				local params = { name = self.fpAnimations.currentAnimation == self.swingExits[self.currentSwing] and self.swings[self.currentSwing] or self.swings_heavy[self.currentSwing] }
-				self.network:sendToServer("server_startEvent", params)
+				swing = swing < self.swingCount and swing + 1 or 1
+				self.network:sendToServer(
+					"server_startEvent",
+					{
+						name = isLightExit and self.swings[swing] or self.swings_heavy[swing]
+					}
+				)
 				sm.audio.play("Sledgehammer - Swing")
+
 				self.pendingRaycastFlag = true
 				self.nextAttackFlag = false
-				self.attackCooldownTimer = self.swingCooldowns[self.currentSwing]
+				self.attackCooldownTimer = self.swingCooldowns[BoolToVal(not isLightExit) + 1][swing]
 				keepBlockSprint = true
 
+				self.currentSwing = swing
 			elseif isAnyOf(self.fpAnimations.currentAnimation, { "guardInto", "guardIdle", "guardExit", "guardBreak", "guardHit" }) then
 				keepBlockSprint = true
 			end
@@ -248,6 +286,23 @@ function Katana.client_startLocalEvent(self, params)
 	self:client_handleEvent(params)
 end
 
+
+function Katana:isSwingAnim( params )
+	local isSwing = false
+	for i = 1, self.swingCount do
+		if self.swings[i] == params.name then
+			self.tpAnimations.animations[self.swings[i]].playRate = 1
+			isSwing = true
+		elseif self.swings_heavy[i] == params.name then
+			self.tpAnimations.animations[self.swings_heavy[i]].playRate = 1
+			isSwing = true
+		end
+	end
+
+	return isSwing
+end
+
+
 function Katana.client_handleEvent(self, params)
 	if params.name == "equip" then
 		self.equipped = true
@@ -261,36 +316,14 @@ function Katana.client_handleEvent(self, params)
 
 	local tpAnimation = self.tpAnimations.animations[params.name]
 	if tpAnimation then
-		local isSwing = false
-		for i = 1, self.swingCount do
-			if self.swings[i] == params.name then
-				self.tpAnimations.animations[self.swings[i]].playRate = 1
-				isSwing = true
-			elseif self.swings_heavy[i] == params.name then
-				self.tpAnimations.animations[self.swings_heavy[i]].playRate = 1
-				isSwing = true
-			end
-		end
-
-		local blend = not isSwing
+		local blend = not self:isSwingAnim( params )
 		setTpAnimation(self.tpAnimations, params.name, blend and 0.2 or 0.0)
 	end
 
 
 	if not self.isLocal then return end
 
-	local isSwing = false
-
-	for i = 1, self.swingCount do
-		if self.swings[i] == params.name then
-			self.tpAnimations.animations[self.swings[i]].playRate = 1
-			isSwing = true
-		elseif self.swings_heavy[i] == params.name then
-			self.tpAnimations.animations[self.swings_heavy[i]].playRate = 1
-			isSwing = true
-		end
-	end
-
+	local isSwing = self:isSwingAnim( params )
 	if isSwing or isAnyOf(params.name, { "guardInto", "guardIdle", "guardExit", "guardBreak", "guardHit" }) then
 		self.tool:setBlockSprint(true)
 	else
@@ -312,14 +345,18 @@ function Katana.client_handleEvent(self, params)
 end
 
 function Katana:client_onEquippedUpdate(lmb, rmb, f)
+	local lightAnim = self.swings[self.currentSwing]
+	local heavyAnim = self.swings_heavy[self.currentSwing]
+
 	if self.pendingRaycastFlag then
 		local time = 0.0
 		local frameTime = 0.0
-		if self.fpAnimations.currentAnimation == self.swings[self.currentSwing]then
-			time = self.fpAnimations.animations[self.swings[self.currentSwing]].time
+
+		if self.fpAnimations.currentAnimation == lightAnim then
+			time = self.fpAnimations.animations[lightAnim].time
 			frameTime = self.swingFrames[self.currentSwing]
-		elseif self.fpAnimations.currentAnimation == self.swings_heavy[self.currentSwing]then
-			time = self.fpAnimations.animations[self.swings_heavy[self.currentSwing]].time
+		elseif self.fpAnimations.currentAnimation == heavyAnim then
+			time = self.fpAnimations.animations[heavyAnim].time
 			frameTime = self.swingFrames[self.currentSwing]
 		end
 
@@ -327,67 +364,72 @@ function Katana:client_onEquippedUpdate(lmb, rmb, f)
 			self.pendingRaycastFlag = false
 			local raycastStart = sm.localPlayer.getRaycastStart()
 			local direction = sm.localPlayer.getDirection()
+
+			sm.melee.meleeAttack(melee_sledgehammer, Damage, raycastStart, direction * Range, self.owner)
+
 			local success, result = sm.physics.raycast(raycastStart, raycastStart + direction * Range, self.owner.character)
 			if success then
 				self.freezeTimer = self.freezeDuration
 			end
-
-			if self.isInBladeMode then
-				if success then
-					local ray = RayResultToTable(result)
-					if self.isInBladeMode and type(ray.target) == "Shape" then
-						self.network:sendToServer(
-							"sv_bladeModeCut",
-							{
-								ray = ray,
-								mode = self.bladeMode
-							}
-						)
-					end
-				end
-			else
-				sm.melee.meleeAttack(melee_sledgehammer, Damage, raycastStart, direction * Range, self.owner)
-			end
 		end
 	end
 
-	if lmb == 1 or lmb == 2 then
-		if self.fpAnimations.currentAnimation == self.swings[self.currentSwing] then
-			if self.attackCooldownTimer < 0.125 then
-				self.nextAttackFlag = true
-			end
-		else
-			if self.attackCooldownTimer <= 0 then
-				self.currentSwing = 1
-				self.network:sendToServer("server_startEvent", { name = self.swings[self.currentSwing] })
-				sm.audio.play("Sledgehammer - Swing")
-				self.pendingRaycastFlag = true
-				self.nextAttackFlag = false
-				self.attackCooldownTimer = self.swingCooldowns[self.currentSwing]
-			end
-		end
+	if lmb == 1 or (lmb == 2 and not self.isInBladeMode) then
+		self:cl_katanaSwing( lightAnim, 1 )
 	end
 
-	if rmb == 1 or rmb == 2 then
-		if self.fpAnimations.currentAnimation == self.swings_heavy[self.currentSwing] then
-			if self.attackCooldownTimer < 0.125 then
-				self.nextAttackFlag = true
-			end
-		else
-			if self.attackCooldownTimer <= 0 then
-				self.currentSwing = 1
-				self.network:sendToServer("server_startEvent", { name = self.swings_heavy[self.currentSwing] })
-				sm.audio.play("Sledgehammer - Swing")
-				self.pendingRaycastFlag = true
-				self.nextAttackFlag = false
-				self.attackCooldownTimer = self.swingCooldowns[self.currentSwing]
-			end
-		end
+	if rmb == 1 or (rmb == 2 and not self.isInBladeMode) then
+		self:cl_katanaSwing( heavyAnim, 2 )
 	end
 
-	self.isInBladeMode = f
+	if f ~= self.isInBladeMode then
+		self.isInBladeMode = f
+		self.tool:setBlockSprint(f)
+		self.tool:setMovementSlowDown(f)
+	end
 
 	return true, true
+end
+
+function Katana:cl_katanaSwing( anim, mode )
+	if self.isInBladeMode then
+		self:cl_bladeModeCut( mode )
+	else
+		local cooldownData = self.swingCooldowns[mode]
+		if self.fpAnimations.currentAnimation == anim then
+			if self.attackCooldownTimer < cooldownData.holdTime then
+				self.nextAttackFlag = true
+			end
+		else
+			if self.attackCooldownTimer <= 0 then
+				self.currentSwing = 1
+				self.network:sendToServer("server_startEvent", { name = anim })
+				sm.audio.play("Sledgehammer - Swing")
+				self.pendingRaycastFlag = true
+				self.nextAttackFlag = false
+				self.attackCooldownTimer = cooldownData[self.currentSwing]
+			end
+		end
+	end
+end
+
+function Katana:cl_bladeModeCut( mode )
+	--self.bladeMode = mode
+	local raycastStart = sm.localPlayer.getRaycastStart()
+	local hit, result = sm.physics.raycast(raycastStart, raycastStart + sm.localPlayer.getDirection() * Range, self.owner.character)
+
+	if not hit then return end
+
+	local ray = RayResultToTable(result)
+	if self.isInBladeMode and type(ray.target) == "Shape" then
+		self.network:sendToServer(
+			"sv_bladeModeCut",
+			{
+				ray = ray,
+				mode = self.bladeMode --mode
+			}
+		)
+	end
 end
 
 function Katana:sv_bladeModeCut( args )
@@ -399,21 +441,24 @@ function Katana:sv_bladeModeCut( args )
 		---@type Vec3
 		local pos = ray.pointWorld
 		---@type Vec3
-		local normal = data.transformNormal(RoundVector(ray.normalWorld))
+		local normal = data.transformNormal(RoundVector(ray.normalLocal))
 		---@type Vec3
 		local dir = RoundVector(data.dir(normal))
 
-		local size = AbsVector(sm.vec3.one() * ((normal + dir) * self.bladeModeCutSize))
+		local cutSize = self.bladeModeCutSize
+		local size = AbsVector(sm.vec3.one() * ((normal + dir) * cutSize))
 		local size_clamped = sm.vec3.new(
-			sm.util.clamp( size.x, 1, self.bladeModeCutSize ),
-			sm.util.clamp( size.y, 1, self.bladeModeCutSize ),
-			sm.util.clamp( size.z, 1, self.bladeModeCutSize )
+			sm.util.clamp( size.x, 1, cutSize ),
+			sm.util.clamp( size.y, 1, cutSize ),
+			sm.util.clamp( size.z, 1, cutSize )
 		)
 
 		target:destroyBlock( target:getClosestBlockLocalPosition(pos - target.worldRotation * (size * 0.25)), size_clamped )
 	else
 		target:destroyShape()
 	end
+
+	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
 end
 
 
@@ -436,7 +481,7 @@ function Katana.client_onEquip(self, animate)
 		self.tool:setFpRenderables(currentRenderablesFp)
 	end
 
-	--self:init()
+	self:init()
 	self:loadAnimations()
 
 	setTpAnimation(self.tpAnimations, "equip", 0.0001)
@@ -552,11 +597,6 @@ function Katana.loadAnimations(self)
 		)
 		setFpAnimation(self.fpAnimations, "idle", 0.0)
 	end
-	--self.swingCooldowns[1] = self.fpAnimations.animations["sledgehammer_attack1"].info.duration
-	self.swingCooldowns[1] = 0.6
-	--self.swingCooldowns[2] = self.fpAnimations.animations["sledgehammer_attack2"].info.duration
-	self.swingCooldowns[2] = 0.6
 
 	self.animationsLoaded = true
-
 end
