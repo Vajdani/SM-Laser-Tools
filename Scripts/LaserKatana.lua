@@ -2,11 +2,10 @@
 --I hate this
 
 
-
+-- #region Class vars and other stuff
 dofile("$GAME_DATA/Scripts/game/AnimationUtil.lua")
 dofile("$SURVIVAL_DATA/Scripts/util.lua")
 dofile("$SURVIVAL_DATA/Scripts/game/survival_meleeattacks.lua")
-
 dofile "$CONTENT_DATA/Scripts/util.lua"
 
 local vec3_zero = sm.vec3.zero()
@@ -74,6 +73,14 @@ Katana.bladeModeDirData = {
 	}
 }
 Katana.bladeModeCutSize = 100
+Katana.swingCount = 2
+Katana.mayaFrameDuration = 1.0 / 30.0
+Katana.freezeDuration = 0.075
+Katana.swings = { "sledgehammer_attack1", "sledgehammer_attack2" }
+Katana.swingFrames = { 4.2 * Katana.mayaFrameDuration, 4.2 * Katana.mayaFrameDuration }
+Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
+Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
+Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
 
 local renderables = {
 	"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
@@ -87,25 +94,17 @@ local renderablesFp = {
 	"$CONTENT_DATA/Tools/LaserKatana/char_laserkatana_fp_animlist.rend"
 }
 
-sm.tool.preloadRenderables(renderables)
-sm.tool.preloadRenderables(renderablesTp)
-sm.tool.preloadRenderables(renderablesFp)
-
 local Range = 7.5 --3.0
 local SwingStaminaSpend = 1.5
 local Damage = 45
 
-Katana.swingCount = 2
-Katana.mayaFrameDuration = 1.0 / 30.0
-Katana.freezeDuration = 0.075
+sm.tool.preloadRenderables(renderables)
+sm.tool.preloadRenderables(renderablesTp)
+sm.tool.preloadRenderables(renderablesFp)
+-- #endregion
 
-Katana.swings = { "sledgehammer_attack1", "sledgehammer_attack2" }
-Katana.swingFrames = { 4.2 * Katana.mayaFrameDuration, 4.2 * Katana.mayaFrameDuration }
-Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
 
-Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
-Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
-
+-- #region Setup
 function Katana.client_onCreate(self)
 	self.owner = self.tool:getOwner()
 	self.isLocal = self.tool:isLocal()
@@ -119,13 +118,6 @@ function Katana.client_onCreate(self)
 
 	self.bladeMode = 1
 	self.isInBladeMode = false
-end
-
-function Katana:client_onToggle()
-	self.bladeMode = self.bladeMode < #self.bladeModeDirData and self.bladeMode + 1 or 1
-	sm.gui.displayAlertText("Cut mode: #df7f00"..self.bladeModeDirData[self.bladeMode].name, 2.5)
-
-	return true
 end
 
 function Katana:client_onDestroy()
@@ -154,6 +146,90 @@ function Katana.init(self)
 		self.animationsLoaded = false
 	end
 end
+-- #endregion
+
+
+-- #region Input
+function Katana:client_onToggle()
+	self.bladeMode = self.bladeMode < #self.bladeModeDirData and self.bladeMode + 1 or 1
+	sm.gui.displayAlertText("Cut mode: #df7f00"..self.bladeModeDirData[self.bladeMode].name, 2.5)
+
+	return true
+end
+
+function Katana:client_onEquippedUpdate(lmb, rmb, f)
+	local lightAnim = self.swings[self.currentSwing]
+	local heavyAnim = self.swings_heavy[self.currentSwing]
+
+	if self.pendingRaycastFlag then
+		local time = 0.0
+		local frameTime = 0.0
+
+		if self.fpAnimations.currentAnimation == lightAnim then
+			time = self.fpAnimations.animations[lightAnim].time
+			frameTime = self.swingFrames[self.currentSwing]
+		elseif self.fpAnimations.currentAnimation == heavyAnim then
+			time = self.fpAnimations.animations[heavyAnim].time
+			frameTime = self.swingFrames[self.currentSwing]
+		end
+
+		if time >= frameTime and frameTime ~= 0 then
+			self.pendingRaycastFlag = false
+			local raycastStart = sm.localPlayer.getRaycastStart()
+			local direction = sm.localPlayer.getDirection()
+
+			sm.melee.meleeAttack(melee_sledgehammer, Damage, raycastStart, direction * Range, self.owner)
+
+			local success, result = sm.physics.raycast(raycastStart, raycastStart + direction * Range, self.owner.character)
+			if success then
+				self.freezeTimer = self.freezeDuration
+			end
+		end
+	end
+
+	if lmb == 1 or (lmb == 2 and not self.isInBladeMode) then
+		self:cl_katanaSwing( lightAnim, 1 )
+	end
+
+	if rmb == 1 or (rmb == 2 and not self.isInBladeMode) then
+		self:cl_katanaSwing( heavyAnim, 2 )
+	end
+
+	if f ~= self.isInBladeMode then
+		self.isInBladeMode = f
+		self.tool:setBlockSprint(f)
+		self.tool:setMovementSlowDown(f)
+	end
+
+	return true, true
+end
+-- #endregion
+
+
+-- #region Util functions
+function Katana.updateFreezeFrame(self, state, dt)
+	local p = 1 - math.max(math.min(self.freezeTimer / self.freezeDuration, 1.0), 0.0)
+	local playRate = p * p * p * p
+	self.fpAnimations.animations[state].playRate = playRate
+	self.freezeTimer = math.max(self.freezeTimer - dt, 0.0)
+end
+
+function Katana:isSwingAnim( params )
+	local isSwing = false
+	for i = 1, self.swingCount do
+		if self.swings[i] == params.name then
+			self.tpAnimations.animations[self.swings[i]].playRate = 1
+			isSwing = true
+		elseif self.swings_heavy[i] == params.name then
+			self.tpAnimations.animations[self.swings_heavy[i]].playRate = 1
+			isSwing = true
+		end
+	end
+
+	return isSwing
+end
+-- #endregion
+
 
 function Katana.client_onUpdate(self, dt)
 	if not self.animationsLoaded then
@@ -267,13 +343,8 @@ function Katana.client_onUpdate(self, dt)
 
 end
 
-function Katana.updateFreezeFrame(self, state, dt)
-	local p = 1 - math.max(math.min(self.freezeTimer / self.freezeDuration, 1.0), 0.0)
-	local playRate = p * p * p * p
-	self.fpAnimations.animations[state].playRate = playRate
-	self.freezeTimer = math.max(self.freezeTimer - dt, 0.0)
-end
 
+-- #region Events
 function Katana.server_startEvent(self, params)
 	local player = self.tool:getOwner()
 	if player then
@@ -284,22 +355,6 @@ end
 
 function Katana.client_startLocalEvent(self, params)
 	self:client_handleEvent(params)
-end
-
-
-function Katana:isSwingAnim( params )
-	local isSwing = false
-	for i = 1, self.swingCount do
-		if self.swings[i] == params.name then
-			self.tpAnimations.animations[self.swings[i]].playRate = 1
-			isSwing = true
-		elseif self.swings_heavy[i] == params.name then
-			self.tpAnimations.animations[self.swings_heavy[i]].playRate = 1
-			isSwing = true
-		end
-	end
-
-	return isSwing
 end
 
 
@@ -343,54 +398,10 @@ function Katana.client_handleEvent(self, params)
 		setFpAnimation(self.fpAnimations, params.name, blend and 0.2 or 0.0)
 	end
 end
+-- #endregion
 
-function Katana:client_onEquippedUpdate(lmb, rmb, f)
-	local lightAnim = self.swings[self.currentSwing]
-	local heavyAnim = self.swings_heavy[self.currentSwing]
 
-	if self.pendingRaycastFlag then
-		local time = 0.0
-		local frameTime = 0.0
-
-		if self.fpAnimations.currentAnimation == lightAnim then
-			time = self.fpAnimations.animations[lightAnim].time
-			frameTime = self.swingFrames[self.currentSwing]
-		elseif self.fpAnimations.currentAnimation == heavyAnim then
-			time = self.fpAnimations.animations[heavyAnim].time
-			frameTime = self.swingFrames[self.currentSwing]
-		end
-
-		if time >= frameTime and frameTime ~= 0 then
-			self.pendingRaycastFlag = false
-			local raycastStart = sm.localPlayer.getRaycastStart()
-			local direction = sm.localPlayer.getDirection()
-
-			sm.melee.meleeAttack(melee_sledgehammer, Damage, raycastStart, direction * Range, self.owner)
-
-			local success, result = sm.physics.raycast(raycastStart, raycastStart + direction * Range, self.owner.character)
-			if success then
-				self.freezeTimer = self.freezeDuration
-			end
-		end
-	end
-
-	if lmb == 1 or (lmb == 2 and not self.isInBladeMode) then
-		self:cl_katanaSwing( lightAnim, 1 )
-	end
-
-	if rmb == 1 or (rmb == 2 and not self.isInBladeMode) then
-		self:cl_katanaSwing( heavyAnim, 2 )
-	end
-
-	if f ~= self.isInBladeMode then
-		self.isInBladeMode = f
-		self.tool:setBlockSprint(f)
-		self.tool:setMovementSlowDown(f)
-	end
-
-	return true, true
-end
-
+-- #region Katana
 function Katana:cl_katanaSwing( anim, mode )
 	if self.isInBladeMode then
 		self:cl_bladeModeCut( mode )
@@ -460,8 +471,10 @@ function Katana:sv_bladeModeCut( args )
 
 	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
 end
+-- #endregion
 
 
+-- #region Equip
 function Katana.client_onEquip(self, animate)
 	if animate then
 		sm.audio.play("Sledgehammer - Equip", self.tool:getPosition())
@@ -502,9 +515,10 @@ function Katana.client_onUnequip(self, animate)
 		end
 	end
 end
+-- #endregion
 
 
-
+-- #region get out
 function Katana.loadAnimations(self)
 
 	self.tpAnimations = createTpAnimations(
@@ -600,3 +614,4 @@ function Katana.loadAnimations(self)
 
 	self.animationsLoaded = true
 end
+-- #endregion
