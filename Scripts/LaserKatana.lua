@@ -81,6 +81,7 @@ Katana.swingFrames = { 4.2 * Katana.mayaFrameDuration, 4.2 * Katana.mayaFrameDur
 Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
 Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
 Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
+Katana.chargedAttackBegin = 0.3 * 40
 
 local renderables = {
 	"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
@@ -108,6 +109,8 @@ sm.tool.preloadRenderables(renderablesFp)
 function Katana.client_onCreate(self)
 	self.owner = self.tool:getOwner()
 	self.isLocal = self.tool:isLocal()
+	self.charging = false
+	self.chargedAttackCharge = 0
 	self:init()
 
 	if not self.isLocal then return end
@@ -118,6 +121,9 @@ function Katana.client_onCreate(self)
 
 	self.bladeMode = 1
 	self.isInBladeMode = false
+	self.blockCharge = false
+
+	self.heavyAttackStartTick = 0
 end
 
 function Katana:client_onDestroy()
@@ -191,8 +197,8 @@ function Katana:client_onEquippedUpdate(lmb, rmb, f)
 		self:cl_katanaSwing( lightAnim, 1 )
 	end
 
-	if rmb == 1 or (rmb == 2 and not self.isInBladeMode) then
-		self:cl_katanaSwing( heavyAnim, 2 )
+	if not self.isInBladeMode and self.owner.character:isOnGround() then
+		self:cl_handleHeavyAttack( rmb, heavyAnim )
 	end
 
 	if f ~= self.isInBladeMode then
@@ -231,116 +237,136 @@ end
 -- #endregion
 
 
-function Katana.client_onUpdate(self, dt)
+function Katana:client_onUpdate(dt)
 	if not self.animationsLoaded then
 		return
 	end
 
+	local ownerChar = self.owner.character
+
 	self.attackCooldownTimer = math.max(self.attackCooldownTimer - dt, 0.0)
-
 	updateTpAnimations(self.tpAnimations, self.equipped, dt)
-	if self.isLocal then
-		local shouldStopPlain = true
-		if self.isInBladeMode then
-			local start = sm.localPlayer.getRaycastStart()
-			local hit, ray = sm.physics.raycast(start, start + sm.localPlayer.getDirection() * Range, self.owner.character, sm.physics.filter.dynamicBody + sm.physics.filter.staticBody)
-			shouldStopPlain = not self.equipped or not hit
 
-			if not shouldStopPlain then
-				local data = self.bladeModeDirData[self.bladeMode]
-				local normal = data.transformNormal(RoundVector(ray.normalLocal))
-				local dir = RoundVector(data.dir(normal))
+	if self.charging then
+		self.chargedAttackCharge = sm.util.clamp(self.chargedAttackCharge + dt, 0, 1)
+		local progress = self.chargedAttackCharge - 0.5
+		setFpAnimationProgress( self.tpAnimations, "sledgehammer_attack_heavy1", progress )
 
-				local cutSize = self.bladeModeCutSize
-				local size = sm.vec3.one() * ((normal + dir) * cutSize)
-				size.x = sm.util.clamp( math.abs(size.x), 1, cutSize )
-				size.y = sm.util.clamp( math.abs(size.y), 1, cutSize )
-				size.z = sm.util.clamp( math.abs(size.z), 1, cutSize )
+		if self.isLocal then
+			setFpAnimationProgress( self.fpAnimations, "sledgehammer_attack_heavy1", progress )
+			sm.gui.setProgressFraction( self.chargedAttackCharge/1 )
 
-				--TODO: make plain snap to blocks
-				--[[
-				local pointLocal = ray.pointWorld --+ normal
-				local a = pointLocal * sm.construction.constants.subdivisions
-				local gridPos = sm.vec3.new( math.floor( a.x ), math.floor( a.y ), math.floor( a.z ) ) - vec3_one
-				local worldPos = gridPos * sm.construction.constants.subdivideRatio + ( vec3_one * 3 * sm.construction.constants.subdivideRatio ) * 0.5
-				]]
+			local performAttack = self.chargedAttackCharge >= 1
+			ownerChar.movementSpeedFraction = performAttack and 1 or 0
 
-				local target = ray:getShape()
-				local worldPos = ray.pointWorld --target:transformLocalPoint( target:getClosestBlockLocalPosition( ray.pointWorld ) )
-
-				self.cutPlain:setPosition(worldPos)
-				self.cutPlain:setScale(size / 32)
-				self.cutPlain:setRotation(target.worldRotation)
-
-				if not self.cutPlain:isPlaying() then
-					self.cutPlain:start()
-				end
+			if performAttack then
+				self.network:sendToServer("sv_performChargedAttack")
 			end
-		end
-
-		if shouldStopPlain and self.cutPlain:isPlaying() then
-			self.cutPlain:stop()
-		end
-
-
-		local swing = self.currentSwing
-		local lightAnim = self.swings[swing]
-		local heavyAnim = self.swings_heavy[swing]
-		local lightAnim_exit = self.swingExits[swing]
-		local heavyAnim_exit = self.swingExits_heavy[swing]
-
-		if self.fpAnimations.currentAnimation == lightAnim then
-			self:updateFreezeFrame(lightAnim, dt)
-		elseif self.fpAnimations.currentAnimation == heavyAnim then
-			self:updateFreezeFrame(heavyAnim, dt)
-		end
-
-		local preAnimation = self.fpAnimations.currentAnimation
-		updateFpAnimations(self.fpAnimations, self.equipped, dt)
-
-		if preAnimation ~= self.fpAnimations.currentAnimation then
-			local keepBlockSprint = false
-			local isLightExit = self.fpAnimations.currentAnimation == lightAnim_exit
-			local endedSwing = (preAnimation == lightAnim and isLightExit) or
-				(preAnimation == heavyAnim and self.fpAnimations.currentAnimation == heavyAnim_exit)
-
-			if self.nextAttackFlag == true and endedSwing == true then
-				swing = swing < self.swingCount and swing + 1 or 1
-				self.network:sendToServer(
-					"server_startEvent",
-					{
-						name = isLightExit and self.swings[swing] or self.swings_heavy[swing]
-					}
-				)
-				sm.audio.play("Sledgehammer - Swing")
-
-				self.pendingRaycastFlag = true
-				self.nextAttackFlag = false
-				self.attackCooldownTimer = self.swingCooldowns[BoolToVal(not isLightExit) + 1][swing]
-				keepBlockSprint = true
-
-				self.currentSwing = swing
-			elseif isAnyOf(self.fpAnimations.currentAnimation, { "guardInto", "guardIdle", "guardExit", "guardBreak", "guardHit" }) then
-				keepBlockSprint = true
-			end
-
-			self.tool:setBlockSprint(keepBlockSprint)
-		end
-
-		local isSprinting = self.tool:isSprinting()
-		if isSprinting and self.fpAnimations.currentAnimation == "idle" and self.attackCooldownTimer <= 0 and
-			not isAnyOf(self.fpAnimations.currentAnimation, { "sprintInto", "sprintIdle" }) then
-			local params = { name = "sprintInto" }
-			self:client_startLocalEvent(params)
-		end
-
-		if (not isSprinting and isAnyOf(self.fpAnimations.currentAnimation, { "sprintInto", "sprintIdle" })) and
-			self.fpAnimations.currentAnimation ~= "sprintExit" then
-			local params = { name = "sprintExit" }
-			self:client_startLocalEvent(params)
 		end
 	end
 
+
+	if not self.isLocal then return end
+
+	local shouldStopPlain = true
+	if self.isInBladeMode then
+		local start = sm.localPlayer.getRaycastStart()
+		local hit, ray = sm.physics.raycast(start, start + sm.localPlayer.getDirection() * Range, ownerChar, sm.physics.filter.dynamicBody + sm.physics.filter.staticBody)
+		shouldStopPlain = not self.equipped or not hit
+
+		if not shouldStopPlain then
+			local data = self.bladeModeDirData[self.bladeMode]
+			local normal = data.transformNormal(RoundVector(ray.normalLocal))
+			local dir = RoundVector(data.dir(normal))
+
+			local cutSize = self.bladeModeCutSize
+			local size = sm.vec3.one() * ((normal + dir) * cutSize)
+			size.x = sm.util.clamp( math.abs(size.x), 1, cutSize )
+			size.y = sm.util.clamp( math.abs(size.y), 1, cutSize )
+			size.z = sm.util.clamp( math.abs(size.z), 1, cutSize )
+
+			--TODO: make plain snap to blocks
+			--[[
+			local pointLocal = ray.pointWorld --+ normal
+			local a = pointLocal * sm.construction.constants.subdivisions
+			local gridPos = sm.vec3.new( math.floor( a.x ), math.floor( a.y ), math.floor( a.z ) ) - vec3_one
+			local worldPos = gridPos * sm.construction.constants.subdivideRatio + ( vec3_one * 3 * sm.construction.constants.subdivideRatio ) * 0.5
+			]]
+
+			local target = ray:getShape()
+			local worldPos = ray.pointWorld --target:transformLocalPoint( target:getClosestBlockLocalPosition( ray.pointWorld ) )
+
+			self.cutPlain:setPosition(worldPos)
+			self.cutPlain:setScale(size / 32)
+			self.cutPlain:setRotation(target.worldRotation)
+
+			if not self.cutPlain:isPlaying() then
+				self.cutPlain:start()
+			end
+		end
+	end
+
+	if shouldStopPlain and self.cutPlain:isPlaying() then
+		self.cutPlain:stop()
+	end
+
+
+	local swing = self.currentSwing
+	local lightAnim = self.swings[swing]
+	local heavyAnim = self.swings_heavy[swing]
+	local lightAnim_exit = self.swingExits[swing]
+	local heavyAnim_exit = self.swingExits_heavy[swing]
+
+	if self.fpAnimations.currentAnimation == lightAnim then
+		self:updateFreezeFrame(lightAnim, dt)
+	elseif self.fpAnimations.currentAnimation == heavyAnim then
+		self:updateFreezeFrame(heavyAnim, dt)
+	end
+
+	local preAnimation = self.fpAnimations.currentAnimation
+	updateFpAnimations(self.fpAnimations, self.equipped, dt)
+
+	if preAnimation ~= self.fpAnimations.currentAnimation then
+		local keepBlockSprint = false
+		local isLightExit = self.fpAnimations.currentAnimation == lightAnim_exit
+		local endedSwing = (preAnimation == lightAnim and isLightExit) or
+			(preAnimation == heavyAnim and self.fpAnimations.currentAnimation == heavyAnim_exit)
+
+		if self.nextAttackFlag == true and endedSwing == true then
+			swing = swing < self.swingCount and swing + 1 or 1
+			self.network:sendToServer(
+				"server_startEvent",
+				{
+					name = isLightExit and self.swings[swing] or self.swings_heavy[swing]
+				}
+			)
+			sm.audio.play("Sledgehammer - Swing")
+
+			self.pendingRaycastFlag = true
+			self.nextAttackFlag = false
+			self.attackCooldownTimer = self.swingCooldowns[BoolToVal(not isLightExit) + 1][swing]
+			keepBlockSprint = true
+
+			self.currentSwing = swing
+		elseif isAnyOf(self.fpAnimations.currentAnimation, { "guardInto", "guardIdle", "guardExit", "guardBreak", "guardHit" }) then
+			keepBlockSprint = true
+		end
+
+		self.tool:setBlockSprint(keepBlockSprint)
+	end
+
+	local isSprinting = self.tool:isSprinting()
+	if isSprinting and self.fpAnimations.currentAnimation == "idle" and self.attackCooldownTimer <= 0 and
+		not isAnyOf(self.fpAnimations.currentAnimation, { "sprintInto", "sprintIdle" }) then
+		local params = { name = "sprintInto" }
+		self:client_startLocalEvent(params)
+	end
+
+	if (not isSprinting and isAnyOf(self.fpAnimations.currentAnimation, { "sprintInto", "sprintIdle" })) and
+		self.fpAnimations.currentAnimation ~= "sprintExit" then
+		local params = { name = "sprintExit" }
+		self:client_startLocalEvent(params)
+	end
 end
 
 
@@ -427,7 +453,11 @@ end
 function Katana:cl_bladeModeCut( mode )
 	--self.bladeMode = mode
 	local raycastStart = sm.localPlayer.getRaycastStart()
-	local hit, result = sm.physics.raycast(raycastStart, raycastStart + sm.localPlayer.getDirection() * Range, self.owner.character)
+	local hit, result = sm.physics.raycast(
+		raycastStart,
+		raycastStart + sm.localPlayer.getDirection() * Range,
+		self.owner.character
+	)
 
 	if not hit then return end
 
@@ -471,6 +501,68 @@ function Katana:sv_bladeModeCut( args )
 
 	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
 end
+
+
+function Katana:cl_handleHeavyAttack( state, anim )
+	local tick = sm.game.getCurrentTick()
+	local canCharge = tick - self.heavyAttackStartTick >= self.chargedAttackBegin
+
+	if state == 1 then
+		self.heavyAttackStartTick = tick
+	elseif state == 2 and canCharge and not self.charging and not self.blockCharge then
+		self.network:sendToServer("sv_updateChargeAttack", true)
+		self.blockCharge = true
+	elseif state == 3 then
+		if not canCharge then
+			self:cl_katanaSwing( anim, 2 )
+			return
+		end
+
+		self.blockCharge = false
+		self.network:sendToServer("sv_updateChargeAttack", false )
+	end
+end
+
+function Katana:sv_updateChargeAttack( state )
+	self.network:sendToClients("cl_updateChargeAttack", state)
+end
+
+function Katana:cl_updateChargeAttack( state )
+	self.charging = state
+	self.chargedAttackCharge = 0
+
+	if self.isLocal then
+		self.tool:setBlockSprint(state)
+		self.tool:setMovementSlowDown(state)
+	end
+
+	local anim = state and "sledgehammer_attack_heavy1" or "idle"
+	if self.tpAnimations.currentAnimation == anim then return end
+
+	local speed = state and 0.2 or 0.5
+	setTpAnimation( self.tpAnimations, anim, speed )
+	if self.isLocal then
+		setFpAnimation( self.fpAnimations, anim, speed )
+	end
+end
+
+function Katana:sv_performChargedAttack()
+	self:sv_updateChargeAttack( false )
+
+	local owner = self.tool:getOwner()
+	local char = owner.character
+	local pos = char.worldPosition + sm.vec3.new(0,0,0.575)
+	local dir = char.direction
+	for i = 1, 50 do
+		sm.projectile.projectileAttack(
+			projectile_potato,
+			50,
+			pos,
+			sm.noise.gunSpread(dir, i) * 130,
+			owner
+		)
+	end
+end
 -- #endregion
 
 
@@ -509,9 +601,17 @@ function Katana.client_onUnequip(self, animate)
 		if animate then
 			sm.audio.play("Sledgehammer - Unequip", self.tool:getPosition())
 		end
+
+		self:cl_updateChargeAttack( false )
+
 		setTpAnimation(self.tpAnimations, "unequip")
-		if self.isLocal and self.fpAnimations.currentAnimation ~= "unequip" then
-			swapFpAnimation(self.fpAnimations, "equip", "unequip", 0.2)
+		if self.isLocal then
+			self.owner.character.movementSpeedFraction = 1
+			self.blockCharge = false
+
+			if self.fpAnimations.currentAnimation ~= "unequip" then
+				swapFpAnimation(self.fpAnimations, "equip", "unequip", 0.2)
+			end
 		end
 	end
 end
