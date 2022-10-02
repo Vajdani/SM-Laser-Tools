@@ -1,64 +1,7 @@
-local vector_up = sm.vec3.new(1,0,0)
-
---Line renderer
-Line = class()
-function Line:init( thickness, colour )
-    self.effect = sm.effect.createEffect("ShapeRenderable")
-	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
-    self.effect:setParameter("color", colour)
-    self.effect:setScale( sm.vec3.one() * thickness )
-	self.sound = sm.effect.createEffect( "Cutter_beam_sound" )
-
-	self.colour = colour
-    self.thickness = thickness
-	self.spinTime = 0
-end
-
-
----@param startPos Vec3
----@param endPos Vec3
----@param dt number
----@param spinSpeed number
-function Line:update( startPos, endPos, dt, spinSpeed )
-	local delta = endPos - startPos
-    local length = delta:length()
-
-    if length < 0.0001 then
-        sm.log.warning("Line:update() | Length of 'endPos - startPos' must be longer than 0.")
-        return
-	end
-
-	local rot = sm.vec3.getRotation(vector_up, delta)
-	local speed = spinSpeed or 0
-	local deltaTime = dt or 0
-	self.spinTime = self.spinTime + deltaTime * speed
-	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), vector_up )
-
-	local distance = sm.vec3.new(length, self.thickness, self.thickness)
-
-	self.effect:setPosition(startPos + delta * 0.5)
-	self.effect:setScale(distance)
-	self.effect:setRotation(rot)
-
-	sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
-	self.sound:setPosition(startPos)
-
-    if not self.effect:isPlaying() then
-        self.effect:start()
-		self.sound:start()
-    end
-end
-
-function Line:stop()
-	self.effect:stopImmediate()
-	self.sound:stopImmediate()
-end
-
-
-
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
+dofile "$CONTENT_DATA/Scripts/util.lua"
 
 ---@class MountedLaserCutter : ShapeClass
 ---@field sv table
@@ -99,7 +42,7 @@ function MountedLaserCutter.sv_init( self )
 		self.sv.data.range = self.defaultRange
 	end
 
-	self:sv_updateGuiVars({ dmg = self.sv.data.damage, range = self.sv.data.range })
+	self:sv_updateGui({ dmg = self.sv.data.damage, range = self.sv.data.range })
 
 	self.sv.unitDamageTimer = Timer()
 	self.sv.unitDamageTimer:start( self.unitDamageTicks )
@@ -121,21 +64,20 @@ function MountedLaserCutter.server_onFixedUpdate( self )
 
 	local type = type(target)
 	if type == "Shape" then
-		local material = target:getMaterialId()
-		if sm.item.isBlock( target.uuid ) then
-			target:destroyBlock( target:getClosestBlockLocalPosition(hitPos) )
-		else
-			target:destroyShape( 0 )
-		end
-
 		sm.effect.playEffect(
 			"Sledgehammer - Destroy",
 			hitPos,
 			sm.vec3.zero(),
 			sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
 			sm.vec3.one(),
-			{ Material = material }
+			{ Material = target:getMaterialId() }
 		)
+
+		if sm.item.isBlock( target.uuid ) then
+			target:destroyBlock( target:getClosestBlockLocalPosition(hitPos) )
+		else
+			target:destroyShape( 0 )
+		end
 	elseif type == "Character" then
 		self.sv.unitDamageTimer:tick()
 		if self.sv.unitDamageTimer:done() then
@@ -147,7 +89,7 @@ function MountedLaserCutter.server_onFixedUpdate( self )
 	end
 end
 
-function MountedLaserCutter:sv_updateGuiVars( args )
+function MountedLaserCutter:sv_updateGui( args )
 	self.sv.data.damage = args.dmg
 	self.sv.data.range = args.range
 	self.storage:save( self.sv.data )
@@ -169,7 +111,7 @@ function MountedLaserCutter.client_onCreate( self )
 	self.cl.gui:setTextChangedCallback( "input_range", "cl_input_range" )
 	self.cl.gui:setIconImage( "icon", self.shape.uuid )
 
-	self.cl.line = Line()
+	self.cl.line = Line_cutter()
 	self.cl.line:init( self.lineThickness, self.lineColour )
 	self.cl.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.interactable )
 
@@ -188,7 +130,7 @@ function MountedLaserCutter:cl_input_dmg( widget, value )
 	end
 
 	self.cl.damage = num
-	self.network:sendToServer("sv_updateGuiVars", { dmg = self.cl.damage, range = self.cl.range })
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range })
 end
 
 function MountedLaserCutter:cl_input_range( widget, value )
@@ -200,7 +142,7 @@ function MountedLaserCutter:cl_input_range( widget, value )
 	end
 
 	self.cl.range = num/4
-	self.network:sendToServer("sv_updateGuiVars", { dmg = self.cl.damage, range = self.cl.range })
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range })
 end
 
 function MountedLaserCutter:cl_updateGui( args )

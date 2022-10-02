@@ -1,65 +1,3 @@
-local vector_up = sm.vec3.new(1,0,0)
-local camAdjust = sm.vec3.new(0,0,0.575)
-local vec3_zero = sm.vec3.zero()
-local vec3_one = sm.vec3.one()
-
---Line renderer
-Line_cutter = class()
-function Line_cutter:init( thickness, colour )
-    self.effect = sm.effect.createEffect("ShapeRenderable")
-	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
-    self.effect:setParameter("color", colour)
-    self.effect:setScale( sm.vec3.one() * thickness )
-	self.sound = sm.effect.createEffect( "Cutter_beam_sound" )
-
-	self.colour = colour
-    self.thickness = thickness
-	self.spinTime = 0
-end
-
-
----@param startPos Vec3
----@param endPos Vec3
----@param dt number
----@param spinSpeed number
-function Line_cutter:update( startPos, endPos, dt, spinSpeed )
-	local delta = endPos - startPos
-    local length = delta:length()
-
-    if length < 0.0001 then
-        sm.log.warning("Line_cutter:update() | Length of 'endPos - startPos' must be longer than 0.")
-        return
-	end
-
-	local rot = sm.vec3.getRotation(vector_up, delta)
-	local speed = spinSpeed or 0
-	local deltaTime = dt or 0
-	self.spinTime = self.spinTime + deltaTime * speed
-	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), vector_up )
-
-	local distance = sm.vec3.new(length, self.thickness, self.thickness)
-
-	self.effect:setPosition(startPos + delta * 0.5)
-	self.effect:setScale(distance)
-	self.effect:setRotation(rot)
-
-	sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
-	self.sound:setPosition(startPos)
-
-    if not self.effect:isPlaying() then
-        self.effect:start()
-		self.sound:start()
-    end
-end
-
-function Line_cutter:stop()
-	self.effect:stopImmediate()
-	self.sound:stopImmediate()
-end
-
-
-
---Laser Cutter
 dofile( "$GAME_DATA/Scripts/game/AnimationUtil.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/util.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_shapes.lua" )
@@ -405,7 +343,7 @@ function Cutter:client_onUpdate( dt )
 	end
 
 	-- Camera update
-	local blend = 1 - math.pow( 1 - 1 / self.aimBlendSpeed, dt * 60 )
+	local blend = 1 - ( (1 - 1 / self.aimBlendSpeed) ^ (dt * 60) )
 	self.aimWeight = sm.util.lerp( self.aimWeight,  0, blend )
 	local bobbing =  1
 

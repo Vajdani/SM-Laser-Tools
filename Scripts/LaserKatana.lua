@@ -2,16 +2,18 @@
 --I hate this
 
 
+--[[
+TODO:
+1. make cutting plain snap to blocks
+2. remove continued swinging from the heavy attack
+]]
+
+
 -- #region Class vars and other stuff
 dofile("$GAME_DATA/Scripts/game/AnimationUtil.lua")
 dofile("$SURVIVAL_DATA/Scripts/util.lua")
 dofile("$SURVIVAL_DATA/Scripts/game/survival_meleeattacks.lua")
 dofile "$CONTENT_DATA/Scripts/util.lua"
-
-local vec3_zero = sm.vec3.zero()
-local vec3_one = sm.vec3.one()
-local vec3_up = sm.vec3.new(0,0,1)
-local vec3_x = sm.vec3.new(1,0,0)
 
 ---@class Katana : ToolClass
 ---@field isLocal boolean
@@ -272,20 +274,26 @@ function Katana:client_onUpdate(dt)
 	if self.isInBladeMode then
 		local start = sm.localPlayer.getRaycastStart()
 		local hit, ray = sm.physics.raycast(start, start + sm.localPlayer.getDirection() * Range, ownerChar, sm.physics.filter.dynamicBody + sm.physics.filter.staticBody)
-		shouldStopPlain = not self.equipped or not hit
+		shouldStopPlain = not self.equipped --or not hit
 
 		if not shouldStopPlain then
+			local pos, scale, rot = vec3_zero, vec3_zero, sm.quat.identity()
+
 			local data = self.bladeModeDirData[self.bladeMode]
 			local normal = data.transformNormal(RoundVector(ray.normalLocal))
 			local dir = RoundVector(data.dir(normal))
 
 			local cutSize = self.bladeModeCutSize
-			local size = sm.vec3.one() * ((normal + dir) * cutSize)
-			size.x = sm.util.clamp( math.abs(size.x), 1, cutSize )
-			size.y = sm.util.clamp( math.abs(size.y), 1, cutSize )
-			size.z = sm.util.clamp( math.abs(size.z), 1, cutSize )
+			if hit then
+				scale = sm.vec3.one() * ((normal + dir) * cutSize)
+				scale.x = sm.util.clamp( math.abs(scale.x), 1, cutSize )
+				scale.y = sm.util.clamp( math.abs(scale.y), 1, cutSize )
+				scale.z = sm.util.clamp( math.abs(scale.z), 1, cutSize )
+			else
+				scale = sm.vec3.new(self.bladeModeCutSize, self.bladeModeCutSize, 1)
+			end
+			scale = scale/32
 
-			--TODO: make plain snap to blocks
 			--[[
 			local pointLocal = ray.pointWorld --+ normal
 			local a = pointLocal * sm.construction.constants.subdivisions
@@ -293,12 +301,12 @@ function Katana:client_onUpdate(dt)
 			local worldPos = gridPos * sm.construction.constants.subdivideRatio + ( vec3_one * 3 * sm.construction.constants.subdivideRatio ) * 0.5
 			]]
 
-			local target = ray:getShape()
-			local worldPos = ray.pointWorld --target:transformLocalPoint( target:getClosestBlockLocalPosition( ray.pointWorld ) )
+			pos = hit and ray.pointWorld or start - vec3_up * 0.1 --target:transformLocalPoint( target:getClosestBlockLocalPosition( ray.pointWorld ) )
+			rot = hit and ray:getShape().worldRotation or sm.camera.getRotation()
 
-			self.cutPlain:setPosition(worldPos)
-			self.cutPlain:setScale(size / 32)
-			self.cutPlain:setRotation(target.worldRotation)
+			self.cutPlain:setPosition(pos)
+			self.cutPlain:setScale(scale)
+			self.cutPlain:setRotation(rot)
 
 			if not self.cutPlain:isPlaying() then
 				self.cutPlain:start()
@@ -395,16 +403,15 @@ function Katana.client_handleEvent(self, params)
 		return
 	end
 
+	local isSwing = self:isSwingAnim( params )
 	local tpAnimation = self.tpAnimations.animations[params.name]
 	if tpAnimation then
-		local blend = not self:isSwingAnim( params )
+		local blend = not isSwing
 		setTpAnimation(self.tpAnimations, params.name, blend and 0.2 or 0.0)
 	end
 
-
 	if not self.isLocal then return end
 
-	local isSwing = self:isSwingAnim( params )
 	if isSwing or isAnyOf(params.name, { "guardInto", "guardIdle", "guardExit", "guardBreak", "guardHit" }) then
 		self.tool:setBlockSprint(true)
 	else

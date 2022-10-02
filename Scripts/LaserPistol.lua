@@ -1,83 +1,9 @@
-local line_up = sm.vec3.new(1,0,0)
-local vec3_up = sm.vec3.new(0,0,1)
-
---Line renderer
-Line_gun = class()
-function Line_gun:init( thickness, colour, strong )
-    self.effect = sm.effect.createEffect("ShapeRenderable")
-	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
-    self.effect:setParameter("color", colour)
-    self.effect:setScale( sm.vec3.one() * thickness )
-	self.sound = sm.effect.createEffect( "Cutter_beam_sound" )
-
-	self.colour = colour
-    self.thickness = thickness
-	self.spinTime = 0
-	self.strong = strong
-end
-
-
----@param startPos Vec3
----@param endPos Vec3
----@param dt number
----@param spinSpeed number
-function Line_gun:update( startPos, endPos, dt, spinSpeed )
-	local delta = endPos - startPos
-    local length = delta:length()
-
-    if length < 0.0001 then
-        sm.log.warning("Line_gun:update() | Length of 'endPos - startPos' must be longer than 0.")
-        return
-	end
-
-	local rot = sm.vec3.getRotation(line_up, delta)
-	local speed = spinSpeed or 0
-	local deltaTime = dt or 0
-	self.spinTime = self.spinTime + deltaTime * speed
-	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), line_up )
-
-	if self.strong then
-		self.thickness = math.max(self.thickness - dt * 0.5, 0)
-	end
-
-	local distance = sm.vec3.new(length, self.thickness, self.thickness)
-
-	self.effect:setPosition(startPos + delta * 0.5)
-	self.effect:setScale(distance)
-	self.effect:setRotation(rot)
-
-	--this shit kills my gpu if its done every frame
-	if sm.game.getCurrentTick() % 4 == 0 then
-		sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
-	end
-
-	self.sound:setPosition(startPos)
-
-    if not self.effect:isPlaying() then
-        self.effect:start()
-		self.sound:start()
-    end
-end
-
-function Line_gun:stop()
-	self.effect:stopImmediate()
-	self.sound:stopImmediate()
-end
-
-function Line_gun:destroy()
-	self.effect:destroy()
-	self.sound:destroy()
-end
-
-
---Laser Gun
 dofile( "$GAME_DATA/Scripts/game/AnimationUtil.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/util.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_shapes.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
-
 dofile "$CONTENT_DATA/Scripts/util.lua"
 
 
@@ -256,15 +182,6 @@ end
 
 function Pistol:sv_onOverdriveLaserHit( pos )
 	sm.physics.explode( pos, 5, 2.5, 5, 50, "PropaneTank - ExplosionSmall" )
-end
-
-
-
-local function ColourLerp(c1, c2, t)
-    local r = sm.util.lerp(c1.r, c2.r, t)
-    local g = sm.util.lerp(c1.g, c2.g, t)
-    local b = sm.util.lerp(c1.b, c2.b, t)
-    return sm.color.new(r,g,b)
 end
 
 
@@ -466,7 +383,7 @@ function Pistol:client_onUpdate( dt )
 
 	-- Camera update
 	local aiming = false
-	local blend = 1 - math.pow( 1 - 1 / self.aimBlendSpeed, dt * 60 )
+	local blend = 1 - ( (1 - 1 / self.aimBlendSpeed) ^ (dt * 60) )
 	self.aimWeight = sm.util.lerp( self.aimWeight, aiming and 1 or 0, blend )
 	local bobbing = aiming and 0.12 or 1
 
