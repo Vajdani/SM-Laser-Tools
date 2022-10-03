@@ -4,8 +4,8 @@
 
 --[[
 TODO:
-1. make cutting plain snap to blocks
-2. remove continued swinging from the heavy attack
+1. remove continued swinging from the heavy attack
+2. better cutting plane
 ]]
 
 
@@ -22,8 +22,9 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field swingCooldowns table
 ---@field fpAnimations table
 ---@field tpAnimations table
----@field cutPlain Effect
+---@field cutPlane Effect
 ---@field owner Player
+---@field bladeHud GuiInterface
 Katana = class()
 Katana.bladeModeDirData = {
 	{
@@ -55,7 +56,6 @@ Katana.bladeModeDirData = {
 		---@param dir Vec3
 		---@return Vec3
 		transformNormal = function( dir )
-			print(dir)
 			local x, y, z = dir.x, dir.y, dir.z
 			local yzDiffer = (y ~= 0 or z ~= 0)
 			local xDiffer = x ~= 0
@@ -75,11 +75,15 @@ Katana.bladeModeDirData = {
 	}
 }
 Katana.bladeModeCutSize = 100
+Katana.cutPlaneColours = {
+	min = sm.color.new(0, 0, 0, 0),
+	max = sm.color.new(0, 0.93, 1, 0.2)
+}
 Katana.swingCount = 2
 Katana.mayaFrameDuration = 1.0 / 30.0
 Katana.freezeDuration = 0.075
-Katana.swings = { "sledgehammer_attack1", "sledgehammer_attack2" }
 Katana.swingFrames = { 4.2 * Katana.mayaFrameDuration, 4.2 * Katana.mayaFrameDuration }
+Katana.swings = { "sledgehammer_attack1", "sledgehammer_attack2" }
 Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
 Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
 Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
@@ -117,21 +121,37 @@ function Katana.client_onCreate(self)
 
 	if not self.isLocal then return end
 
-	self.cutPlain = sm.effect.createEffect("ShapeRenderable")
-	self.cutPlain:setParameter("uuid", blk_wood1)
-	self.cutPlain:setParameter("visualization", true)
+	self.cutPlane = sm.effect.createEffect("Katana_cut_plane")
+	self.cutPlane:setParameter("minColor", self.cutPlaneColours.min)
+	self.cutPlane:setParameter("maxColor", self.cutPlaneColours.max)
+	--[[self.cutPlane = sm.effect.createEffect("ShapeRenderable")
+	self.cutPlane:setParameter("uuid", blk_wood1)
+	self.cutPlane:setParameter("visualization", true)]]
 
 	self.bladeMode = 1
 	self.isInBladeMode = false
-	self.blockCharge = false
+	self.bladeHud = sm.gui.createGuiFromLayout(
+		"$CONTENT_DATA/Gui/BladeMode.layout",
+		false,
+		{
+			isHud = true,
+			isInteractive = false,
+			needsCursor = false,
+			hidesHotbar = false,
+			isOverlapped = false,
+			backgroundAlpha = 0
+		}
+	)
 
+	self.blockCharge = false
 	self.heavyAttackStartTick = 0
 end
 
 function Katana:client_onDestroy()
 	if not self.isLocal then return end
 
-	self.cutPlain:destroy()
+	self.cutPlane:destroy()
+	self.bladeHud:destroy()
 end
 
 function Katana.init(self)
@@ -158,6 +178,10 @@ end
 
 
 -- #region Input
+function Katana:client_onReload()
+	return true
+end
+
 function Katana:client_onToggle()
 	self.bladeMode = self.bladeMode < #self.bladeModeDirData and self.bladeMode + 1 or 1
 	sm.gui.displayAlertText("Cut mode: #df7f00"..self.bladeModeDirData[self.bladeMode].name, 2.5)
@@ -204,6 +228,8 @@ function Katana:client_onEquippedUpdate(lmb, rmb, f)
 	end
 
 	if f ~= self.isInBladeMode then
+		if f then self.bladeHud:open() else self.bladeHud:close() end
+
 		self.isInBladeMode = f
 		self.tool:setBlockSprint(f)
 		self.tool:setMovementSlowDown(f)
@@ -235,6 +261,14 @@ function Katana:isSwingAnim( params )
 	end
 
 	return isSwing
+end
+
+--Thank you so much Programmer Alex
+function Katana:calculateCuttingPlanePos( target, worldPos )
+	local A = target:getClosestBlockLocalPosition( worldPos )/4
+	local B = target.localPosition/4 - sm.vec3.new(0.125,0.125,0.125)
+	local C = target:getBoundingBox()
+	return target:transformLocalPoint( A-(B+C/2) )
 end
 -- #endregion
 
@@ -270,52 +304,48 @@ function Katana:client_onUpdate(dt)
 
 	if not self.isLocal then return end
 
-	local shouldStopPlain = true
+	local shouldStopPlane = true
 	if self.isInBladeMode then
 		local start = sm.localPlayer.getRaycastStart()
 		local hit, ray = sm.physics.raycast(start, start + sm.localPlayer.getDirection() * Range, ownerChar, sm.physics.filter.dynamicBody + sm.physics.filter.staticBody)
-		shouldStopPlain = not self.equipped --or not hit
+		shouldStopPlane = not self.equipped --or not hit
 
-		if not shouldStopPlain then
+		if not shouldStopPlane then
 			local pos, scale, rot = vec3_zero, vec3_zero, sm.quat.identity()
-
 			local data = self.bladeModeDirData[self.bladeMode]
-			local normal = data.transformNormal(RoundVector(ray.normalLocal))
-			local dir = RoundVector(data.dir(normal))
-
 			local cutSize = self.bladeModeCutSize
+
 			if hit then
-				scale = sm.vec3.one() * ((normal + dir) * cutSize)
+				local normal = data.transformNormal(RoundVector(ray.normalLocal))
+				local dir = RoundVector(data.dir(normal))
+
+				scale = vec3_one * ((normal + dir) * cutSize)
 				scale.x = sm.util.clamp( math.abs(scale.x), 1, cutSize )
 				scale.y = sm.util.clamp( math.abs(scale.y), 1, cutSize )
 				scale.z = sm.util.clamp( math.abs(scale.z), 1, cutSize )
 			else
-				scale = sm.vec3.new(self.bladeModeCutSize, self.bladeModeCutSize, 1)
+				scale = data.name == "Horizontal" and
+				sm.vec3.new(cutSize, cutSize, 0.1) or
+				sm.vec3.new(0.1, cutSize, cutSize)
 			end
-			scale = scale/32
+			scale = scale * 0.0625
 
-			--[[
-			local pointLocal = ray.pointWorld --+ normal
-			local a = pointLocal * sm.construction.constants.subdivisions
-			local gridPos = sm.vec3.new( math.floor( a.x ), math.floor( a.y ), math.floor( a.z ) ) - vec3_one
-			local worldPos = gridPos * sm.construction.constants.subdivideRatio + ( vec3_one * 3 * sm.construction.constants.subdivideRatio ) * 0.5
-			]]
+			local shape = ray:getShape()
+			pos = hit and self:calculateCuttingPlanePos( shape, ray.pointWorld ) or self.tool:getTpBonePos("jnt_head")
+			rot = hit and shape.worldRotation or sm.camera.getRotation()
 
-			pos = hit and ray.pointWorld or start - vec3_up * 0.1 --target:transformLocalPoint( target:getClosestBlockLocalPosition( ray.pointWorld ) )
-			rot = hit and ray:getShape().worldRotation or sm.camera.getRotation()
+			self.cutPlane:setPosition(pos)
+			self.cutPlane:setScale(scale)
+			self.cutPlane:setRotation(rot)
 
-			self.cutPlain:setPosition(pos)
-			self.cutPlain:setScale(scale)
-			self.cutPlain:setRotation(rot)
-
-			if not self.cutPlain:isPlaying() then
-				self.cutPlain:start()
+			if not self.cutPlane:isPlaying() then
+				self.cutPlane:start()
 			end
 		end
 	end
 
-	if shouldStopPlain and self.cutPlain:isPlaying() then
-		self.cutPlain:stop()
+	if shouldStopPlane and self.cutPlane:isPlaying() then
+		self.cutPlane:stop()
 	end
 
 

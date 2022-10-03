@@ -4,6 +4,7 @@ camAdjust = sm.vec3.new(0,0,0.575)
 vec3_zero = sm.vec3.zero()
 vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)
+vec3_y = sm.vec3.new(1,0,0)
 -- #endregion
 
 
