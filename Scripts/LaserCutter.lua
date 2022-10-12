@@ -154,7 +154,13 @@ function Cutter:cl_cut( dt )
 
 						if self.unitDamageTimer:done() then
 							self.unitDamageTimer:reset()
-							sm.projectile.projectileAttack( projectile_potato, 45, beamEnd, playerDir, self.owner )
+							sm.projectile.projectileAttack(
+								projectile_potato,
+								45,
+								beamEnd,
+								(target.worldPosition - beamEnd),
+								self.owner
+							)
 						end
 					else
 						self.network:sendToServer( "sv_explode", beamEnd)
@@ -422,9 +428,7 @@ function Cutter.loadAnimations( self )
 		{
 			idle = { "connecttool_idle" },
 			use_idle = { "connecttool_use_idle", { looping = true } },
-			--[[rot_in = { "connecttool_rotate_in", { nextAnimation = "rot_right" } },
-			rot_right = { "connecttool_rotate_right", { nextAnimation = "rot_out" } },
-			rot_out = { "connecttool_rotate_out", { nextAnimation = "idle" } },]]
+
 			pickup = { "connecttool_pickup", { nextAnimation = "idle" } },
 			putdown = { "connecttool_putdown" },
 		}
@@ -465,9 +469,6 @@ function Cutter.loadAnimations( self )
 
 				idle = { "connecttool_idle", { looping = true } },
 				use_idle = { "connecttool_use_idle", { looping = true } },
-				--[[rot_in = { "connecttool_rotate_in", { nextAnimation = "rot_right" } },
-				rot_right = { "connecttool_rotate_right", { nextAnimation = "rot_out" } },
-				rot_out = { "connecttool_rotate_out", { nextAnimation = "idle" } },]]
 
 				sprintInto = { "connecttool_sprint_into", { nextAnimation = "sprintIdle",  blendNext = 0.2 } },
 				sprintExit = { "connecttool_sprint_exit", { nextAnimation = "idle",  blendNext = 0 } },

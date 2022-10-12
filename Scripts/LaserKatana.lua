@@ -6,6 +6,8 @@
 TODO:
 1. remove continued swinging from the heavy attack
 2. better cutting plane
+3. better blade mode activation sound
+4. blade mode damages bots
 ]]
 
 
@@ -25,6 +27,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field cutPlane Effect
 ---@field owner Player
 ---@field bladeHud GuiInterface
+---@field bladeSound Effect
 Katana = class()
 Katana.bladeModeDirData = {
 	{
@@ -87,7 +90,7 @@ Katana.swings = { "sledgehammer_attack1", "sledgehammer_attack2" }
 Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
 Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
 Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
-Katana.chargedAttackBegin = 0.3 * 40
+Katana.chargedAttackBegin = 0.2 * 40
 
 local renderables = {
 	"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
@@ -101,13 +104,15 @@ local renderablesFp = {
 	"$CONTENT_DATA/Tools/LaserKatana/char_laserkatana_fp_animlist.rend"
 }
 
-local Range = 7.5 --3.0
-local SwingStaminaSpend = 1.5
-local Damage = 45
-
 sm.tool.preloadRenderables(renderables)
 sm.tool.preloadRenderables(renderablesTp)
 sm.tool.preloadRenderables(renderablesFp)
+
+local Range = 4.5 --3.0
+local SwingStaminaSpend = 1.5
+local Damage = 45
+
+local vec3_1eighth = sm.vec3.new(0.125,0.125,0.125)
 -- #endregion
 
 
@@ -142,9 +147,10 @@ function Katana.client_onCreate(self)
 			backgroundAlpha = 0
 		}
 	)
+	self.bladeSound = sm.effect.createEffect("Pistol_overdrive_on")
 
 	self.blockCharge = false
-	self.heavyAttackStartTick = 0
+	self.chargedAttackStartTick = 0
 end
 
 function Katana:client_onDestroy()
@@ -161,9 +167,10 @@ function Katana.init(self)
 	self.nextAttackFlag = false
 	self.currentSwing = 1
 
+	--self.swingCooldowns = { 0.6, 0.6 }
 	self.swingCooldowns = {
 		{ 0.6, 0.6, holdTime = 0.125 },
-		{ 0.6, 0.6, holdTime = 0.125 } --{ 1, 1, holdTime = 0.25 }
+		{ 0.6, 0.6, holdTime = 0.125 }
 	}
 
 	self.dispersionFraction = 0.001
@@ -227,8 +234,15 @@ function Katana:client_onEquippedUpdate(lmb, rmb, f)
 		self:cl_handleHeavyAttack( rmb, heavyAnim )
 	end
 
+	self.bladeSound:setPosition(self.tool:getPosition())
 	if f ~= self.isInBladeMode then
-		if f then self.bladeHud:open() else self.bladeHud:close() end
+		if f then
+			self.bladeHud:open()
+			self.bladeSound:start()
+		else
+			self.bladeHud:close()
+			self.bladeSound:stopImmediate()
+		end
 
 		self.isInBladeMode = f
 		self.tool:setBlockSprint(f)
@@ -240,7 +254,7 @@ end
 -- #endregion
 
 
--- #region Util functions
+-- #region Random functions
 function Katana.updateFreezeFrame(self, state, dt)
 	local p = 1 - math.max(math.min(self.freezeTimer / self.freezeDuration, 1.0), 0.0)
 	local playRate = p * p * p * p
@@ -265,10 +279,10 @@ end
 
 --Thank you so much Programmer Alex
 function Katana:calculateCuttingPlanePos( target, worldPos )
-	local A = target:getClosestBlockLocalPosition( worldPos )/4
-	local B = target.localPosition/4 - sm.vec3.new(0.125,0.125,0.125)
+	local A = sm.item.isBlock(target.uuid) and target:getClosestBlockLocalPosition( worldPos ) * 0.25 or target.localPosition * 0.25
+	local B = target.localPosition * 0.25 - vec3_1eighth
 	local C = target:getBoundingBox()
-	return target:transformLocalPoint( A-(B+C/2) )
+	return target:transformLocalPoint( A-(B+C*0.5) )
 end
 -- #endregion
 
@@ -288,11 +302,22 @@ function Katana:client_onUpdate(dt)
 		local progress = self.chargedAttackCharge - 0.5
 		setFpAnimationProgress( self.tpAnimations, "sledgehammer_attack_heavy1", progress )
 
+		local performAttack = self.chargedAttackCharge >= 1
+		if performAttack then
+			sm.audio.play("Gas Explosion", self.tool:getPosition())
+		end
+
 		if self.isLocal then
+			if not ownerChar:isOnGround() then
+				self.network:sendToServer("sv_updateChargeAttack", false )
+				ownerChar.movementSpeedFraction = 1
+
+				return
+			end
+
 			setFpAnimationProgress( self.fpAnimations, "sledgehammer_attack_heavy1", progress )
 			sm.gui.setProgressFraction( self.chargedAttackCharge/1 )
 
-			local performAttack = self.chargedAttackCharge >= 1
 			ownerChar.movementSpeedFraction = performAttack and 1 or 0
 
 			if performAttack then
@@ -300,7 +325,6 @@ function Katana:client_onUpdate(dt)
 			end
 		end
 	end
-
 
 	if not self.isLocal then return end
 
@@ -323,12 +347,15 @@ function Katana:client_onUpdate(dt)
 				scale.x = sm.util.clamp( math.abs(scale.x), 1, cutSize )
 				scale.y = sm.util.clamp( math.abs(scale.y), 1, cutSize )
 				scale.z = sm.util.clamp( math.abs(scale.z), 1, cutSize )
+
+				scale = data.name == "Horizontal" and
+						sm.vec3.new(scale.x, scale.y, 0.01) or
+						sm.vec3.new(0.1, scale.y, scale.z)
 			else
 				scale = data.name == "Horizontal" and
-				sm.vec3.new(cutSize, cutSize, 0.1) or
-				sm.vec3.new(0.1, cutSize, cutSize)
+						sm.vec3.new(cutSize, cutSize, 0.01) or
+						sm.vec3.new(0.1, cutSize, cutSize)
 			end
-			scale = scale * 0.0625
 
 			local shape = ray:getShape()
 			pos = hit and self:calculateCuttingPlanePos( shape, ray.pointWorld ) or self.tool:getTpBonePos("jnt_head")
@@ -467,7 +494,8 @@ end
 -- #region Katana
 function Katana:cl_katanaSwing( anim, mode )
 	if self.isInBladeMode then
-		self:cl_bladeModeCut( mode )
+		--self.bladeMode = mode
+		self.network:sendToServer("sv_bladeModeCut", { pos = sm.localPlayer.getRaycastStart(), mode = self.bladeMode })
 	else
 		local cooldownData = self.swingCooldowns[mode]
 		if self.fpAnimations.currentAnimation == anim then
@@ -487,66 +515,58 @@ function Katana:cl_katanaSwing( anim, mode )
 	end
 end
 
-function Katana:cl_bladeModeCut( mode )
-	--self.bladeMode = mode
-	local raycastStart = sm.localPlayer.getRaycastStart()
+function Katana:sv_bladeModeCut( args )
+	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
+
+	---@type Vec3
+	local start = args.pos
+	local char = self.tool:getOwner().character
 	local hit, result = sm.physics.raycast(
-		raycastStart,
-		raycastStart + sm.localPlayer.getDirection() * Range,
-		self.owner.character
+		start,
+		start + char.direction * Range,
+		char
 	)
 
-	if not hit then return end
-
 	local ray = RayResultToTable(result)
-	if self.isInBladeMode and type(ray.target) == "Shape" then
-		self.network:sendToServer(
-			"sv_bladeModeCut",
-			{
-				ray = ray,
-				mode = self.bladeMode --mode
-			}
-		)
-	end
-end
-
-function Katana:sv_bladeModeCut( args )
-	local ray = args.ray
 	local target = ray.target
+	if hit and type(target) == "Shape" then
 
-	if sm.item.isBlock(target.uuid) then
-		local data = self.bladeModeDirData[args.mode]
-		---@type Vec3
-		local pos = ray.pointWorld
-		---@type Vec3
-		local normal = data.transformNormal(RoundVector(ray.normalLocal))
-		---@type Vec3
-		local dir = RoundVector(data.dir(normal))
+		if sm.item.isBlock(target.uuid) then
+			local data = self.bladeModeDirData[args.mode]
+			---@type Vec3
+			local pos = ray.pointWorld
+			local normal = data.transformNormal(RoundVector(ray.normalLocal))
+			local dir = RoundVector(data.dir(normal))
 
-		local cutSize = self.bladeModeCutSize
-		local size = AbsVector(sm.vec3.one() * ((normal + dir) * cutSize))
-		local size_clamped = sm.vec3.new(
-			sm.util.clamp( size.x, 1, cutSize ),
-			sm.util.clamp( size.y, 1, cutSize ),
-			sm.util.clamp( size.z, 1, cutSize )
-		)
+			local cutSize = self.bladeModeCutSize
+			local size = AbsVector(vec3_one * ((normal + dir) * cutSize))
+			local size_clamped = sm.vec3.new(
+				sm.util.clamp( size.x, 1, cutSize ),
+				sm.util.clamp( size.y, 1, cutSize ),
+				sm.util.clamp( size.z, 1, cutSize )
+			)
 
-		target:destroyBlock( target:getClosestBlockLocalPosition(pos - target.worldRotation * (size * 0.25)), size_clamped )
+			target:destroyBlock(
+				target:getClosestBlockLocalPosition(pos - target.worldRotation * (size * 0.25)),
+				size_clamped
+			)
+		else
+			target:destroyShape()
+		end
 	else
-		target:destroyShape()
-	end
 
-	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
+	end
 end
 
 
 function Katana:cl_handleHeavyAttack( state, anim )
 	local tick = sm.game.getCurrentTick()
-	local canCharge = tick - self.heavyAttackStartTick >= self.chargedAttackBegin
+	local canCharge = tick - self.chargedAttackStartTick >= self.chargedAttackBegin
 
+	--Makes it so you can hold the heavy attack button for a bit before you actually start charging it
 	if state == 1 then
-		self.heavyAttackStartTick = tick
-	elseif state == 2 and canCharge and not self.charging and not self.blockCharge then
+		self.chargedAttackStartTick = tick
+	elseif not self.blockCharge and state == 2 and canCharge and not self.charging then
 		self.network:sendToServer("sv_updateChargeAttack", true)
 		self.blockCharge = true
 	elseif state == 3 then
@@ -595,7 +615,7 @@ function Katana:sv_performChargedAttack()
 			projectile_potato,
 			50,
 			pos,
-			sm.noise.gunSpread(dir, i) * 130,
+			sm.noise.gunSpread(dir, 12) * 130,
 			owner
 		)
 	end
@@ -673,17 +693,7 @@ function Katana.loadAnimations(self)
 			sledgehammer_attack_heavy1 = { "sledgehammer_attack_heavy1", { nextAnimation = "sledgehammer_exit_heavy1" } },
 			sledgehammer_attack_heavy2 = { "sledgehammer_attack_heavy2", { nextAnimation = "sledgehammer_exit_heavy2" } },
 			sledgehammer_exit_heavy1 = { "sledgehammer_exit_heavy1", { nextAnimation = "idle" } },
-			sledgehammer_exit_heavy2 = { "sledgehammer_exit_heavy2", { nextAnimation = "idle" } },
-
-			--[[
-			guardInto = { "sledgehammer_guard_into", { nextAnimation = "guardIdle" } },
-			guardIdle = { "sledgehammer_guard_idle", { looping = true } },
-			guardExit = { "sledgehammer_guard_exit", { nextAnimation = "idle" } },
-
-			guardBreak = { "sledgehammer_guard_break", { nextAnimation = "idle" } } --,
-			--guardHit = { "sledgehammer_guard_hit", { nextAnimation = "guardIdle" } }
-			--guardHit is missing for tp
-			]]
+			sledgehammer_exit_heavy2 = { "sledgehammer_exit_heavy2", { nextAnimation = "idle" } }
 		}
 	)
 	local movementAnimations = {
@@ -735,15 +745,7 @@ function Katana.loadAnimations(self)
 				sledgehammer_attack_heavy1 = { "sledgehammer_attack_heavy1", { nextAnimation = "sledgehammer_exit_heavy1" } },
 				sledgehammer_attack_heavy2 = { "sledgehammer_attack_heavy2", { nextAnimation = "sledgehammer_exit_heavy2" } },
 				sledgehammer_exit_heavy1 = { "sledgehammer_exit_heavy1", { nextAnimation = "idle" } },
-				sledgehammer_exit_heavy2 = { "sledgehammer_exit_heavy2", { nextAnimation = "idle" } },
-
-				--[[guardInto = { "sledgehammer_guard_into", { nextAnimation = "guardIdle" } },
-				guardIdle = { "sledgehammer_guard_idle", { looping = true } },
-				guardExit = { "sledgehammer_guard_exit", { nextAnimation = "idle" } },
-
-				guardBreak = { "sledgehammer_guard_break", { nextAnimation = "idle" } },
-				guardHit = { "sledgehammer_guard_hit", { nextAnimation = "guardIdle" } }]]
-
+				sledgehammer_exit_heavy2 = { "sledgehammer_exit_heavy2", { nextAnimation = "idle" } }
 			}
 		)
 		setFpAnimation(self.fpAnimations, "idle", 0.0)

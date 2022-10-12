@@ -82,7 +82,13 @@ function MountedLaserCutter.server_onFixedUpdate( self )
 		self.sv.unitDamageTimer:tick()
 		if self.sv.unitDamageTimer:done() then
 			self.sv.unitDamageTimer:reset()
-			sm.projectile.shapeProjectileAttack( projectile_potato, self.sv.data.damage, self.shape:transformPoint(hitPos), self.shape.at * 10, self.shape )
+			sm.projectile.shapeProjectileAttack(
+				projectile_potato,
+				self.sv.data.damage,
+				self.shape:transformPoint(hitPos),
+				(target.worldPosition - hitPos),
+				self.shape
+			)
 		end
 	else
 		sm.physics.explode( hitPos, 3, 1, 1, 1 )

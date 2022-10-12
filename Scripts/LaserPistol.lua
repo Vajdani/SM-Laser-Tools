@@ -149,12 +149,14 @@ function Pistol:sv_onWeakLaserHit( args )
 	local target = result.target
 	if not target then return end
 
+	local pos = result.pointWorld
 	local type = type(target)
+
 	if type == "Shape" then
 		if sm.exists(target) then
 			sm.effect.playEffect(
 				"Sledgehammer - Destroy",
-				result.pointWorld,
+				pos,
 				sm.vec3.zero(),
 				sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
 				sm.vec3.one(),
@@ -162,7 +164,7 @@ function Pistol:sv_onWeakLaserHit( args )
 			)
 
 			if sm.item.isBlock( target.uuid ) then
-				target:destroyBlock( target:getClosestBlockLocalPosition(result.pointWorld) )
+				target:destroyBlock( target:getClosestBlockLocalPosition(pos) )
 			else
 				target:destroyShape()
 			end
@@ -171,12 +173,12 @@ function Pistol:sv_onWeakLaserHit( args )
 		sm.projectile.projectileAttack(
 			projectile_potato,
 			self.laserDamage,
-			result.pointWorld,
-			args.dir,
+			pos,
+			(target.worldPosition - pos),
 			self.tool:getOwner()
 		)
 	else
-		sm.physics.explode( result.pointWorld, 3, 1, 1, 1 )
+		sm.physics.explode( pos, 3, 1, 1, 1 )
 	end
 end
 
@@ -206,13 +208,13 @@ end
 
 function Pistol:client_onUpdate( dt )
 	for k, laser in pairs(self.lasers) do
-		laser.lifeTime = laser.lifeTime - dt * 3
+		laser.lifeTime = laser.lifeTime - dt
 
 		---@type Vec3, Vec3
 		local currentPos, dir = laser.pos, laser.dir
 		local hit, result = false, nil
 		if not laser.strong then
-			hit, result = sm.physics.raycast( currentPos, currentPos + dir, self.owner.character )
+			hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), self.owner.character )
 		end
 
 		local shouldDelete = result and isAnyOf(result.type, self.killTypes) or laser.lifeTime <= 0 or laser.line.thickness == 0
@@ -241,7 +243,7 @@ function Pistol:client_onUpdate( dt )
 			if laser.strong then
 				laser.line:update( currentPos, currentPos + dir, dt )
 			else
-				local newPos = currentPos + dir * self.laserSpeed * dt * (hit and 0.25 or 1)
+				local newPos = currentPos + dir * dt * self.laserSpeed * (hit and 0.1 or 1)
 				laser.pos = newPos
 				laser.line:update( newPos, newPos + dir * self.laserLength, dt )
 			end
@@ -267,12 +269,6 @@ function Pistol:client_onUpdate( dt )
 			elseif not isSprinting and ( self.fpAnimations.currentAnimation == "sprintIdle" or self.fpAnimations.currentAnimation == "sprintInto" ) then
 				swapFpAnimation( self.fpAnimations, "sprintInto", "sprintExit", 0.0 )
 			end
-
-			--[[if firing and self.fpAnimations.currentAnimation ~= "use_idle" then
-				setFpAnimation( self.fpAnimations, "use_idle", 0.2 )
-			elseif not firing and self.fpAnimations.currentAnimation == "use_idle" then
-				setFpAnimation( self.fpAnimations, "idle", 0.5 )
-			end]]
 		end
 		updateFpAnimations( self.fpAnimations, equipped, dt )
 
@@ -294,12 +290,6 @@ function Pistol:client_onUpdate( dt )
 	end
 
 	if equipped then
-		--[[if firing and self.tpAnimations.currentAnimation ~= "use_idle" then
-			setTpAnimation( self.tpAnimations, "use_idle", 10 )
-		elseif not firing and self.tpAnimations.currentAnimation == "use_idle" then
-			setTpAnimation( self.tpAnimations, "idle", 2.5 )
-		end]]
-
 		self.shootEffect:setRotation( sm.vec3.getRotation(vec3_up, self.tool:getDirection()) )
 		self.shootEffect:setPosition( self.tool:isInFirstPersonView() and self.tool:getFpBonePos( "pipe" ) or self.tool:getTpBonePos( "pipe" ) )
 		self.poweronEffect:setPosition( self.tool:getPosition() )
