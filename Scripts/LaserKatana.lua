@@ -1,13 +1,8 @@
---please never make me destroy multiple blocks at once ever again
---I hate this
-
-
 --[[
 TODO:
-1. remove continued swinging from the heavy attack
+1. effects for blade mode(swing, block destroy)
 2. better cutting plane
 3. better blade mode activation sound
-4. blade mode damages bots
 ]]
 
 
@@ -29,6 +24,9 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field bladeHud GuiInterface
 ---@field bladeSound Effect
 Katana = class()
+
+--please never make me destroy multiple blocks at once ever again
+--I hate this
 Katana.bladeModeDirData = {
 	{
 		name = "Horizontal",
@@ -78,6 +76,7 @@ Katana.bladeModeDirData = {
 	}
 }
 Katana.bladeModeCutSize = 100
+Katana.bladeModeCutDamage = 150
 Katana.cutPlaneColours = {
 	min = sm.color.new(0, 0, 0, 0),
 	max = sm.color.new(0, 0.93, 1, 0.2)
@@ -89,8 +88,8 @@ Katana.swingFrames = { 4.2 * Katana.mayaFrameDuration, 4.2 * Katana.mayaFrameDur
 Katana.swings = { "sledgehammer_attack1", "sledgehammer_attack2" }
 Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
 Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
-Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
-Katana.chargedAttackBegin = 0.2 * 40
+--Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
+Katana.chargedAttackBegin = 0.15 * 40
 
 local renderables = {
 	"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
@@ -170,7 +169,7 @@ function Katana.init(self)
 	--self.swingCooldowns = { 0.6, 0.6 }
 	self.swingCooldowns = {
 		{ 0.6, 0.6, holdTime = 0.125 },
-		{ 0.6, 0.6, holdTime = 0.125 }
+		{ 1, 1, holdTime = 0.125 }
 	}
 
 	self.dispersionFraction = 0.001
@@ -348,13 +347,9 @@ function Katana:client_onUpdate(dt)
 				scale.y = sm.util.clamp( math.abs(scale.y), 1, cutSize )
 				scale.z = sm.util.clamp( math.abs(scale.z), 1, cutSize )
 
-				scale = data.name == "Horizontal" and
-						sm.vec3.new(scale.x, scale.y, 0.01) or
-						sm.vec3.new(0.1, scale.y, scale.z)
+				scale = data.name == "Horizontal" and sm.vec3.new(scale.x, scale.y, 0.01) or sm.vec3.new(0.01, scale.y, scale.z)
 			else
-				scale = data.name == "Horizontal" and
-						sm.vec3.new(cutSize, cutSize, 0.01) or
-						sm.vec3.new(0.1, cutSize, cutSize)
+				scale = data.name == "Horizontal" and sm.vec3.new(cutSize, cutSize, 0.01) or sm.vec3.new(0.01, cutSize, cutSize)
 			end
 
 			local shape = ray:getShape()
@@ -375,17 +370,16 @@ function Katana:client_onUpdate(dt)
 		self.cutPlane:stop()
 	end
 
-
 	local swing = self.currentSwing
 	local lightAnim = self.swings[swing]
-	local heavyAnim = self.swings_heavy[swing]
+	--local heavyAnim = self.swings_heavy[swing]
 	local lightAnim_exit = self.swingExits[swing]
-	local heavyAnim_exit = self.swingExits_heavy[swing]
+	--local heavyAnim_exit = self.swingExits_heavy[swing]
 
 	if self.fpAnimations.currentAnimation == lightAnim then
 		self:updateFreezeFrame(lightAnim, dt)
-	elseif self.fpAnimations.currentAnimation == heavyAnim then
-		self:updateFreezeFrame(heavyAnim, dt)
+	--elseif self.fpAnimations.currentAnimation == heavyAnim then
+		--self:updateFreezeFrame(heavyAnim, dt)
 	end
 
 	local preAnimation = self.fpAnimations.currentAnimation
@@ -394,15 +388,14 @@ function Katana:client_onUpdate(dt)
 	if preAnimation ~= self.fpAnimations.currentAnimation then
 		local keepBlockSprint = false
 		local isLightExit = self.fpAnimations.currentAnimation == lightAnim_exit
-		local endedSwing = (preAnimation == lightAnim and isLightExit) or
-			(preAnimation == heavyAnim and self.fpAnimations.currentAnimation == heavyAnim_exit)
+		local endedSwing = (preAnimation == lightAnim and isLightExit) --or (preAnimation == heavyAnim and self.fpAnimations.currentAnimation == heavyAnim_exit)
 
 		if self.nextAttackFlag == true and endedSwing == true then
 			swing = swing < self.swingCount and swing + 1 or 1
 			self.network:sendToServer(
 				"server_startEvent",
 				{
-					name = isLightExit and self.swings[swing] or self.swings_heavy[swing]
+					name = self.swings[swing] --isLightExit and self.swings[swing] or self.swings_heavy[swing]
 				}
 			)
 			sm.audio.play("Sledgehammer - Swing")
@@ -495,7 +488,14 @@ end
 function Katana:cl_katanaSwing( anim, mode )
 	if self.isInBladeMode then
 		--self.bladeMode = mode
-		self.network:sendToServer("sv_bladeModeCut", { pos = sm.localPlayer.getRaycastStart(), mode = self.bladeMode })
+		self.network:sendToServer(
+			"sv_bladeModeCut",
+			{
+				pos = sm.localPlayer.getRaycastStart(),
+				mode = self.bladeMode,
+				rot = sm.camera.getRotation()
+			}
+		)
 	else
 		local cooldownData = self.swingCooldowns[mode]
 		if self.fpAnimations.currentAnimation == anim then
@@ -518,19 +518,20 @@ end
 function Katana:sv_bladeModeCut( args )
 	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
 
+	local owner = self.tool:getOwner()
+	local char = owner.character
 	---@type Vec3
 	local start = args.pos
-	local char = self.tool:getOwner().character
+	local charDir = char.direction
 	local hit, result = sm.physics.raycast(
 		start,
-		start + char.direction * Range,
+		start + charDir * Range,
 		char
 	)
 
 	local ray = RayResultToTable(result)
 	local target = ray.target
 	if hit and type(target) == "Shape" then
-
 		if sm.item.isBlock(target.uuid) then
 			local data = self.bladeModeDirData[args.mode]
 			---@type Vec3
@@ -554,8 +555,19 @@ function Katana:sv_bladeModeCut( args )
 			target:destroyShape()
 		end
 	else
-
+		sm.melee.meleeAttack(
+			melee_farmbotswipe,
+			self.bladeModeCutDamage,
+			start,
+			charDir * Range,
+			owner
+		)
 	end
+
+	sm.effect.playEffect(
+		"Farmbot - Attack02",
+		char.worldPosition + camAdjust
+	)
 end
 
 
@@ -665,6 +677,9 @@ function Katana.client_onUnequip(self, animate)
 		if self.isLocal then
 			self.owner.character.movementSpeedFraction = 1
 			self.blockCharge = false
+			self.bladeHud:close()
+			self.bladeSound:stopImmediate()
+			self.isInBladeMode = false
 
 			if self.fpAnimations.currentAnimation ~= "unequip" then
 				swapFpAnimation(self.fpAnimations, "equip", "unequip", 0.2)

@@ -71,5 +71,23 @@
 				"parameters" : [ "minColor", "maxColor" ]
 			}
 		]
+	},
+	"Katana_swing":
+	{
+		"effectList":
+		[	
+			{
+				"type": "particle",
+				"name": "katana_swing",
+				"direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
+				"attached": true,
+				"delay": 0.7
+			},
+			{
+				"type": "audio",
+				"name": "event:/char/npc/bots/enemies/farmbot/farmbot_attack_02",
+				"delay": 0.0
+			}
+		]
 	}
 }
