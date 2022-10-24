@@ -31,7 +31,8 @@
             "data" : {},
             "file" : "$CONTENT_DATA/Scripts/LaserKatana.lua"
          },
-         "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf"
+         "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf",
+         "showInInventory": false
       }
    ]
 }

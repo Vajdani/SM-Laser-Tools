@@ -131,7 +131,7 @@ end
 
 -- #region Line_cutter
 Line_cutter = class()
-function Line_cutter:init( thickness, colour )
+function Line_cutter:init( thickness, colour, dyingShrink )
     self.effect = sm.effect.createEffect("ShapeRenderable")
 	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
     self.effect:setParameter("color", colour)
@@ -140,7 +140,9 @@ function Line_cutter:init( thickness, colour )
 
 	self.colour = colour
     self.thickness = thickness
+	self.currentThickness = thickness
 	self.spinTime = 0
+	self.dyingShrink = dyingShrink or 1
 end
 
 
@@ -148,7 +150,7 @@ end
 ---@param endPos Vec3
 ---@param dt number
 ---@param spinSpeed number
-function Line_cutter:update( startPos, endPos, dt, spinSpeed )
+function Line_cutter:update( startPos, endPos, dt, spinSpeed, dying )
 	local delta = endPos - startPos
     local length = delta:length()
 
@@ -163,13 +165,17 @@ function Line_cutter:update( startPos, endPos, dt, spinSpeed )
 	self.spinTime = self.spinTime + deltaTime * speed
 	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), line_up )
 
-	local distance = sm.vec3.new(length, self.thickness, self.thickness)
+	self.currentThickness = dying and math.max(self.currentThickness - dt * self.dyingShrink, 0) or self.thickness
+	local distance = sm.vec3.new(length, self.currentThickness, self.currentThickness)
 
 	self.effect:setPosition(startPos + delta * 0.5)
 	self.effect:setScale(distance)
 	self.effect:setRotation(rot)
 
-	sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
+	if self.currentThickness >= self.thickness * 0.25 then
+		sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
+	end
+
 	self.sound:setPosition(startPos)
 
     if not self.effect:isPlaying() then
@@ -191,7 +197,7 @@ end
 ---@param vector Vec3
 ---@return Vec3 right
 function calculateRightVector(vector)
-    local yaw = math.atan2(vector.y, vector.x) - math.pi / 2
+    local yaw = math.atan(vector.y, vector.x) - math.pi / 2
     return sm.vec3.new(math.cos(yaw), math.sin(yaw), 0)
 end
 

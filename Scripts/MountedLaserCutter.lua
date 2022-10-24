@@ -20,7 +20,7 @@ MountedLaserCutter.defaultRange = 15
 MountedLaserCutter.lineThickness = 0.2
 MountedLaserCutter.lineColour = sm.color.new(0,1,1)
 MountedLaserCutter.spinSpeed = 250
-MountedLaserCutter.beamStopTicks = 40
+MountedLaserCutter.beamStopSeconds = 1
 MountedLaserCutter.unitDamageTicks = 10
 
 local barrelAdjust = sm.vec3.one() * 0.4
@@ -113,18 +113,16 @@ function MountedLaserCutter.client_onCreate( self )
 	self.cl.range = self.defaultRange
 
 	self.cl.gui = sm.gui.createGuiFromLayout( "$CONTENT_DATA/Gui/Mounted.layout", false )
-	self.cl.gui:setTextChangedCallback( "input_dmg", "cl_input_dmg" )
-	self.cl.gui:setTextChangedCallback( "input_range", "cl_input_range" )
+	self.cl.gui:setTextAcceptedCallback( "input_dmg", "cl_input_dmg" )
+	self.cl.gui:setTextAcceptedCallback( "input_range", "cl_input_range" )
 	self.cl.gui:setIconImage( "icon", self.shape.uuid )
 
 	self.cl.line = Line_cutter()
-	self.cl.line:init( self.lineThickness, self.lineColour )
+	self.cl.line:init( self.lineThickness, self.lineColour, 0.4 )
 	self.cl.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.interactable )
 
 	self.cl.lastPos = sm.vec3.zero()
-	self.cl.beamStopTimer = Timer()
-	self.cl.beamStopTimer:start( self.beamStopTicks )
-	self.cl.beamStopTimer.count = self.cl.beamStopTimer.ticks
+	self.cl.beamStopTimer = self.beamStopSeconds
 end
 
 function MountedLaserCutter:cl_input_dmg( widget, value )
@@ -147,7 +145,7 @@ function MountedLaserCutter:cl_input_range( widget, value )
 		return
 	end
 
-	self.cl.range = num/4
+	self.cl.range = num
 	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range })
 end
 
@@ -155,7 +153,7 @@ function MountedLaserCutter:cl_updateGui( args )
 	self.cl.damage = args.dmg
 	self.cl.range = args.range
 	self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
-	self.cl.gui:setText( "input_range", tostring(self.cl.range*4) )
+	self.cl.gui:setText( "input_range", tostring(self.cl.range) )
 end
 
 function MountedLaserCutter:client_onInteract( char, state )
@@ -165,14 +163,12 @@ function MountedLaserCutter:client_onInteract( char, state )
 end
 
 function MountedLaserCutter.client_onUpdate( self, dt )
-	self.cl.line.colour = sm.color.new(0,1,1)
-
 	local active = self:shouldFire()
-
 	local hit, result = false, nil
 	local selfDir = self.shape.up
 	local selfPos = self.shape.worldPosition + barrelAdjust * selfDir
-	local shape, char
+	local target
+
 	if active then
 		if not self.cl.activeSound:isPlaying() then
 			self.cl.activeSound:start()
@@ -181,22 +177,22 @@ function MountedLaserCutter.client_onUpdate( self, dt )
 		local endPos = selfPos + selfDir * self.cl.range
 		hit, result = sm.physics.raycast( selfPos, endPos )
 
-		shape, char = result:getShape(), result:getCharacter()
+		target = result:getShape() or result:getCharacter()
 
-		if hit and (shape or char) then
+		if hit and target then
 			self.cl.lastPos = result.pointWorld
-			self.cl.beamStopTimer:reset()
-			self.cl.line:update( selfPos, result.pointWorld )
+			self.cl.beamStopTimer = self.beamStopSeconds
+			self.cl.line:update( selfPos, result.pointWorld, dt, 250, false )
 		end
 	elseif self.cl.activeSound:isPlaying() then
 		self.cl.activeSound:stop()
 	end
 
-	if (not active or not hit or not shape and not char) and self.cl.line.effect:isPlaying() then
-		self.cl.beamStopTimer:tick()
-		self.cl.line:update( selfPos, self.cl.lastPos )
+	if (not active or not hit or not target) and self.cl.line.effect:isPlaying() then
+		self.cl.beamStopTimer = math.max(self.cl.beamStopTimer - dt, 0)
+		self.cl.line:update( selfPos, self.cl.lastPos, dt, 250, true )
 
-		if self.cl.beamStopTimer:done() then
+		if self.cl.beamStopTimer <= 0 then
 			self.cl.line:stop()
 		end
 	end
@@ -219,25 +215,11 @@ end
 
 function MountedLaserCutter:shouldFire()
 	local parents = self.interactable:getParents()
-	local active = false
 	for k, parent in pairs(parents) do
 		if parent.active then
-			active = true
-			break
+			return true
 		end
 	end
 
-	return active
+	return false
 end
-
---[[
-function MountedLaserCutter.client_getAvailableParentConnectionCount( self, connectionType )
-	if bit.band( connectionType, sm.interactable.connectionType.logic ) ~= 0 then
-		return 1 - #self.interactable:getParents( sm.interactable.connectionType.logic )
-	end
-	if bit.band( connectionType, sm.interactable.connectionType.ammo ) ~= 0 then
-		return 1 - #self.interactable:getParents( sm.interactable.connectionType.ammo )
-	end
-	return 0
-end
-]]

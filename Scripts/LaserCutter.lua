@@ -7,7 +7,7 @@ dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 
 ---@class Cutter : ToolClass
 ---@field owner Player
----@field beamStopTimer table
+---@field beamStopTimer number
 ---@field unitDamageTimer table
 ---@field line table
 ---@field inputStates table
@@ -33,7 +33,7 @@ Cutter.lineStats = {
 	colour = sm.color.new(0,1,1),
 	spinSpeed = 250
 }
-Cutter.beamStopTicks = 40
+Cutter.beamStopSeconds = 1
 Cutter.unitDamageTicks = 10
 
 local renderables = {
@@ -60,10 +60,8 @@ function Cutter.client_onCreate( self )
 	}
 	self.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.owner.character )
 	self.line = Line_cutter()
-	self.line:init( self.lineStats.thickness, self.lineStats.colour )
-	self.beamStopTimer = Timer()
-	self.beamStopTimer:start( self.beamStopTicks )
-	self.beamStopTimer.count = self.beamStopTimer.ticks
+	self.line:init( self.lineStats.thickness, self.lineStats.colour, 0.1 )
+	self.beamStopTimer = self.beamStopSeconds
 	self.lastPos = sm.vec3.zero()
 
 	self:loadAnimations()
@@ -99,11 +97,11 @@ function Cutter:cl_getBeamStart()
 end
 
 function Cutter:cl_updateDyingBeam( dt )
-	self.beamStopTimer:tick()
+	self.beamStopTimer = math.max(self.beamStopTimer - dt, 0)
 	local beamStart = self:cl_getBeamStart()
-	self.line:update( beamStart, self.lastPos, dt, self.lineStats.spinSpeed )
+	self.line:update( beamStart, self.lastPos, dt, self.lineStats.spinSpeed, true )
 
-	if self.beamStopTimer:done() then
+	if self.beamStopTimer <= 0 then
 		self.line:stop()
 	end
 end
@@ -133,10 +131,10 @@ function Cutter:cl_cut( dt )
 
 			if target then
 				local beamEnd =  result.pointWorld
-				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineStats.spinSpeed )
+				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineStats.spinSpeed, false )
 
 				self.lastPos = beamEnd
-				self.beamStopTimer:reset()
+				self.beamStopTimer = self.beamStopSeconds
 
 				if self.isLocal then
 					local type = type(target)
@@ -174,7 +172,7 @@ function Cutter:cl_cut( dt )
 
 		if self.line.effect:isPlaying() then
 			self.line:stop()
-			self.beamStopTimer.count = self.beamStopTimer.ticks
+			self.beamStopTimer = self.beamStopSeconds
 
 			if self.isLocal then
 				self.unitDamageTimer:reset()
@@ -256,9 +254,6 @@ function Cutter:cl_syncInputs( inputs )
 end
 
 
-function Cutter:client_onFixedUpdate( dt )
-	self:cl_cut(dt)
-end
 
 function Cutter:client_onUpdate( dt )
 	local firing, target = self:cl_cut(dt)
