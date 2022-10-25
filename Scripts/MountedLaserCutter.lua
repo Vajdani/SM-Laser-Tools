@@ -24,6 +24,8 @@ MountedLaserCutter.beamStopSeconds = 1
 MountedLaserCutter.unitDamageTicks = 10
 
 local barrelAdjust = sm.vec3.one() * 0.4
+local on = "#269e44On"
+local off = "#9e2626Off"
 
 function MountedLaserCutter.server_onCreate( self )
 	self:sv_init()
@@ -40,9 +42,10 @@ function MountedLaserCutter.sv_init( self )
 		self.sv.data = {}
 		self.sv.data.damage = self.defaultDamage
 		self.sv.data.range = self.defaultRange
+		self.sv.data.line = false
 	end
 
-	self:sv_updateGui({ dmg = self.sv.data.damage, range = self.sv.data.range })
+	self:sv_updateGui({ dmg = self.sv.data.damage, range = self.sv.data.range, line = self.sv.data.line })
 
 	self.sv.unitDamageTimer = Timer()
 	self.sv.unitDamageTimer:start( self.unitDamageTicks )
@@ -98,6 +101,7 @@ end
 function MountedLaserCutter:sv_updateGui( args )
 	self.sv.data.damage = args.dmg
 	self.sv.data.range = args.range
+	self.sv.data.line = args.line
 	self.storage:save( self.sv.data )
 
 	self.network:sendToClients( "cl_updateGui", args )
@@ -116,9 +120,12 @@ function MountedLaserCutter.client_onCreate( self )
 	self.cl.gui:setTextAcceptedCallback( "input_dmg", "cl_input_dmg" )
 	self.cl.gui:setTextAcceptedCallback( "input_range", "cl_input_range" )
 	self.cl.gui:setIconImage( "icon", self.shape.uuid )
+	self.cl.gui:setButtonCallback( "laser", "cl_input_laser" )
+	self.cl.gui:setText( "laser", off )
 
 	self.cl.line = Line_cutter()
 	self.cl.line:init( self.lineThickness, self.lineColour, 0.4 )
+	self.cl.lineAlways = false
 	self.cl.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.interactable )
 
 	self.cl.lastPos = sm.vec3.zero()
@@ -134,7 +141,7 @@ function MountedLaserCutter:cl_input_dmg( widget, value )
 	end
 
 	self.cl.damage = num
-	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range })
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range, line = self.cl.lineAlways })
 end
 
 function MountedLaserCutter:cl_input_range( widget, value )
@@ -146,14 +153,21 @@ function MountedLaserCutter:cl_input_range( widget, value )
 	end
 
 	self.cl.range = num
-	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range })
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range, line = self.cl.lineAlways })
+end
+
+function MountedLaserCutter:cl_input_laser()
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range, line = not self.cl.lineAlways })
 end
 
 function MountedLaserCutter:cl_updateGui( args )
 	self.cl.damage = args.dmg
 	self.cl.range = args.range
-	self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
-	self.cl.gui:setText( "input_range", tostring(self.cl.range) )
+	self.cl.lineAlways = args.line
+
+	self.cl.gui:setText( "input_dmg", string.format("%.3f", tostring(self.cl.damage) ) )
+	self.cl.gui:setText( "input_range", string.format("%.3f", tostring(self.cl.range) ) )
+	self.cl.gui:setText( "laser", self.cl.lineAlways and on or off )
 end
 
 function MountedLaserCutter:client_onInteract( char, state )
@@ -183,6 +197,10 @@ function MountedLaserCutter.client_onUpdate( self, dt )
 			self.cl.lastPos = result.pointWorld
 			self.cl.beamStopTimer = self.beamStopSeconds
 			self.cl.line:update( selfPos, result.pointWorld, dt, 250, false )
+		elseif self.cl.lineAlways then
+			self.cl.lastPos = endPos
+			self.cl.beamStopTimer = self.beamStopSeconds
+			self.cl.line:update( selfPos, endPos, dt, 250, false )
 		end
 	elseif self.cl.activeSound:isPlaying() then
 		self.cl.activeSound:stop()

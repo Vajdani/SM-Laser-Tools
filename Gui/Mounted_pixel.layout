@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 520 670" name="BackPanel">
-        <Widget type="Widget" skin="BackgroundEngineNoUpgrade" position="10 10 500 650">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 520 320" name="BackPanel">
+        <Widget type="Widget" skin="BackgroundEngineNoUpgrade" position="10 10 500 300">
             <Widget type="TextBox" skin="TextBox" position="0 25 500 100">
                 <Property key="Caption" value="Mountable Laser Cutter"/>
                 <Property key="TextAlign" value="Center"/>
@@ -9,31 +9,40 @@
                 <Property key="FontHeight" value="20"/>
                 <Widget type="ImageBox" skin="ImageBox" position="20 13 75 75" name="icon"/>
             </Widget>
-            <Widget type="Widget" skin="PanelEmpty" position="0 140 500 500">
-                <Widget type="TextBox" skin="TextBox" position="175 10 150 50" name="header_dmg">
+            <Widget type="Widget" skin="PanelEmpty" position="0 140 500 150">
+                <Widget type="TextBox" skin="TextBox" position="15 10 150 50" name="header_dmg">
                     <Property key="Caption" value="Laser Damage"/>
                     <Property key="TextAlign" value="Center"/>
                     <Property key="FontName" value="SM_ItemTitle"/>
                     <Property key="FontHeight" value="15"/>
                 </Widget>
-                <Widget type="TextBox" skin="TextBox" position="175 120 150 50" name="header_range">
+                <Widget type="TextBox" skin="TextBox" position="175 10 150 50" name="header_range">
                     <Property key="Caption" value="Laser Range"/>
                     <Property key="TextAlign" value="Center"/>
                     <Property key="FontName" value="SM_ItemTitle"/>
                     <Property key="FontHeight" value="15"/>
                 </Widget>
-                <Widget type="Canvas" skin="LiftInput" position="175 60 150 50" name="input_dmg">
+                <Widget type="Canvas" skin="LiftInput" position="15 60 150 50" name="input_dmg">
                     <Widget type="EditBox" skin="EditBoxEmpty" position="5 5 140 40" name="input_dmg">
                         <Property key="TextAlign" value="Center"/>
                         <Property key="FontName" value="SM_HeaderTiny"/>
                     </Widget>
                 </Widget>
-                <Widget type="Canvas" skin="LiftInput" position="175 170 150 50" name="input_range">
+                <Widget type="Canvas" skin="LiftInput" position="175 60 150 50" name="input_range">
                     <Widget type="EditBox" skin="EditBoxEmpty" position="5 5 140 40" name="input_range">
                         <Property key="TextAlign" value="Center"/>
                         <Property key="FontName" value="SM_HeaderTiny"/>
                     </Widget>
                 </Widget>
+                <Widget type="EditBox" skin="EditBoxEmpty" position="335 10 150 50">
+                    <Property key="Caption" value="Laser is always on"/>
+                    <Property key="FontHeight" value="15"/>
+                    <Property key="FontName" value="SM_ItemTitle"/>
+                    <Property key="TextAlign" value="Center"/>
+                    <Property key="ReadOnly" value="true"/>
+                    <Property key="Static" value="true"/>
+                </Widget>
+                <Widget type="Button" skin="ActiveButton" position="335 60 150 50" name="laser"/>
             </Widget>
             <Widget type="Canvas" skin="WhiteSkin" position="5 130 490 5">
                 <Property key="Colour" value="0.392157 0.392157 0.392157"/>
