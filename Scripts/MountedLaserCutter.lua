@@ -200,7 +200,7 @@ function MountedLaserCutter.client_onUpdate( self, dt )
 		elseif self.cl.lineAlways then
 			self.cl.lastPos = endPos
 			self.cl.beamStopTimer = self.beamStopSeconds
-			self.cl.line:update( selfPos, endPos, dt, 250, false )
+			self.cl.line:update( selfPos, hit and result.pointWorld or endPos, dt, 250, false )
 		end
 	elseif self.cl.activeSound:isPlaying() then
 		self.cl.activeSound:stop()
