@@ -92,15 +92,18 @@ Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy
 Katana.chargedAttackBegin = 0.15 * 40
 
 local renderables = {
-	"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
+	--"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
+	"$CONTENT_DATA/Tools/LaserKatana/char_katana_base.rend",
+	"$CONTENT_DATA/Tools/LaserKatana/char_katana_blade.rend",
+	--"$CONTENT_DATA/Tools/LaserKatana/char_katana_sheath.rend"
 }
 local renderablesTp = {
-	"$CONTENT_DATA/Tools/LaserKatana/char_male_tp_laserkatana.rend",
-	"$CONTENT_DATA/Tools/LaserKatana/char_laserkatana_fp_animlist.rend"
+	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_male_tp_laserkatana.rend",
+	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_laserkatana_fp_animlist.rend"
 }
 local renderablesFp = {
-	"$CONTENT_DATA/Tools/LaserKatana/char_male_fp_laserkatana.rend",
-	"$CONTENT_DATA/Tools/LaserKatana/char_laserkatana_fp_animlist.rend"
+	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_male_fp_laserkatana.rend",
+	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_laserkatana_fp_animlist.rend"
 }
 
 sm.tool.preloadRenderables(renderables)
@@ -662,6 +665,10 @@ function Katana.client_onEquip(self, animate)
 	if self.isLocal then
 		swapFpAnimation(self.fpAnimations, "unequip", "equip", 0.2)
 	end
+
+	local col = sm.color.new(1,0,0) --self.cutPlaneColours.max
+	self.tool:setTpColor(col)
+	self.tool:setFpColor(col)
 end
 
 function Katana.client_onUnequip(self, animate)

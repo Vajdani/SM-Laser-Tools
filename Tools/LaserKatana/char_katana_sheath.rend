@@ -1,0 +1,34 @@
+{
+	"lodList": [
+		{
+			"mesh": "$CONTENT_DATA/Tools/LaserKatana/katana_sheath.dae",
+			"includes": [ "POSITION", "UV0", "NORMAL", "TANGENTS", "BLEND_INDICES", "BLEND_WEIGHTS" ],
+			"subMeshMap": {
+				"base": {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$CONTENT_DATA/Tools/LaserKatana/Textures/katana_base1.tga",
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_metal01_asg.tga",
+                  "$GAME_DATA/Textures/Default/default_nor.tga"
+               ]
+            },
+            "laser": {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Textures/Default/default_dif.tga",
+                  "$CONTENT_DATA/Tools/LaserKatana/Textures/obj_atlas_generic_asg.tga",
+                  "$GAME_DATA/Textures/Default/default_nor.tga"
+               ]
+            },
+            "caps": {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$CONTENT_DATA/Tools/LaserKatana/Textures/katana_blade1.tga",
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_metal01_asg.tga",
+                  "$GAME_DATA/Textures/Default/default_nor.tga"
+               ]
+            }
+         }
+		}
+	]
+}

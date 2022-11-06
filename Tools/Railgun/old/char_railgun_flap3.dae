@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author></author>
+      <authoring_tool>FBX COLLADA exporter</authoring_tool>
+      <comments></comments>
+    </contributor>
+    <created>2022-10-31T22:35:32Z</created>
+    <keywords></keywords>
+    <modified>2022-10-31T22:35:32Z</modified>
+    <revision></revision>
+    <subject></subject>
+    <title></title>
+    <unit meter="0.010000" name="centimeter"></unit>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_geometries>
+    <geometry id="barrelBasic_geo.001-lib" name="barrelBasic_geo.001Mesh">
+      <mesh>
+        <source id="barrelBasic_geo.001-POSITION">
+          <float_array id="barrelBasic_geo.001-POSITION-array" count="63">
+0.300000 1.220000 1.150000
+0.000000 0.920000 1.150000
+0.350000 0.870000 0.609482
+0.235529 1.220001 2.791265
+0.219198 1.220001 3.150000
+0.298493 1.220000 1.150000
+0.292843 1.162651 1.150000
+0.248022 1.054496 1.150000
+0.275761 1.106360 1.150000
+0.165201 0.971776 1.150000
+0.210690 1.009053 1.150000
+0.000000 0.921543 1.150000
+0.056991 0.927086 1.150000
+0.113304 0.944100 1.150000
+0.178180 1.124380 3.150000
+0.205920 1.176244 3.150000
+0.000000 1.000853 3.150000
+0.043462 1.013984 3.150000
+0.095360 1.041661 3.150000
+0.140848 1.078937 3.150000
+0.000000 0.984113 2.782018
+</float_array>
+          <technique_common>
+            <accessor source="#barrelBasic_geo.001-POSITION-array" count="21" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="barrelBasic_geo.001-Normal0">
+          <float_array id="barrelBasic_geo.001-Normal0-array" count="333">
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.824197 0.539574 -0.171926
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.539044 0.824541 -0.171940
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.621145 0.764819 -0.170969
+-0.675360 0.675360 -0.296274
+-0.539044 0.824541 -0.171940
+-0.696512 0.696957 -0.170653
+-0.675360 0.675360 -0.296274
+-0.621145 0.764819 -0.170969
+-0.764423 0.621635 -0.170962
+-0.675360 0.675360 -0.296274
+-0.696512 0.696957 -0.170653
+-0.824197 0.539574 -0.171926
+-0.675360 0.675360 -0.296274
+-0.764423 0.621635 -0.170962
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+-0.675360 0.675360 -0.296274
+0.260726 -0.961624 0.085449
+-0.045739 -0.997935 0.045084
+0.705361 -0.705414 0.069692
+-0.994459 0.097958 -0.038150
+-0.979612 0.196653 -0.041080
+-0.956637 0.288022 -0.043471
+-0.956004 0.290107 -0.043521
+-0.956637 0.288022 -0.043471
+-0.923301 0.381365 -0.045568
+-0.824197 0.539574 -0.171926
+-0.923301 0.381365 -0.045568
+-0.956637 0.288022 -0.043471
+-0.956637 0.288022 -0.043471
+-0.979612 0.196653 -0.041080
+-0.824197 0.539574 -0.171926
+-0.830619 0.554734 -0.048390
+-0.824197 0.539574 -0.171926
+-0.764423 0.621635 -0.170962
+-0.824197 0.539574 -0.171926
+-0.830619 0.554734 -0.048390
+-0.923301 0.381365 -0.045568
+-0.705814 0.706677 -0.049340
+-0.764423 0.621635 -0.170962
+-0.696512 0.696957 -0.170653
+-0.764423 0.621635 -0.170962
+-0.705814 0.706677 -0.049340
+-0.830619 0.554734 -0.048390
+-0.621145 0.764819 -0.170969
+-0.553720 0.831296 -0.048384
+-0.705814 0.706677 -0.049340
+-0.705814 0.706677 -0.049340
+-0.696512 0.696957 -0.170653
+-0.621145 0.764819 -0.170969
+-0.539044 0.824541 -0.171940
+-0.380237 0.923766 -0.045557
+-0.553720 0.831296 -0.048384
+-0.553720 0.831296 -0.048384
+-0.621145 0.764819 -0.170969
+-0.539044 0.824541 -0.171940
+-0.286857 0.956987 -0.043456
+-0.288942 0.956357 -0.043507
+-0.380237 0.923766 -0.045557
+-0.380237 0.923766 -0.045557
+-0.539044 0.824541 -0.171940
+-0.286857 0.956987 -0.043456
+-0.286857 0.956987 -0.043456
+-0.539044 0.824541 -0.171940
+-0.195461 0.979852 -0.041064
+-0.286857 0.956987 -0.043456
+-0.195461 0.979852 -0.041064
+-0.096746 0.994578 -0.038131
+0.260726 -0.961624 0.085449
+0.705361 -0.705414 0.069692
+0.374734 -0.921995 0.097469
+0.374734 -0.921995 0.097469
+0.705361 -0.705414 0.069692
+0.549064 -0.828376 0.111006
+0.549064 -0.828376 0.111006
+0.705361 -0.705414 0.069692
+0.701933 -0.702801 0.115587
+0.827692 -0.550083 0.111058
+0.701933 -0.702801 0.115587
+0.705361 -0.705414 0.069692
+0.827692 -0.550083 0.111058
+0.705361 -0.705414 0.069692
+0.921522 -0.375868 0.097571
+0.961313 -0.261830 0.085566
+0.921522 -0.375868 0.097571
+0.705361 -0.705414 0.069692
+-0.086207 -0.995509 0.039108
+-0.086207 -0.995509 0.039108
+0.705361 -0.705414 0.069692
+0.961313 -0.261830 0.085566
+0.705361 -0.705414 0.069692
+0.997951 0.045372 0.045116
+0.995518 0.086113 0.039105
+0.995518 0.086113 0.039105
+0.997951 0.045372 0.045116
+0.997951 0.045372 0.045116
+0.705361 -0.705414 0.069692
+0.995518 0.086113 0.039105
+</float_array>
+          <technique_common>
+            <accessor source="#barrelBasic_geo.001-Normal0-array" count="111" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="barrelBasic_geo.001-UV0">
+          <float_array id="barrelBasic_geo.001-UV0-array" count="60">
+0.968750 0.902790
+0.581685 0.387920
+0.875000 0.935306
+0.875000 0.752756
+0.604801 0.344700
+0.619036 0.297791
+0.906250 0.752782
+0.937500 0.752859
+0.788381 0.935505
+0.625000 0.250000
+0.781250 0.901946
+0.375000 0.500000
+0.812500 0.752859
+0.550575 0.425790
+0.625000 0.500000
+0.843750 0.935332
+0.469420 0.479917
+0.968750 0.752984
+0.937500 0.935409
+0.623744 0.250000
+0.906250 0.935332
+0.999356 0.753148
+0.781250 0.752984
+0.812500 0.935409
+0.843750 0.752782
+0.375000 0.498715
+0.961791 0.935506
+0.750839 0.753148
+0.512668 0.456853
+0.422493 0.494095
+</float_array>
+          <technique_common>
+            <accessor source="#barrelBasic_geo.001-UV0-array" count="30" stride="2">
+              <param name="S" type="float" />
+              <param name="T" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="barrelBasic_geo.001-VERTEX">
+          <input semantic="POSITION" source="#barrelBasic_geo.001-POSITION" />
+        </vertices>
+        <triangles count="37">
+          <input semantic="VERTEX" offset="0" source="#barrelBasic_geo.001-VERTEX" />
+          <input semantic="NORMAL" offset="1" source="#barrelBasic_geo.001-Normal0" />
+          <input semantic="TEXCOORD" offset="2" set="0" source="#barrelBasic_geo.001-UV0" />
+          <p> 0 0 9 2 1 14 6 2 5 2 3 14 8 4 4 6 5 5 2 6 14 12 7 29 13 8 16 11 9 25 2 10 14 1 11 11 12 12 29 2 13 14 11 14 25 9 15 28 2 16 14 13 17 16 10 18 13 2 19 14 9 20 28 7 21 1 2 22 14 10 23 13 8 24 4 2 25 14 7 26 1 0 27 9 6 28 5 5 29 19 16 30 8 20 31 10 2 32 14 5 33 21 6 34 17 3 35 0 4 36 26 3 37 0 15 38 18 8 39 7 15 40 18 3 41 0 3 42 0 6 43 17 8 44 7 14 45 20 8 46 7 7 47 6 8 48 7 14 49 20 15 50 18 19 51 2 7 52 6 10 53 3 7 54 6 19 55 2 14 56 20 9 57 24 18 58 15 19 59 2 19 60 2 10 61 3 9 62 24 13 63 12 17 64 23 18 65 15 18 66 15 9 67 24 13 68 12 20 69 10 16 70 8 17 71 23 17 72 23 13 73 12 20 74 10 20 75 10 13 76 12 12 77 22 20 78 10 12 79 22 11 80 27 16 81 8 2 82 14 17 83 23 17 84 23 2 85 14 18 86 15 18 87 15 2 88 14 19 89 2 14 90 20 19 91 2 2 92 14 14 93 20 2 94 14 15 95 18 4 96 26 15 97 18 2 98 14 20 99 27 11 100 11 2 101 14 4 102 26 2 103 14 3 104 0 0 105 9 5 106 19 3 107 0 3 108 0 2 109 14 0 110 9</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_controllers>
+    <controller id="barrelBasic_geo.001Controller">
+      <skin source="#barrelBasic_geo.001-lib">
+        <bind_shape_matrix>1.000000 -0.000000 -0.000000 -0.000000 -0.000000 1.000000 -0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000
+</bind_shape_matrix>
+        <source id="barrelBasic_geo.001Controller-Joints">
+          <Name_array id="barrelBasic_geo.001Controller-Joints-array" count="2">
+ jnt_barrel jnt_flap3</Name_array>
+          <technique_common>
+            <accessor source="#barrelBasic_geo.001Controller-Joints-array" count="2">
+              <param type="name" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="barrelBasic_geo.001Controller-Matrices">
+          <float_array id="barrelBasic_geo.001Controller-Matrices-array" count="32">
+
+1.000000 0.000000 0.000000 -0.000000 -0.000000 1.000000 0.000000 -1.226135 0.000000 -0.000000 1.000000 -1.069256 0.000000 0.000000 0.000000 1.000000
+-1.000000 -0.000000 -0.000000 0.000000 0.000000 -0.000000 1.000000 -2.803530 -0.000000 1.000000 0.000000 -1.226135 0.000000 0.000000 0.000000 1.000000</float_array>
+          <technique_common>
+            <accessor source="#barrelBasic_geo.001Controller-Matrices-array" count="2" stride="16">
+              <param type="float4x4" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="barrelBasic_geo.001Controller-Weights">
+          <float_array id="barrelBasic_geo.001Controller-Weights-array" count="22">
+
+1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000
+1.000000 1.000000 1.000000 1.000000 1.000000 1.000000</float_array>
+          <technique_common>
+            <accessor source="#barrelBasic_geo.001Controller-Weights-array" count="22">
+              <param type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <joints>
+          <input semantic="JOINT" source="#barrelBasic_geo.001Controller-Joints" />
+          <input semantic="INV_BIND_MATRIX" source="#barrelBasic_geo.001Controller-Matrices" />
+        </joints>
+        <vertex_weights count="21">
+          <input semantic="JOINT" offset="0" source="#barrelBasic_geo.001Controller-Joints" />
+          <input semantic="WEIGHT" offset="1" source="#barrelBasic_geo.001Controller-Weights" />
+          <vcount>1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</vcount>
+          <v>1 1 1 2 1 3 1 4 1 5 1 6 1 7 1 8 1 9 1 10 1 11 1 12 1 13 1 14 1 15 1 16 1 17 1 18 1 19 1 20 1 21</v>
+        </vertex_weights>
+      </skin>
+    </controller>
+  </library_controllers>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node name="jnt_barrel" id="jnt_barrel" sid="jnt_barrel" type="JOINT">
+        <matrix sid="matrix">1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 -0.000000 1.226135 0.000000 0.000000 1.000000 1.069256 0.000000 0.000000 0.000000 1.000000</matrix>
+        <extra>
+          <technique profile="FCOLLADA">
+            <visibility>1.000000</visibility>
+          </technique>
+        </extra>
+        <node name="jnt_flap3" id="jnt_flap3" sid="jnt_flap3" type="JOINT">
+          <matrix sid="matrix">-1.000000 -0.000000 -0.000000 0.000000 -0.000000 0.000000 1.000000 0.000000 0.000000 1.000000 -0.000000 1.734274 0.000000 0.000000 0.000000 1.000000</matrix>
+          <extra>
+            <technique profile="FCOLLADA">
+              <visibility>1.000000</visibility>
+            </technique>
+          </extra>
+        </node>
+      </node>
+      <node name="barrelBasic_geo.001" id="barrelBasic_geo.001" sid="barrelBasic_geo.001">
+        <instance_controller url="#barrelBasic_geo.001Controller" />
+        <extra>
+          <technique profile="FCOLLADA">
+            <visibility>1.000000</visibility>
+          </technique>
+        </extra>
+      </node>
+      <extra>
+        <technique profile="MAX3D">
+          <frame_rate>0.000000</frame_rate>
+        </technique>
+        <technique profile="FCOLLADA">
+          <start_time>0.000000</start_time>
+          <end_time>1.000000</end_time>
+        </technique>
+      </extra>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"></instance_visual_scene>
+  </scene>
+</COLLADA>

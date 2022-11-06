@@ -31,8 +31,20 @@
             "data" : {},
             "file" : "$CONTENT_DATA/Scripts/LaserKatana.lua"
          },
-         "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf",
-         "showInInventory": false
+         "showInInventory" : false,
+         "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf"
+      },
+      {
+         "name" : "Railgun",
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
+         "script" : {
+            "class" : "Railgun",
+            "data" : {},
+            "file" : "$CONTENT_DATA/Scripts/Railgun.lua"
+         },
+         "showInInventory" : false,
+         "uuid" : "704fdad0-99bf-45a7-b24e-dfbeb028b54f"
       }
    ]
 }

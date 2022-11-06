@@ -1,0 +1,22 @@
+{
+	"lodList": [
+		{
+			"mesh": "$CONTENT_DATA/Tools/Railgun/char_railgun_flap4.dae",
+			"includes": [ "POSITION", "UV0", "NORMAL", "TANGENTS", "BLEND_INDICES", "BLEND_WEIGHTS" ],
+			"subMeshList": [
+            {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_dif.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_asg.tga",
+                  "$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_nor.tga"
+               ]
+            }
+			],
+         "animationList": [
+            { "name" : "charge", "file" : "$CONTENT_DATA/Tools/Railgun/Animations/flap4_charge.dae", "looping" : true },
+            { "name" : "charge_fp", "file" : "$CONTENT_DATA/Tools/Railgun/Animations/flap4_charge.dae", "looping" : true }
+         ]
+		}
+	]
+}

@@ -1,0 +1,34 @@
+{
+	"lodList": [
+		{
+			"mesh": "$CONTENT_DATA/Tools/LaserKatana/katana_base.dae",
+			"includes": [ "POSITION", "UV0", "NORMAL", "TANGENTS", "BLEND_INDICES", "BLEND_WEIGHTS" ],
+			"subMeshMap": {
+				"base": {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$CONTENT_DATA/Tools/LaserKatana/Textures/katana_base1.tga",
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_metal01_asg.tga",
+                  "$GAME_DATA/Textures/Default/default_nor.tga" //"$GAME_DATA/Objects/Textures/Blocks/blk_metal01_nor.tga"
+               ]
+            },
+            "blade": {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$CONTENT_DATA/Tools/LaserKatana/Textures/katana_blade1.tga",
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_metal01_asg.tga",
+                  "$GAME_DATA/Textures/Default/default_nor.tga"
+               ]
+            },
+            "grip": {
+               "material": "DifAsgNor",
+               "textureList": [
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_spaceship01_dif.tga",
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_spaceship01_asg.tga",
+                  "$GAME_DATA/Objects/Textures/Blocks/blk_spaceship01_nor.tga"
+               ]
+            }
+         }
+		}
+	]
+}
