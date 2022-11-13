@@ -24,14 +24,14 @@
       },
       {
          "name" : "Laser Katana",
-         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
-         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserKatana/Preview/char_katana_preview.rend",
+         "previewRotation" : [ 1, 0, 0, 0, -1, 0, 0, 0, -1 ],
          "script" : {
             "class" : "Katana",
             "data" : {},
             "file" : "$CONTENT_DATA/Scripts/LaserKatana.lua"
          },
-         "showInInventory" : false,
+         "showInInventory" : true,
          "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf"
       },
       {

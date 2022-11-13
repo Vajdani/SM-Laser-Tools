@@ -131,9 +131,12 @@ function Katana.client_onCreate(self)
 	self.cutPlane = sm.effect.createEffect("Katana_cut_plane")
 	self.cutPlane:setParameter("minColor", self.cutPlaneColours.min)
 	self.cutPlane:setParameter("maxColor", self.cutPlaneColours.max)
-	--[[self.cutPlane = sm.effect.createEffect("ShapeRenderable")
+
+	--[[
+	self.cutPlane = sm.effect.createEffect("ShapeRenderable")
 	self.cutPlane:setParameter("uuid", blk_wood1)
-	self.cutPlane:setParameter("visualization", true)]]
+	self.cutPlane:setParameter("visualization", true)
+	]]
 
 	self.bladeMode = 1
 	self.isInBladeMode = false
@@ -350,7 +353,8 @@ function Katana:client_onUpdate(dt)
 				scale.y = sm.util.clamp( math.abs(scale.y), 1, cutSize )
 				scale.z = sm.util.clamp( math.abs(scale.z), 1, cutSize )
 
-				scale = data.name == "Horizontal" and sm.vec3.new(scale.x, scale.y, 0.01) or sm.vec3.new(0.01, scale.y, scale.z)
+				--scale = data.name == "Horizontal" and sm.vec3.new(scale.x, scale.y, 0.01) or sm.vec3.new(0.01, scale.y, scale.z)
+				scale = scale - AbsVector(normal:cross(dir) * 0.99)
 			else
 				scale = data.name == "Horizontal" and sm.vec3.new(cutSize, cutSize, 0.01) or sm.vec3.new(0.01, cutSize, cutSize)
 			end
