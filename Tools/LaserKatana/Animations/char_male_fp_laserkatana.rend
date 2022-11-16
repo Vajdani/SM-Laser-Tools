@@ -3,11 +3,16 @@
 		"animationList" : [
 			{ "name" : "sledgehammer_idle", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_idle.dae" },
 
-			{ "name" : "sledgehammer_attack1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1.dae" },
-			{ "name" : "sledgehammer_exit1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1_exit.dae" },
+			{ "name" : "katana_attack1", 			"file" : "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/Katana_horizontal_1.dae" },
+			{ "name" : "katana_exit1", 			"file" : "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/Katana_horizontal_1_hide.dae" },
 
-			{ "name" : "sledgehammer_attack2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2.dae" },
-			{ "name" : "sledgehammer_exit2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2_exit.dae" },
+			{ "name" : "katana_attack2", 			"file" : "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/Katana_horizontal_2.dae" },
+			{ "name" : "katana_exit2", 			"file" : "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/Katana_horizontal_2_hide.dae" },
+
+			//{ "name" : "sledgehammer_attack1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1.dae" },
+			//{ "name" : "sledgehammer_exit1", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack1_exit.dae" },
+			//{ "name" : "sledgehammer_attack2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2.dae" },
+			//{ "name" : "sledgehammer_exit2", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_attack2_exit.dae" },
 
 			{ "name" : "sledgehammer_pickup", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_pickup.dae" },
 			{ "name" : "sledgehammer_putdown", 			"file" : "$GAME_DATA/Character/Char_Male/Animations/Firstperson/Sledgehammer/ani_char_male_fp_sledgehammer_putdown.dae" },

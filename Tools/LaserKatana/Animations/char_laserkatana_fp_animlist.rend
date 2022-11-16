@@ -1,11 +1,12 @@
 {
 	"lodList": [{
-		"mesh": "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_position.dae",
+		"mesh": "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/katana_position_fp.dae", //"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_position.dae",
 		"includes" : ["POSITION", "UV0", "NORMAL", "TANGENTS", "BLEND_INDICES", "BLEND_WEIGHTS"],
 		"animationList" : [
-			{ "name" : "sledgehammer_attack1", 			"file" : "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_attack1.dae" },
-
-			{ "name" : "sledgehammer_attack2", 			"file" : "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_attack2.dae" },
+			{ "name" : "sledgehammer_attack1", 			"file" : "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/Katana_horizontal_1.dae" },
+			{ "name" : "sledgehammer_attack2", 			"file" : "$CONTENT_DATA/Tools/LaserKatana/Animations/FP/Katana_horizontal_2.dae" },
+			//{ "name" : "sledgehammer_attack1", 			"file" : "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_attack1.dae" },
+			//{ "name" : "sledgehammer_attack2", 			"file" : "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_attack2.dae" },
 
 			{ "name" : "sledgehammer_guard_into", 		 "file" : "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_guard_into.dae" },
 			{ "name" : "sledgehammer_guard_exit", 		 "file" : "$GAME_DATA/Character/Char_Tools/Char_sledgehammer/Animations/ani_char_sledgehammer_fp_guard_exit.dae" },

@@ -95,11 +95,11 @@ local renderables = {
 	--"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
 	"$CONTENT_DATA/Tools/LaserKatana/char_katana_base.rend",
 	"$CONTENT_DATA/Tools/LaserKatana/char_katana_blade.rend",
-	--"$CONTENT_DATA/Tools/LaserKatana/char_katana_sheath.rend"
+	"$CONTENT_DATA/Tools/LaserKatana/char_katana_sheath.rend"
 }
 local renderablesTp = {
 	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_male_tp_laserkatana.rend",
-	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_laserkatana_fp_animlist.rend"
+	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_laserkatana_tp_animlist.rend"
 }
 local renderablesFp = {
 	"$CONTENT_DATA/Tools/LaserKatana/Animations/char_male_fp_laserkatana.rend",
@@ -174,7 +174,7 @@ function Katana.init(self)
 
 	--self.swingCooldowns = { 0.6, 0.6 }
 	self.swingCooldowns = {
-		{ 0.6, 0.6, holdTime = 0.125 },
+		{ 0.6, 0.6, holdTime = 0.25 },
 		{ 1, 1, holdTime = 0.125 }
 	}
 
@@ -391,6 +391,7 @@ function Katana:client_onUpdate(dt)
 
 	local preAnimation = self.fpAnimations.currentAnimation
 	updateFpAnimations(self.fpAnimations, self.equipped, dt)
+	print(self.currentSwing)
 
 	if preAnimation ~= self.fpAnimations.currentAnimation then
 		local keepBlockSprint = false
@@ -763,10 +764,10 @@ function Katana.loadAnimations(self)
 				sprintIdle = { "sledgehammer_sprint_idle", { looping = true } },
 				sprintExit = { "sledgehammer_sprint_exit", { nextAnimation = "idle" } },
 
-				sledgehammer_attack1 = { "sledgehammer_attack1", { nextAnimation = "sledgehammer_exit1" } },
-				sledgehammer_attack2 = { "sledgehammer_attack2", { nextAnimation = "sledgehammer_exit2" } },
-				sledgehammer_exit1 = { "sledgehammer_exit1", { nextAnimation = "idle" } },
-				sledgehammer_exit2 = { "sledgehammer_exit2", { nextAnimation = "idle" } },
+				sledgehammer_attack1 = { "katana_attack1", { nextAnimation = "sledgehammer_exit1" } },
+				sledgehammer_attack2 = { "katana_attack2", { nextAnimation = "sledgehammer_exit2" } },
+				sledgehammer_exit1 = { "katana_exit1", { nextAnimation = "idle" } },
+				sledgehammer_exit2 = { "katana_exit2", { nextAnimation = "idle" } },
 
 				sledgehammer_attack_heavy1 = { "sledgehammer_attack_heavy1", { nextAnimation = "sledgehammer_exit_heavy1" } },
 				sledgehammer_attack_heavy2 = { "sledgehammer_attack_heavy2", { nextAnimation = "sledgehammer_exit_heavy2" } },
