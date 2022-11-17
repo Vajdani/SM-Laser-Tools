@@ -23,6 +23,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field owner Player
 ---@field bladeHud GuiInterface
 ---@field bladeSound Effect
+---@field bladeProjectiles table
 Katana = class()
 
 --please never make me destroy multiple blocks at once ever again
@@ -79,7 +80,7 @@ Katana.bladeModeCutSize = 100
 Katana.bladeModeCutDamage = 150
 Katana.cutPlaneColours = {
 	min = sm.color.new(0, 0, 0, 0),
-	max = sm.color.new(0, 0.93, 1, 0.2)
+	max = sm.color.new(1, 0, 0, 0.2) --sm.color.new(0, 0.93, 1, 0.2)
 }
 Katana.swingCount = 2
 Katana.mayaFrameDuration = 1.0 / 30.0
@@ -90,6 +91,13 @@ Katana.swingExits = { "sledgehammer_exit1", "sledgehammer_exit2" }
 Katana.swings_heavy = { "sledgehammer_attack_heavy1", "sledgehammer_attack_heavy2" }
 --Katana.swingExits_heavy = { "sledgehammer_exit_heavy1", "sledgehammer_exit_heavy2" }
 Katana.chargedAttackBegin = 0.15 * 40
+Katana.projectileSpeed = 25
+Katana.killTypes = {
+	"terrainSurface",
+	"terrainAsset",
+	"limiter"
+}
+
 
 local renderables = {
 	--"$GAME_DATA/Character/Char_Tools/Char_sledgehammer/char_sledgehammer.rend"
@@ -124,6 +132,8 @@ function Katana.client_onCreate(self)
 	self.isLocal = self.tool:isLocal()
 	self.charging = false
 	self.chargedAttackCharge = 0
+	self.bladeProjectiles = {}
+
 	self:init()
 
 	if not self.isLocal then return end
@@ -298,6 +308,28 @@ function Katana:client_onUpdate(dt)
 	end
 
 	local ownerChar = self.owner.character
+	for k, projectile in pairs(self.bladeProjectiles) do
+        projectile.lifeTime = projectile.lifeTime - dt
+
+		---@type Vec3
+        local currentPos = projectile.pos
+		---@type Vec3
+        local dir = projectile.dir
+        local hit, result = sm.physics.spherecast(currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), 0.5, ownerChar)
+		local shouldDelete = result and isAnyOf(result.type, self.killTypes) or projectile.lifeTime <= 0
+        if hit or shouldDelete then
+            if shouldDelete then
+				projectile.effect:destroy()
+				self.bladeProjectiles[k] = nil
+			end
+        end
+
+        if not shouldDelete then
+            local pos = currentPos + dir * dt * self.projectileSpeed * (hit and 0.5 or 1)
+            projectile.pos = pos
+            projectile.effect:setPosition(pos)
+        end
+    end
 
 	self.attackCooldownTimer = math.max(self.attackCooldownTimer - dt, 0.0)
 	updateTpAnimations(self.tpAnimations, self.equipped, dt)
@@ -391,7 +423,6 @@ function Katana:client_onUpdate(dt)
 
 	local preAnimation = self.fpAnimations.currentAnimation
 	updateFpAnimations(self.fpAnimations, self.equipped, dt)
-	print(self.currentSwing)
 
 	if preAnimation ~= self.fpAnimations.currentAnimation then
 		local keepBlockSprint = false
@@ -506,6 +537,7 @@ function Katana:cl_katanaSwing( anim, mode )
 		)
 	else
 		local cooldownData = self.swingCooldowns[mode]
+		--isAnyOf(self.fpAnimations.currentAnimation, {anim, "sledgehammer_exit1"})
 		if self.fpAnimations.currentAnimation == anim then
 			if self.attackCooldownTimer < cooldownData.holdTime then
 				self.nextAttackFlag = true
@@ -625,8 +657,10 @@ end
 
 function Katana:sv_performChargedAttack()
 	self:sv_updateChargeAttack( false )
+    self.network:sendToClients("cl_performChargedAttack")
 
-	local owner = self.tool:getOwner()
+    --[[
+    local owner = self.tool:getOwner()
 	local char = owner.character
 	local pos = char.worldPosition + sm.vec3.new(0,0,0.575)
 	local dir = char.direction
@@ -639,6 +673,24 @@ function Katana:sv_performChargedAttack()
 			owner
 		)
 	end
+    ]]
+end
+
+function Katana:cl_performChargedAttack()
+    local char = self.tool:getOwner().character
+    local projectile = {
+        effect = sm.effect.createEffect("ShapeRenderable"),
+        pos = char.worldPosition,
+        dir = char.direction,
+        lifeTime = 15
+    }
+
+    projectile.effect:setParameter("uuid", blk_wood1)
+    projectile.effect:setPosition(projectile.pos)
+    projectile.effect:setRotation(sm.vec3.getRotation(projectile.dir, vec3_up))
+    projectile.effect:start()
+
+    self.bladeProjectiles[#self.bladeProjectiles+1] = projectile
 end
 -- #endregion
 
@@ -658,9 +710,12 @@ function Katana.client_onEquip(self, animate)
 	for k, v in pairs(renderables) do currentRenderablesTp[#currentRenderablesTp + 1] = v end
 	for k, v in pairs(renderables) do currentRenderablesFp[#currentRenderablesFp + 1] = v end
 
+	local col = self.cutPlaneColours.max
 	self.tool:setTpRenderables(currentRenderablesTp)
+	self.tool:setTpColor(col)
 	if self.isLocal then
 		self.tool:setFpRenderables(currentRenderablesFp)
+		self.tool:setFpColor(col)
 	end
 
 	self:init()
@@ -670,10 +725,6 @@ function Katana.client_onEquip(self, animate)
 	if self.isLocal then
 		swapFpAnimation(self.fpAnimations, "unequip", "equip", 0.2)
 	end
-
-	local col = sm.color.new(1,0,0) --self.cutPlaneColours.max
-	self.tool:setTpColor(col)
-	self.tool:setFpColor(col)
 end
 
 function Katana.client_onUnequip(self, animate)
