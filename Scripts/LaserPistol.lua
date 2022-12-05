@@ -146,8 +146,9 @@ end
 
 function Pistol:sv_onWeakLaserHit( args )
 	local result = args.ray
+	---@type Shape|Character
 	local target = result.target
-	if not target then return end
+	if not target or not sm.exists(target) then return end
 
 	local pos = result.pointWorld
 	local type = type(target)

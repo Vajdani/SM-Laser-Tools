@@ -3,6 +3,7 @@ TODO:
 1. effects for blade mode(swing, block destroy)
 2. better cutting plane
 3. better blade mode activation sound
+4. better cutting hud
 ]]
 
 
