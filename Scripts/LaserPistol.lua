@@ -6,6 +6,13 @@ dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 dofile "$CONTENT_DATA/Scripts/util.lua"
 
+---@class Laser
+---@field line Line_gun
+---@field pos Vec3
+---@field dir Vec3
+---@field strong boolean
+---@field overdrive boolean
+---@field lifeTime number
 
 ---@class Pistol : ToolClass
 ---@field owner Player
@@ -20,7 +27,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field secondaryCooldown table
 ---@field overdriveCooldown table
 ---@field overdriveDuration table
----@field lasers table
+---@field lasers Laser[]
 ---@field colour Color
 ---@field shootEffect Effect
 ---@field poweronEffect Effect
@@ -208,10 +215,43 @@ function Pistol:client_onFixedUpdate( dt )
 end
 
 function Pistol:client_onUpdate( dt )
+	self:updateLasers(dt)
+
+	if self.lerpProgress <= 1 and not self.lerpBlock then
+		self.lerpProgress = self.lerpProgress + dt
+		local colour = ColourLerp( self.colour, self.defaultColour, self.lerpProgress )
+		self.tool:setFpColor(colour)
+		if self.isLocal then
+			self.tool:setTpColor(colour)
+		end
+	end
+
+	-- First person animation
+	local isSprinting =  self.tool:isSprinting()
+	local isCrouching =  self.tool:isCrouching()
+	local equipped = self.tool:isEquipped()
+
+	if self.isLocal then
+		self:updateFP(dt, equipped, isSprinting, isCrouching)
+	end
+
+	if equipped then
+		self.shootEffect:setRotation( sm.vec3.getRotation(vec3_up, self.tool:getDirection()) )
+		self.shootEffect:setPosition( self.tool:isInFirstPersonView() and self.tool:getFpBonePos( "pipe" ) or self.tool:getTpBonePos( "pipe" ) )
+		self.poweronEffect:setPosition( self.tool:getPosition() )
+	end
+
+	local crouchWeight = self.tool:isCrouching() and 1.0 or 0.0
+	local normalWeight = 1.0 - crouchWeight
+	self:updateTP(dt, crouchWeight, normalWeight)
+	self:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
+	self:updateCam(dt)
+end
+
+function Pistol:updateLasers(dt)
 	for k, laser in pairs(self.lasers) do
 		laser.lifeTime = laser.lifeTime - dt
 
-		---@type Vec3, Vec3
 		local currentPos, dir = laser.pos, laser.dir
 		local hit, result = false, nil
 		if not laser.strong then
@@ -242,62 +282,44 @@ function Pistol:client_onUpdate( dt )
 
 		if not shouldDelete then
 			if laser.strong then
-				laser.line:update( currentPos, currentPos + dir, dt )
+				laser.line:update(currentPos, currentPos + dir, dt)
 			else
 				local newPos = currentPos + dir * dt * self.laserSpeed * (hit and 0.1 or 1)
 				laser.pos = newPos
-				laser.line:update( newPos, newPos + dir * self.laserLength, dt )
+				laser.line:update(newPos, newPos + dir * self.laserLength, dt)
 			end
 		end
 	end
+end
 
-	if self.lerpProgress <= 1 and not self.lerpBlock then
-		self.lerpProgress = self.lerpProgress + dt
-		local colour = ColourLerp( self.colour, self.defaultColour, self.lerpProgress )
-		self.tool:setFpColor(colour)
-		self.tool:setTpColor(colour)
-	end
-
-	-- First person animation
-	local isSprinting =  self.tool:isSprinting()
-	local isCrouching =  self.tool:isCrouching()
-	local equipped = self.tool:isEquipped()
-
-	if self.isLocal then
-		if equipped then
-			if isSprinting and self.fpAnimations.currentAnimation ~= "sprintInto" and self.fpAnimations.currentAnimation ~= "sprintIdle" then
-				swapFpAnimation( self.fpAnimations, "sprintExit", "sprintInto", 0.0 )
-			elseif not isSprinting and ( self.fpAnimations.currentAnimation == "sprintIdle" or self.fpAnimations.currentAnimation == "sprintInto" ) then
-				swapFpAnimation( self.fpAnimations, "sprintInto", "sprintExit", 0.0 )
-			end
-		end
-		updateFpAnimations( self.fpAnimations, equipped, dt )
-
-		local dispersion = 0.0
-		local fireMode = self.normalFireMode
-		dispersion = isCrouching and fireMode.minDispersionCrouching or fireMode.minDispersionStanding
-
-		if self.tool:getRelativeMoveDirection():length() > 0 then
-			dispersion = dispersion + fireMode.maxMovementDispersion * self.tool:getMovementSpeedFraction()
-		end
-
-		if not self.tool:isOnGround() then
-			dispersion = dispersion * fireMode.jumpDispersionMultiplier
-		end
-
-		self.movementDispersion = dispersion
-		self.crosshairSpread = math.max(self.crosshairSpread - dt, 0 )
-		self.tool:setDispersionFraction( clamp( self.movementDispersion + self.crosshairSpread, 0.0, 1.0 ) )
-	end
-
+function Pistol:updateFP(dt, equipped, isSprinting, isCrouching)
 	if equipped then
-		self.shootEffect:setRotation( sm.vec3.getRotation(vec3_up, self.tool:getDirection()) )
-		self.shootEffect:setPosition( self.tool:isInFirstPersonView() and self.tool:getFpBonePos( "pipe" ) or self.tool:getTpBonePos( "pipe" ) )
-		self.poweronEffect:setPosition( self.tool:getPosition() )
+		if isSprinting and self.fpAnimations.currentAnimation ~= "sprintInto" and self.fpAnimations.currentAnimation ~= "sprintIdle" then
+			swapFpAnimation( self.fpAnimations, "sprintExit", "sprintInto", 0.0 )
+		elseif not isSprinting and ( self.fpAnimations.currentAnimation == "sprintIdle" or self.fpAnimations.currentAnimation == "sprintInto" ) then
+			swapFpAnimation( self.fpAnimations, "sprintInto", "sprintExit", 0.0 )
+		end
+	end
+	updateFpAnimations( self.fpAnimations, equipped, dt )
+
+	local dispersion = 0.0
+	local fireMode = self.normalFireMode
+	dispersion = isCrouching and fireMode.minDispersionCrouching or fireMode.minDispersionStanding
+
+	if self.tool:getRelativeMoveDirection():length() > 0 then
+		dispersion = dispersion + fireMode.maxMovementDispersion * self.tool:getMovementSpeedFraction()
 	end
 
-	local crouchWeight = self.tool:isCrouching() and 1.0 or 0.0
-	local normalWeight = 1.0 - crouchWeight
+	if not self.tool:isOnGround() then
+		dispersion = dispersion * fireMode.jumpDispersionMultiplier
+	end
+
+	self.movementDispersion = dispersion
+	self.crosshairSpread = math.max(self.crosshairSpread - dt, 0 )
+	self.tool:setDispersionFraction( clamp( self.movementDispersion + self.crosshairSpread, 0.0, 1.0 ) )
+end
+
+function Pistol:updateTP(dt, crouchWeight, normalWeight)
 	local totalWeight = 0.0
 	for name, animation in pairs( self.tpAnimations.animations ) do
 		animation.time = animation.time + dt
@@ -331,8 +353,9 @@ function Pistol:client_onUpdate( dt )
 			self.tool:updateAnimation( animation.info.name, animation.time, weight )
 		end
 	end
+end
 
-
+function Pistol:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
 	-- Third Person joint lock
 	local playerDir = self.tool:getSmoothDirection()
 	local angle = math.asin( playerDir:dot( sm.vec3.new( 0, 0, 1 ) ) ) / ( math.pi / 2 )
@@ -370,18 +393,18 @@ function Pistol:client_onUpdate( dt )
 	self.tool:updateJoint( "jnt_spine2", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.10 + crouchSpineWeight ) * finalJointWeight )
 	self.tool:updateJoint( "jnt_spine3", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.45 + crouchSpineWeight ) * finalJointWeight )
 	self.tool:updateJoint( "jnt_head", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), 0.3 * finalJointWeight )
+end
 
-
-	-- Camera update
-	local aiming = false
+function Pistol:updateCam(dt)
 	local blend = 1 - ( (1 - 1 / self.aimBlendSpeed) ^ (dt * 60) )
-	self.aimWeight = sm.util.lerp( self.aimWeight, aiming and 1 or 0, blend )
-	local bobbing = aiming and 0.12 or 1
+	self.aimWeight = sm.util.lerp( self.aimWeight, 0, blend )
+	local bobbing = 1
 
 	local fov = sm.camera.getDefaultFov() / 3
 	self.tool:updateCamera( 2.8, fov, sm.vec3.new( 0.65, 0.0, 0.05 ), self.aimWeight )
 	self.tool:updateFpCamera( fov, sm.vec3.new( 0.0, 0.0, 0.0 ), self.aimWeight, bobbing )
 end
+
 
 function Pistol.client_onEquip( self, animate )
 	if animate then
@@ -397,8 +420,10 @@ function Pistol.client_onEquip( self, animate )
 
 	for k,v in pairs( renderablesTp ) do currentRenderablesTp[#currentRenderablesTp+1] = v end
 	for k,v in pairs( renderablesFp ) do currentRenderablesFp[#currentRenderablesFp+1] = v end
-	for k,v in pairs( renderables ) do currentRenderablesTp[#currentRenderablesTp+1] = v end
-	for k,v in pairs( renderables ) do currentRenderablesFp[#currentRenderablesFp+1] = v end
+	for k,v in pairs( renderables ) do
+		currentRenderablesTp[#currentRenderablesTp+1] = v
+		currentRenderablesFp[#currentRenderablesFp+1] = v
+	end
 
 	self.tool:setTpRenderables( currentRenderablesTp )
     if self.isLocal then
@@ -414,7 +439,9 @@ function Pistol.client_onEquip( self, animate )
 	self.lerpProgress = 1
 	self.colour = self.defaultColour
 	self.tool:setFpColor(self.colour)
-	self.tool:setTpColor(self.colour)
+	if self.isLocal then
+		self.tool:setTpColor(self.colour)
+	end
 end
 
 function Pistol.client_onUnequip( self, animate )

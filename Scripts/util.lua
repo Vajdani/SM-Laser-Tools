@@ -5,6 +5,7 @@ vec3_zero = sm.vec3.zero()
 vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)
 vec3_y = sm.vec3.new(1,0,0)
+local defaultQuat = sm.quat.identity()
 -- #endregion
 
 
@@ -60,6 +61,11 @@ end
 -- #region Classes
 -- #region Line_gun
 local line_up = sm.vec3.new(1,0,0)
+---@class Line_gun
+---@field init function
+---@field update function
+---@field stop function
+---@field destroy function
 Line_gun = class()
 function Line_gun:init( thickness, colour, strong )
     self.effect = sm.effect.createEffect("ShapeRenderable")
@@ -84,7 +90,6 @@ function Line_gun:update( startPos, endPos, dt, spinSpeed )
     local length = delta:length()
 
     if length < 0.0001 then
-        sm.log.warning("Line_gun:update() | Length of 'endPos - startPos' must be longer than 0.")
         return
 	end
 
@@ -99,14 +104,13 @@ function Line_gun:update( startPos, endPos, dt, spinSpeed )
 	end
 
 	local distance = sm.vec3.new(length, self.thickness, self.thickness)
-
 	self.effect:setPosition(startPos + delta * 0.5)
 	self.effect:setScale(distance)
 	self.effect:setRotation(rot)
 
 	--this shit kills my gpu if its done every frame
 	if sm.game.getCurrentTick() % 4 == 0 then
-		sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
+		sm.particle.createParticle( "cutter_block_destroy", endPos, defaultQuat, self.colour )
 	end
 
 	self.sound:setPosition(startPos)
@@ -131,6 +135,11 @@ end
 
 -- #region Line_cutter
 Line_cutter = class()
+---@class Line_cutter
+---@field init function
+---@field update function
+---@field stop function
+---@field setThicknessMultiplier function
 function Line_cutter:init( thickness, colour, dyingShrink )
     self.effect = sm.effect.createEffect("ShapeRenderable")
 	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
@@ -160,7 +169,6 @@ function Line_cutter:update( startPos, endPos, dt, spinSpeed, dying )
     local length = delta:length()
 
     if length < 0.0001 then
-        sm.log.warning("Line_cutter:update() | Length of 'endPos - startPos' must be longer than 0.")
         return
 	end
 

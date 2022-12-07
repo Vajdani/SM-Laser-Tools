@@ -202,10 +202,8 @@ function Cutter:sv_cut( args )
 		local effectData = { Material = material }
 
     	if sm.item.isBlock( shape.uuid ) then
-			---@type Vec3
 			normal = RoundVector(normal)
 			local cutSize = args.size
-			---@type Vec3
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
 			local destroyPos = pos - shape.worldRotation * (size - normal) * (1 / 12)
 			shape:destroyBlock(
@@ -259,7 +257,7 @@ end
 
 
 
-function Cutter:client_onUpdate( dt )
+function Cutter:client_onUpdate(dt)
 	local target = self:cl_cut(dt)
 	local isSprinting =  self.tool:isSprinting()
 	local isCrouching =  self.tool:isCrouching()
