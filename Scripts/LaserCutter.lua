@@ -10,7 +10,7 @@ dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 ---@field beamStopTimer number
 ---@field unitDamageTimer table
 ---@field line table
----@field inputStates table
+---@field firing boolean
 ---@field fpAnimations table
 ---@field tpAnimations table
 ---@field normalFireMode table
@@ -21,13 +21,7 @@ dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 ---@field aimWeight number
 ---@field cutSize number
 Cutter = class()
-Cutter.cuttableObjs = {
-	blk_scrapmetal,
-	blk_metal1,
-	blk_metal2,
-	blk_metal3,
-}
-Cutter.beamLength = 15^2 --15 meters, the script uses vec3:length2() instead of vec3:length() because its faster
+Cutter.beamLength = 15
 Cutter.lineStats = {
 	thickness = 0.05,
 	colour = sm.color.new(0,1,1),
@@ -54,10 +48,7 @@ sm.tool.preloadRenderables( renderablesFp )
 function Cutter.client_onCreate( self )
 	self.isLocal = self.tool:isLocal()
 	self.owner = self.tool:getOwner()
-	self.inputStates = {
-		primaryState = 0,
-		secondaryState = 0
-	}
+	self.firing = false
 	self.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.owner.character )
 	self.line = Line_cutter()
 	self.line:init( self.lineStats.thickness, self.lineStats.colour, 0.1 )
@@ -126,11 +117,10 @@ function Cutter:cl_cut( dt )
 	local playerChar = self.owner.character
 	local playerPos = playerChar.worldPosition
 	local playerDir = playerChar.direction
-	local firing = isAnyOf(self.inputStates.primaryState, {1, 2}) and self.tool:isEquipped()
 	local hit = false
 	local result, target
 
-	if firing then
+	if self.firing then
 		if not self.activeSound:isPlaying() then
 			self.activeSound:start()
 		end
@@ -138,7 +128,7 @@ function Cutter:cl_cut( dt )
 		local raycastStart = playerPos + camAdjust
 		hit, result = sm.physics.raycast( raycastStart, raycastStart + playerDir * self.beamLength, playerChar )
 
-		if hit and (result.pointWorld - playerPos):length2() <= self.beamLength then
+		if hit then
 			target = result:getShape() or result:getCharacter() or result:getHarvestable()
 
 			if target then
@@ -192,11 +182,11 @@ function Cutter:cl_cut( dt )
 		end
 	end
 
-	if (not hit or not target or (result.pointWorld - playerPos):length2() <= self.beamLength) and self.line.effect:isPlaying() then
+	if (not hit or not target) and self.line.effect:isPlaying() then
 		self:cl_updateDyingBeam(dt)
 	end
 
-	return firing, target
+	return target
 end
 
 function Cutter:sv_cut( args )
@@ -259,34 +249,34 @@ function Cutter:sv_explode( pos )
 end
 
 
-function Cutter:sv_syncInputs( inputs )
-	self.network:sendToClients( "cl_syncInputs", inputs )
+function Cutter:sv_updateFiring( firing )
+	self.network:sendToClients( "cl_updateFiring", firing )
 end
 
-function Cutter:cl_syncInputs( inputs )
-	self.inputStates = inputs
+function Cutter:cl_updateFiring( firing )
+	self.firing = firing
 end
 
 
 
 function Cutter:client_onUpdate( dt )
-	local firing, target = self:cl_cut(dt)
+	local target = self:cl_cut(dt)
 	local isSprinting =  self.tool:isSprinting()
 	local isCrouching =  self.tool:isCrouching()
 	local equipped = self.tool:isEquipped()
 
 	if self.isLocal then
-		self:updateFP(dt, equipped, firing, target, isSprinting, isCrouching)
+		self:updateFP(dt, equipped, target, isSprinting, isCrouching)
 	end
 
 	local crouchWeight = self.tool:isCrouching() and 1.0 or 0.0
 	local normalWeight = 1.0 - crouchWeight
-	self:updateTP(dt, equipped, firing, crouchWeight, normalWeight)
+	self:updateTP(dt, equipped, crouchWeight, normalWeight)
 	self:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
 	self:updateCam(dt)
 end
 
-function Cutter:updateFP(dt, equipped, firing, target, isSprinting, isCrouching)
+function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
 	if equipped then
 		if isSprinting and self.fpAnimations.currentAnimation ~= "sprintInto" and self.fpAnimations.currentAnimation ~= "sprintIdle" then
 			swapFpAnimation( self.fpAnimations, "sprintExit", "sprintInto", 0.0 )
@@ -294,9 +284,9 @@ function Cutter:updateFP(dt, equipped, firing, target, isSprinting, isCrouching)
 			swapFpAnimation( self.fpAnimations, "sprintInto", "sprintExit", 0.0 )
 		end
 
-		if firing and self.fpAnimations.currentAnimation ~= "use_idle" then
+		if self.firing and self.fpAnimations.currentAnimation ~= "use_idle" then
 			setFpAnimation( self.fpAnimations, "use_idle", 0.2 )
-		elseif not firing and self.fpAnimations.currentAnimation == "use_idle" then
+		elseif not self.firing and self.fpAnimations.currentAnimation == "use_idle" then
 			setFpAnimation( self.fpAnimations, "idle", 0.5 )
 		end
 	end
@@ -315,18 +305,18 @@ function Cutter:updateFP(dt, equipped, firing, target, isSprinting, isCrouching)
 	end
 
 	self.movementDispersion = dispersion
-	local spreadFactor = firing and 0.25 or 0
+	local spreadFactor = self.firing and 0.25 or 0
 	spreadFactor = target ~= nil and spreadFactor * 2 or spreadFactor
 	self.tool:setDispersionFraction( clamp( self.movementDispersion + spreadFactor, 0.0, 1.0 ) )
 	self.tool:setCrossHairAlpha( 1.0 )
 	self.tool:setInteractionTextSuppressed( false )
 end
 
-function Cutter:updateTP(dt, equipped, firing, crouchWeight, normalWeight)
+function Cutter:updateTP(dt, equipped, crouchWeight, normalWeight)
 	if equipped then
-		if firing and self.tpAnimations.currentAnimation ~= "use_idle" then
+		if self.firing and self.tpAnimations.currentAnimation ~= "use_idle" then
 			setTpAnimation( self.tpAnimations, "use_idle", 10 )
-		elseif not firing and self.tpAnimations.currentAnimation == "use_idle" then
+		elseif not self.firing and self.tpAnimations.currentAnimation == "use_idle" then
 			setTpAnimation( self.tpAnimations, "idle", 2.5 )
 		end
 	end
@@ -443,10 +433,7 @@ end
 
 function Cutter.client_onUnequip( self, animate )
 	self.line.effect:stopImmediate()
-
-	if sm.localPlayer.getPlayer() == self.owner then
-		self.inputStates.primaryState = sm.tool.interactState.null
-	end
+	self.firing = false
 
 	if sm.exists( self.tool ) then
 		if animate then
@@ -466,11 +453,9 @@ function Cutter.client_onUnequip( self, animate )
 end
 
 function Cutter.client_onEquippedUpdate( self, primaryState, secondaryState )
-	local inputStates = { primaryState = primaryState, secondaryState = secondaryState }
-
-	if self.inputStates.primaryState ~= primaryState or self.inputStates.secondaryState ~= secondaryState then
-		self.inputStates = inputStates
-		self.network:sendToServer("sv_syncInputs", inputStates)
+	local firing = primaryState == 1 or primaryState == 2
+	if firing ~= self.firing then
+		self.network:sendToServer("sv_updateFiring", firing)
 	end
 
 	return true, true
@@ -564,14 +549,11 @@ function Cutter.calculateFirePosition( self )
 		fireOffset.z = 0.45
 	end
 
-	if firstPerson then
-		if not isAnyOf(self.inputStates.secondaryState, {sm.tool.interactState.start, sm.tool.interactState.hold}) then
-			fireOffset = fireOffset + right * 0.05
-		end
-	else
+	if not firstPerson then
 		fireOffset = fireOffset + right * 0.25
 		fireOffset = fireOffset:rotate( math.rad( pitch ), right )
 	end
+
 	local firePosition = GetOwnerPosition( self.tool ) + fireOffset
 	return firePosition
 end
