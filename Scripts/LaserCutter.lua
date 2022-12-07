@@ -40,7 +40,7 @@ local renderables = {
     "$CONTENT_DATA/Tools/LaserCutter/char_cuttertool.rend",
 }
 local renderablesTp = {
-    "$GAME_DATA/Character/Char_Male/Animations/char_male_tp_connecttool.rend",
+    "$CONTENT_DATA/Tools/LaserCutter/char_male_tp_lasercutter.rend",
     "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_tp_animlist.rend"
 }
 local renderablesFp = {
@@ -75,17 +75,29 @@ end
 
 
 function Cutter:client_onReload()
-	--self.cutSize = self.cutSize + 2
-	--sm.gui.displayAlertText(tostring(self.cutSize), 2.5)
+	self.cutSize = self.cutSize + 2
+	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
+	sm.audio.play("PaintTool - ColorPick")
+	--self.network:sendToServer("sv_updateLineThickness", self.cutSize)
 
 	return true
 end
 
 function Cutter:client_onToggle()
-	--self.cutSize = math.max(self.cutSize - 2, 1)
-	--sm.gui.displayAlertText(tostring(self.cutSize), 2.5)
+	self.cutSize = math.max(self.cutSize - 2, 1)
+	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
+	sm.audio.play("PaintTool - ColorPick")
+	--network:sendToServer("sv_updateLineThickness", self.cutSize)
 
 	return true
+end
+
+function Cutter:sv_updateLineThickness(num)
+	self.network:sendToClients("cl_updateLineThickness", num)
+end
+
+function Cutter:cl_updateLineThickness(num)
+	self.line:setThicknessMultiplier(num)
 end
 
 
@@ -114,7 +126,7 @@ function Cutter:cl_cut( dt )
 	local playerChar = self.owner.character
 	local playerPos = playerChar.worldPosition
 	local playerDir = playerChar.direction
-	local firing = isAnyOf(self.inputStates.primaryState, {sm.tool.interactState.start, sm.tool.interactState.hold}) and self.tool:isEquipped()
+	local firing = isAnyOf(self.inputStates.primaryState, {1, 2}) and self.tool:isEquipped()
 	local hit = false
 	local result, target
 
@@ -196,47 +208,49 @@ function Cutter:sv_cut( args )
 		---@type Vec3
 		local normal = args.normal
 		local material = shape:getMaterialId()
-		local effectRot = sm.vec3.getRotation( sm.vec3.new(0,0,1), normal )
+		local effectRot = sm.vec3.getRotation( vec3_up, normal )
 		local effectData = { Material = material }
-		--local shapeRot = shape.worldRotation
 
     	if sm.item.isBlock( shape.uuid ) then
-			--[[local rot = sm.vec3.getRotation(sm.vec3.new(1, 0, 0), normal) * sm.quat.fromEuler(sm.vec3.new(0, 0, 90))
-			local size = args.size
-			local size_vec3 = rot * sm.vec3.new(size, 1, size)
-			size_vec3.x = sm.util.clamp(math.ceil(size_vec3.x), 1, size)
-			size_vec3.y = sm.util.clamp(math.ceil(size_vec3.y), 1, size)
-			size_vec3.z = sm.util.clamp(math.ceil(size_vec3.z), 1, size)]]
+			---@type Vec3
+			normal = RoundVector(normal)
+			local cutSize = args.size
+			---@type Vec3
+			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
+			local destroyPos = pos - shape.worldRotation * (size - normal) * (1 / 12)
+			shape:destroyBlock(
+				shape:getClosestBlockLocalPosition(destroyPos),
+				size
+			)
 
-			local destroyPos = pos --- (shapeRot * (size_vec3/12))
-			shape:destroyBlock( shape:getClosestBlockLocalPosition(destroyPos), vec3_one --[[size_vec3]] )
-
-			--[[for i = 0, size_vec3.x - 1 do
-				for j = 0, size_vec3.y - 1 do
-					for k = 0, size_vec3.z - 1 do]]
+			--[[
+			for i = 0, size.x - 1 do
+				for j = 0, size.y - 1 do
+					for k = 0, size.z - 1 do
 						sm.effect.playEffect(
 							"Sledgehammer - Destroy",
-							destroyPos, --+ (sm.vec3.new(i, j, k) * 0.25),
+							destroyPos + (sm.vec3.new(i, j, k) - normal) * 0.25,
 							vec3_zero,
 							effectRot,
 							vec3_one,
 							effectData
 						)
-			--[[		end
+					end
 				end
-			end]]
+			end
+			]]
 		else
 			shape:destroyShape()
-
-			sm.effect.playEffect(
-				"Sledgehammer - Destroy",
-				pos,
-				vec3_zero,
-				effectRot,
-				vec3_one,
-				effectData
-			)
 		end
+
+		sm.effect.playEffect(
+			"Sledgehammer - Destroy",
+			pos,
+			vec3_zero,
+			effectRot,
+			vec3_one,
+			effectData
+		)
 	end
 end
 
@@ -257,48 +271,58 @@ end
 
 function Cutter:client_onUpdate( dt )
 	local firing, target = self:cl_cut(dt)
-
-	-- First person animation
 	local isSprinting =  self.tool:isSprinting()
 	local isCrouching =  self.tool:isCrouching()
 	local equipped = self.tool:isEquipped()
 
 	if self.isLocal then
-		if equipped then
-			if isSprinting and self.fpAnimations.currentAnimation ~= "sprintInto" and self.fpAnimations.currentAnimation ~= "sprintIdle" then
-				swapFpAnimation( self.fpAnimations, "sprintExit", "sprintInto", 0.0 )
-			elseif not isSprinting and ( self.fpAnimations.currentAnimation == "sprintIdle" or self.fpAnimations.currentAnimation == "sprintInto" ) then
-				swapFpAnimation( self.fpAnimations, "sprintInto", "sprintExit", 0.0 )
-			end
-
-			if firing and self.fpAnimations.currentAnimation ~= "use_idle" then
-				setFpAnimation( self.fpAnimations, "use_idle", 0.2 )
-			elseif not firing and self.fpAnimations.currentAnimation == "use_idle" then
-				setFpAnimation( self.fpAnimations, "idle", 0.5 )
-			end
-		end
-		updateFpAnimations( self.fpAnimations, equipped, dt )
-
-		local dispersion = 0.0
-		local fireMode = self.normalFireMode
-		dispersion = isCrouching and fireMode.minDispersionCrouching or fireMode.minDispersionStanding
-
-		if self.tool:getRelativeMoveDirection():length() > 0 then
-			dispersion = dispersion + fireMode.maxMovementDispersion * self.tool:getMovementSpeedFraction()
-		end
-
-		if not self.tool:isOnGround() then
-			dispersion = dispersion * fireMode.jumpDispersionMultiplier
-		end
-
-		self.movementDispersion = dispersion
-		local spreadFactor = firing and 0.25 or 0
-		spreadFactor = target ~= nil and spreadFactor * 2 or spreadFactor
-		self.tool:setDispersionFraction( clamp( self.movementDispersion + spreadFactor, 0.0, 1.0 ) )
-		self.tool:setCrossHairAlpha( 1.0 )
-		self.tool:setInteractionTextSuppressed( false )
+		self:updateFP(dt, equipped, firing, target, isSprinting, isCrouching)
 	end
 
+	local crouchWeight = self.tool:isCrouching() and 1.0 or 0.0
+	local normalWeight = 1.0 - crouchWeight
+	self:updateTP(dt, equipped, firing, crouchWeight, normalWeight)
+	self:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
+	self:updateCam(dt)
+end
+
+function Cutter:updateFP(dt, equipped, firing, target, isSprinting, isCrouching)
+	if equipped then
+		if isSprinting and self.fpAnimations.currentAnimation ~= "sprintInto" and self.fpAnimations.currentAnimation ~= "sprintIdle" then
+			swapFpAnimation( self.fpAnimations, "sprintExit", "sprintInto", 0.0 )
+		elseif not isSprinting and ( self.fpAnimations.currentAnimation == "sprintIdle" or self.fpAnimations.currentAnimation == "sprintInto" ) then
+			swapFpAnimation( self.fpAnimations, "sprintInto", "sprintExit", 0.0 )
+		end
+
+		if firing and self.fpAnimations.currentAnimation ~= "use_idle" then
+			setFpAnimation( self.fpAnimations, "use_idle", 0.2 )
+		elseif not firing and self.fpAnimations.currentAnimation == "use_idle" then
+			setFpAnimation( self.fpAnimations, "idle", 0.5 )
+		end
+	end
+	updateFpAnimations( self.fpAnimations, equipped, dt )
+
+	local dispersion = 0.0
+	local fireMode = self.normalFireMode
+	dispersion = isCrouching and fireMode.minDispersionCrouching or fireMode.minDispersionStanding
+
+	if self.tool:getRelativeMoveDirection():length() > 0 then
+		dispersion = dispersion + fireMode.maxMovementDispersion * self.tool:getMovementSpeedFraction()
+	end
+
+	if not self.tool:isOnGround() then
+		dispersion = dispersion * fireMode.jumpDispersionMultiplier
+	end
+
+	self.movementDispersion = dispersion
+	local spreadFactor = firing and 0.25 or 0
+	spreadFactor = target ~= nil and spreadFactor * 2 or spreadFactor
+	self.tool:setDispersionFraction( clamp( self.movementDispersion + spreadFactor, 0.0, 1.0 ) )
+	self.tool:setCrossHairAlpha( 1.0 )
+	self.tool:setInteractionTextSuppressed( false )
+end
+
+function Cutter:updateTP(dt, equipped, firing, crouchWeight, normalWeight)
 	if equipped then
 		if firing and self.tpAnimations.currentAnimation ~= "use_idle" then
 			setTpAnimation( self.tpAnimations, "use_idle", 10 )
@@ -307,8 +331,6 @@ function Cutter:client_onUpdate( dt )
 		end
 	end
 
-	local crouchWeight = self.tool:isCrouching() and 1.0 or 0.0
-	local normalWeight = 1.0 - crouchWeight
 	local totalWeight = 0.0
 	for name, animation in pairs( self.tpAnimations.animations ) do
 		animation.time = animation.time + dt
@@ -342,16 +364,53 @@ function Cutter:client_onUpdate( dt )
 			self.tool:updateAnimation( animation.info.name, animation.time, weight )
 		end
 	end
+end
 
-	-- Camera update
+function Cutter:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
+	-- Third Person joint lock
+	local playerDir = self.tool:getSmoothDirection()
+	local angle = math.asin( playerDir:dot( sm.vec3.new( 0, 0, 1 ) ) ) / ( math.pi / 2 )
+	local relativeMoveDirection = self.tool:getRelativeMoveDirection()
+	if ( ( ( self.tpAnimations.currentAnimation == "shoot" and ( relativeMoveDirection:length() > 0 or isCrouching) ) ) and not isSprinting ) then
+		self.jointWeight = math.min( self.jointWeight + ( 10.0 * dt ), 1.0 )
+	else
+		self.jointWeight = math.max( self.jointWeight - ( 6.0 * dt ), 0.0 )
+	end
+
+	if ( not isSprinting ) then
+		self.spineWeight = math.min( self.spineWeight + ( 10.0 * dt ), 1.0 )
+	else
+		self.spineWeight = math.max( self.spineWeight - ( 10.0 * dt ), 0.0 )
+	end
+
+	local finalAngle = ( 0.5 + angle * 0.5 )
+	self.tool:updateAnimation( "spudgun_spine_bend", finalAngle, self.spineWeight )
+
+	local totalOffsetZ = lerp( -22.0, -26.0, crouchWeight )
+	local totalOffsetY = lerp( 6.0, 12.0, crouchWeight )
+	local crouchTotalOffsetX = clamp( ( angle * 60.0 ) -15.0, -60.0, 40.0 )
+	local normalTotalOffsetX = clamp( ( angle * 50.0 ), -45.0, 50.0 )
+	local totalOffsetX = lerp( normalTotalOffsetX, crouchTotalOffsetX , crouchWeight )
+	local finalJointWeight = ( self.jointWeight )
+
+	self.tool:updateJoint( "jnt_hips", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), 0.35 * finalJointWeight * ( normalWeight ) )
+	local crouchSpineWeight = ( 0.35 / 3 ) * crouchWeight
+	self.tool:updateJoint( "jnt_spine1", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.10 + crouchSpineWeight )  * finalJointWeight )
+	self.tool:updateJoint( "jnt_spine2", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.10 + crouchSpineWeight ) * finalJointWeight )
+	self.tool:updateJoint( "jnt_spine3", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.45 + crouchSpineWeight ) * finalJointWeight )
+	self.tool:updateJoint( "jnt_head", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), 0.3 * finalJointWeight )
+end
+
+function Cutter:updateCam(dt)
 	local blend = 1 - ( (1 - 1 / self.aimBlendSpeed) ^ (dt * 60) )
 	self.aimWeight = sm.util.lerp( self.aimWeight,  0, blend )
 	local bobbing =  1
-
 	local fov = sm.camera.getDefaultFov() / 3
 	self.tool:updateCamera( 2.8, fov, sm.vec3.new( 0.65, 0.0, 0.05 ), self.aimWeight )
 	self.tool:updateFpCamera( fov, sm.vec3.new( 0.0, 0.0, 0.0 ), self.aimWeight, bobbing )
 end
+
+
 
 function Cutter.client_onEquip( self, animate )
 	if animate then
@@ -367,15 +426,16 @@ function Cutter.client_onEquip( self, animate )
 
 	for k,v in pairs( renderablesTp ) do currentRenderablesTp[#currentRenderablesTp+1] = v end
 	for k,v in pairs( renderablesFp ) do currentRenderablesFp[#currentRenderablesFp+1] = v end
-	for k,v in pairs( renderables ) do currentRenderablesTp[#currentRenderablesTp+1] = v end
-	for k,v in pairs( renderables ) do currentRenderablesFp[#currentRenderablesFp+1] = v end
+	for k,v in pairs( renderables ) do
+		currentRenderablesTp[#currentRenderablesTp+1] = v
+		currentRenderablesFp[#currentRenderablesFp+1] = v
+	end
 	self:loadAnimations()
 
 	self.tool:setTpRenderables( currentRenderablesTp )
 	setTpAnimation( self.tpAnimations, "pickup", 0.0001 )
 
 	if self.isLocal then
-		-- Sets Cutter renderable, change this to change the mesh
 		self.tool:setFpRenderables( currentRenderablesFp )
 		swapFpAnimation( self.fpAnimations, "unequip", "equip", 0.2 )
 	end

@@ -143,6 +143,11 @@ function Line_cutter:init( thickness, colour, dyingShrink )
 	self.currentThickness = thickness
 	self.spinTime = 0
 	self.dyingShrink = dyingShrink or 1
+	self.thicknessMultiplier = 1
+end
+
+function Line_cutter:setThicknessMultiplier( num )
+	self.thicknessMultiplier = num
 end
 
 
@@ -165,7 +170,7 @@ function Line_cutter:update( startPos, endPos, dt, spinSpeed, dying )
 	self.spinTime = self.spinTime + deltaTime * speed
 	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), line_up )
 
-	self.currentThickness = dying and math.max(self.currentThickness - dt * self.dyingShrink, 0) or self.thickness
+	self.currentThickness = (dying and math.max(self.currentThickness - dt * self.dyingShrink, 0) or self.thickness) * self.thicknessMultiplier
 	local distance = sm.vec3.new(length, self.currentThickness, self.currentThickness)
 
 	self.effect:setPosition(startPos + delta * 0.5)
