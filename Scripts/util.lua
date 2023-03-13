@@ -1,6 +1,7 @@
 -- #region Constants
-vec3_up = sm.vec3.new(0,0,1)
 camAdjust = sm.vec3.new(0,0,0.575)
+camAdjust_crouch = sm.vec3.new(0,0,0.3)
+vec3_up = sm.vec3.new(0,0,1)
 vec3_zero = sm.vec3.zero()
 vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)

@@ -125,7 +125,7 @@ function Cutter:cl_cut( dt )
 			self.activeSound:start()
 		end
 
-		local raycastStart = playerPos + camAdjust
+		local raycastStart = playerPos + (playerChar:isCrouching() and camAdjust_crouch or camAdjust)
 		hit, result = sm.physics.raycast( raycastStart, raycastStart + playerDir * self.beamLength, playerChar )
 
 		if hit then
@@ -206,10 +206,7 @@ function Cutter:sv_cut( args )
 			local cutSize = args.size
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
 			local destroyPos = pos - shape.worldRotation * (size - normal) * (1 / 12)
-			shape:destroyBlock(
-				shape:getClosestBlockLocalPosition(destroyPos),
-				size
-			)
+			shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
 
 			--[[
 			for i = 0, size.x - 1 do
