@@ -21,6 +21,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field fpAnimations table
 ---@field tpAnimations table
 ---@field cutPlane Effect
+---@field cutTrigger AreaTrigger
 ---@field owner Player
 ---@field bladeHud GuiInterface
 ---@field bladeSound Effect
@@ -253,10 +254,10 @@ function Katana:client_onEquippedUpdate(lmb, rmb, f)
 	self.bladeSound:setPosition(self.tool:getPosition())
 	if f ~= self.isInBladeMode then
 		if f then
-			self.bladeHud:open()
+			--self.bladeHud:open()
 			self.bladeSound:start()
 		else
-			self.bladeHud:close()
+			--self.bladeHud:close()
 			self.bladeSound:stopImmediate()
 		end
 
@@ -373,7 +374,7 @@ function Katana:client_onUpdate(dt)
 		shouldStopPlane = not self.equipped --or not hit
 
 		if not shouldStopPlane then
-			local pos, scale, rot = vec3_zero, vec3_zero, sm.quat.identity()
+			local pos, scale, rot = vec3_zero, vec3_zero, defaultQuat
 			local data = self.bladeModeDirData[self.bladeMode]
 			local cutSize = self.bladeModeCutSize
 
@@ -381,12 +382,11 @@ function Katana:client_onUpdate(dt)
 				local normal = data.transformNormal(RoundVector(ray.normalLocal))
 				local dir = RoundVector(data.dir(normal))
 
-				scale = vec3_one * ((normal + dir) * cutSize)
+				scale = vec3_one * (normal + dir) * cutSize
 				scale.x = sm.util.clamp( math.abs(scale.x), 1, cutSize )
 				scale.y = sm.util.clamp( math.abs(scale.y), 1, cutSize )
 				scale.z = sm.util.clamp( math.abs(scale.z), 1, cutSize )
 
-				--scale = data.name == "Horizontal" and sm.vec3.new(scale.x, scale.y, 0.01) or sm.vec3.new(0.01, scale.y, scale.z)
 				scale = scale - AbsVector(normal:cross(dir) * 0.99)
 			else
 				scale = data.name == "Horizontal" and sm.vec3.new(cutSize, cutSize, 0.01) or sm.vec3.new(0.01, cutSize, cutSize)
@@ -399,6 +399,17 @@ function Katana:client_onUpdate(dt)
 			self.cutPlane:setPosition(pos)
 			self.cutPlane:setScale(scale)
 			self.cutPlane:setRotation(rot)
+
+			if self.triggerScale ~= scale then
+				self.triggerScale = scale
+				if sm.exists(self.cutTrigger) then
+					sm.areaTrigger.destroy(self.cutTrigger)
+				end
+
+				self.cutTrigger = sm.areaTrigger.createBox(scale * 0.25, pos, defaultQuat, 3)
+			end
+			self.cutTrigger:setWorldPosition(pos)
+			self.cutTrigger:setWorldRotation(rot)
 
 			if not self.cutPlane:isPlaying() then
 				self.cutPlane:start()
@@ -533,7 +544,8 @@ function Katana:cl_katanaSwing( anim, mode )
 			{
 				pos = sm.localPlayer.getRaycastStart(),
 				mode = self.bladeMode,
-				rot = sm.camera.getRotation()
+				rot = sm.camera.getRotation(),
+				bodies = self.cutTrigger:getContents()
 			}
 		)
 	else
@@ -558,42 +570,42 @@ end
 
 function Katana:sv_bladeModeCut( args )
 	self:server_startEvent({ name = "sledgehammer_attack_heavy1" })
+	self.network:sendToClients("cl_bladeModeCut")
 
 	local owner = self.tool:getOwner()
 	local char = owner.character
 	---@type Vec3
 	local start = args.pos
 	local charDir = char.direction
-	local hit, result = sm.physics.raycast(
-		start,
-		start + charDir * Range,
-		char
-	)
+	local hit, result = sm.physics.raycast(start, start + charDir * Range, char)
 
 	local ray = RayResultToTable(result)
 	local target = ray.target
 	if hit and type(target) == "Shape" then
-		if sm.item.isBlock(target.uuid) then
-			local data = self.bladeModeDirData[args.mode]
-			---@type Vec3
-			local pos = ray.pointWorld
-			local normal = data.transformNormal(RoundVector(ray.normalLocal))
-			local dir = RoundVector(data.dir(normal))
+		local data = self.bladeModeDirData[args.mode]
+		local pos = ray.pointWorld
+		local normal = data.transformNormal(RoundVector(ray.normalLocal))
+		local dir = RoundVector(data.dir(normal))
 
-			local cutSize = self.bladeModeCutSize
-			local size = AbsVector(vec3_one * ((normal + dir) * cutSize))
-			local size_clamped = sm.vec3.new(
-				sm.util.clamp( size.x, 1, cutSize ),
-				sm.util.clamp( size.y, 1, cutSize ),
-				sm.util.clamp( size.z, 1, cutSize )
-			)
+		local cutSize = self.bladeModeCutSize
+		local size = AbsVector(vec3_one * ((normal + dir) * cutSize))
+		local size_clamped = sm.vec3.new(
+			sm.util.clamp( size.x, 1, cutSize ),
+			sm.util.clamp( size.y, 1, cutSize ),
+			sm.util.clamp( size.z, 1, cutSize )
+		)
 
-			target:destroyBlock(
-				target:getClosestBlockLocalPosition(pos - target.worldRotation * (size * 0.25)),
-				size_clamped
-			)
-		else
-			target:destroyShape()
+		for k, body in pairs(args.bodies) do
+			for _k, shape in pairs(body:getShapes()) do
+				if sm.item.isBlock(shape.uuid) then
+					shape:destroyBlock(
+						shape:getClosestBlockLocalPosition(pos - shape.worldRotation * (size * 0.25)),
+						size_clamped
+					)
+				else
+					shape:destroyShape()
+				end
+			end
 		end
 	else
 		sm.melee.meleeAttack(
@@ -604,11 +616,10 @@ function Katana:sv_bladeModeCut( args )
 			owner
 		)
 	end
+end
 
-	sm.effect.playEffect(
-		"Farmbot - Attack02",
-		char.worldPosition + camAdjust
-	)
+function Katana:cl_bladeModeCut()
+	sm.effect.playHostedEffect("Farmbot - Attack02", self.owner.character)
 end
 
 
@@ -717,6 +728,9 @@ function Katana.client_onEquip(self, animate)
 	if self.isLocal then
 		self.tool:setFpRenderables(currentRenderablesFp)
 		self.tool:setFpColor(col)
+
+		self.cutPlane:setParameter("minColor", self.cutPlaneColours.min)
+		self.cutPlane:setParameter("maxColor", col)
 	end
 
 	self:init()
@@ -816,10 +830,17 @@ function Katana.loadAnimations(self)
 				sprintIdle = { "sledgehammer_sprint_idle", { looping = true } },
 				sprintExit = { "sledgehammer_sprint_exit", { nextAnimation = "idle" } },
 
+				--[[
 				sledgehammer_attack1 = { "katana_attack1", { nextAnimation = "sledgehammer_exit1" } },
 				sledgehammer_attack2 = { "katana_attack2", { nextAnimation = "sledgehammer_exit2" } },
 				sledgehammer_exit1 = { "katana_exit1", { nextAnimation = "idle" } },
 				sledgehammer_exit2 = { "katana_exit2", { nextAnimation = "idle" } },
+				]]
+
+				sledgehammer_attack1 = { "sledgehammer_attack1", { nextAnimation = "sledgehammer_exit1" } },
+				sledgehammer_attack2 = { "sledgehammer_attack2", { nextAnimation = "sledgehammer_exit2" } },
+				sledgehammer_exit1 = { "sledgehammer_exit1", { nextAnimation = "idle" } },
+				sledgehammer_exit2 = { "sledgehammer_exit2", { nextAnimation = "idle" } },
 
 				sledgehammer_attack_heavy1 = { "sledgehammer_attack_heavy1", { nextAnimation = "sledgehammer_exit_heavy1" } },
 				sledgehammer_attack_heavy2 = { "sledgehammer_attack_heavy2", { nextAnimation = "sledgehammer_exit_heavy2" } },

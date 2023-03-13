@@ -31,7 +31,7 @@
             "data" : {},
             "file" : "$CONTENT_DATA/Scripts/LaserKatana.lua"
          },
-         "showInInventory" : false,
+         "showInInventory" : true,
          "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf"
       },
       {
@@ -43,7 +43,7 @@
             "data" : {},
             "file" : "$CONTENT_DATA/Scripts/Railgun.lua"
          },
-         "showInInventory" : false,
+         "showInInventory" : true,
          "uuid" : "704fdad0-99bf-45a7-b24e-dfbeb028b54f"
       }
    ]

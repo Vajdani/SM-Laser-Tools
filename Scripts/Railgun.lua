@@ -215,14 +215,11 @@ function Railgun.client_onUpdate( self, dt )
 		return
 	end
 
-
-
-	self.railCharge = self.charging and sm.util.clamp(self.railCharge + dt * 0.25, 0,1) or sm.util.clamp(self.railCharge - dt * 0.5, 0,1)
-	self.dt = (self.dt or 0) + dt
-	self.tool:updateAnimation("charge", self.dt, 1)
+	self.railCharge = self.charging and sm.util.clamp(self.railCharge + dt * 0.5, 0,1) or sm.util.clamp(self.railCharge - dt, 0,1)
+	self.tool:updateAnimation("charge", self.railCharge, 1)
 
 	if self.isLocal then
-		self.tool:updateFpAnimation("charge_fp", self.dt, 1, true)
+		self.tool:updateFpAnimation("charge_fp", self.railCharge, 1, false)
 		sm.gui.setProgressFraction(self.railCharge / 1)
 
 		if self.railCharge >= 1 then
@@ -233,13 +230,6 @@ function Railgun.client_onUpdate( self, dt )
 			self.blockCharge = false
 		end
 	end
-
-	sm.camera.setCameraState(0)
-	sm.camera.setPosition(self.tool:getPosition() + self.tool:getDirection() * 2)
-	sm.camera.setDirection(-self.tool:getDirection())
-	sm.camera.setFov(sm.camera.getDefaultFov())
-
-
 
 	local effectPos, rot
 	if self.isLocal then

@@ -6,13 +6,16 @@ vec3_zero = sm.vec3.zero()
 vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)
 vec3_y = sm.vec3.new(1,0,0)
-local defaultQuat = sm.quat.identity()
+defaultQuat = sm.quat.identity()
 -- #endregion
 
 
+---@class RaycastResult_table : RaycastResult
+---@field target Shape|Character|Harvestable
+
 -- #region Functions
 ---@param rayResult RaycastResult
----@return table
+---@return RaycastResult_table
 function RayResultToTable( rayResult )
     return {
         valid = rayResult.valid,
