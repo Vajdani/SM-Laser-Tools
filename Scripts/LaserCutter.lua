@@ -33,10 +33,10 @@ Cutter.unitDamageTicks = 10
 Cutter.maxCutSize = 7
 
 local renderables = {
-    "$CONTENT_DATA/Tools/LaserCutter/char_cuttertool.rend",
+    "$CONTENT_DATA/Tools/LaserCutter/char_lasercutter.rend",
 }
 local renderablesTp = {
-    "$CONTENT_DATA/Tools/LaserCutter/char_male_tp_lasercutter.rend",
+    "$CONTENT_DATA/Tools/LaserCutter/Animations/char_male_tp_lasercutter.rend",
     "$GAME_DATA/Character/Char_Tools/Char_connecttool/char_connecttool_tp_animlist.rend"
 }
 local renderablesFp = {

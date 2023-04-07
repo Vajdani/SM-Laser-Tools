@@ -1,7 +1,7 @@
 {
 	"lodList": [
 		{
-			"mesh": "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.dae",
+			"mesh": "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.dae",
 			"includes": [ "POSITION", "UV0", "NORMAL", "TANGENTS", "BLEND_INDICES", "BLEND_WEIGHTS" ],
 			"subMeshList": [
 				{

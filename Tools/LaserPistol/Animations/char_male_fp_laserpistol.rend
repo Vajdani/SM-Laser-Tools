@@ -92,7 +92,7 @@
 				},
 				{
 					"name": "laserpistol_shoot",
-					"file": "$CONTENT_DATA/Tools/LaserPistol/Animations/ani_char_male_fp_laserpistol_shoot.dae"
+					"file": "$CONTENT_DATA/Tools/LaserPistol/Animations/FP/ani_char_male_fp_laserpistol_shoot.dae"
 				}
 			],
 			"maxViewDistance": 1000.0

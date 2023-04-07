@@ -91,7 +91,7 @@
 				},
 				{
 					"name": "laserpistol_shoot",
-					"file": "$CONTENT_DATA/Tools/LaserPistol/Animations/ani_char_male_laserpistol_shoot.dae"
+					"file": "$CONTENT_DATA/Tools/LaserPistol/Animations/TP/ani_char_male_laserpistol_shoot.dae"
 				},
 				{
 					"name": "spudgun_spine_bend",

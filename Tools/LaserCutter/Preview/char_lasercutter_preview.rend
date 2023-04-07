@@ -1,15 +1,7 @@
 {
-   "lodList": [
+   "lodList" : [
       {
-         "mesh": "$CONTENT_DATA/Tools/LaserCutter/cutter.dae",
-         "includes": [
-            "POSITION",
-            "UV0",
-            "NORMAL",
-            "TANGENTS",
-            "BLEND_INDICES",
-            "BLEND_WEIGHTS"
-         ],
+         "mesh" : "$CONTENT_DATA/Tools/LaserCutter/Preview/char_lasercutter_preview.obj",
          "subMeshList": [
             {
                "material": "DifAsgNor",
@@ -30,8 +22,8 @@
             {
                "material": "DifAsgNor",
                "textureList": [
-                  "$CONTENT_DATA/Tools/LaserCutter/char_spudgun_base_dif.tga",
-                  "$CONTENT_DATA/Tools/LaserCutter/char_spudgun_base_asg.tga",
+                  "$CONTENT_DATA/Tools/LaserCutter/Textures/char_spudgun_base_dif.tga",
+                  "$CONTENT_DATA/Tools/LaserCutter/Textures/char_spudgun_base_asg.tga",
                   "$GAME_DATA/Character/Char_Tools/Char_spudgun/Base/char_spudgun_base_nor.tga"
                ]
             },
@@ -54,7 +46,7 @@
             {
                "material": "DifAsgNor",
                "textureList": [
-                  "$CONTENT_DATA/Tools/LaserCutter/obj_fittings_pipes_dif.tga",
+                  "$CONTENT_DATA/Tools/LaserCutter/Textures/obj_fittings_pipes_dif.tga",
                   "$GAME_DATA/Objects/Textures/fittings/obj_fittings_pipes_asg.tga",
                   "$GAME_DATA/Objects/Textures/fittings/obj_fittings_pipes_nor.tga"
                ]
@@ -62,13 +54,12 @@
             {
                "material": "DifAsgNor",
                "textureList": [
-                  "$CONTENT_DATA/Tools/LaserCutter/obj_industrial_satellite_dif.tga",
+                  "$CONTENT_DATA/Tools/LaserCutter/Textures/obj_industrial_satellite_dif.tga",
                   "$GAME_DATA/Objects/Textures/industrial/obj_industrial_satellite_asg.tga",
                   "$GAME_DATA/Objects/Textures/industrial/obj_industrial_satellite_nor.tga"
                ]
             }
-         ],
-         "maxViewDistance": 1000.0
+         ]
       }
    ]
 }
