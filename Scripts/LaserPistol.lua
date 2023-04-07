@@ -57,9 +57,9 @@ Pistol.explodeStats = {
 }
 Pistol.defaultColour = sm.color.new("#f4ff00")
 Pistol.killTypes = {
-	"terrainSurface",
-	"terrainAsset",
-	"limiter"
+	terrainSurface = true,
+	terrainAsset = true,
+	limiter = true
 }
 
 local renderables = {
@@ -123,7 +123,7 @@ function Pistol:client_onReload()
 
 		sm.gui.displayAlertText("#"..self.lineStats.colour_strong:getHexStr():sub(1,6).."Overdrive activated!", 2.5)
 	else
-		sm.gui.displayAlertText("Can't activate overdrive yet!", 2.5)
+		--sm.gui.displayAlertText("Can't activate overdrive yet!", 2.5)
 		sm.audio.play("RaftShark")
 	end
 
@@ -179,7 +179,7 @@ function Pistol:sv_onWeakLaserHit( args )
 		end
 	elseif type == "Character" then
 		sm.projectile.projectileAttack(
-			projectile_potato,
+			cutterpotato,
 			self.laserDamage,
 			pos,
 			(target.worldPosition - pos),
@@ -258,7 +258,7 @@ function Pistol:updateLasers(dt)
 			hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), self.owner.character )
 		end
 
-		local shouldDelete = result and isAnyOf(result.type, self.killTypes) or laser.lifeTime <= 0 or laser.line.thickness == 0
+		local shouldDelete = result and self.killTypes[result.type] == true or laser.lifeTime <= 0 or laser.line.thickness == 0
 		if hit or shouldDelete then
 			if self.isLocal and hit then
 				if laser.overdrive then
@@ -316,7 +316,7 @@ function Pistol:updateFP(dt, equipped, isSprinting, isCrouching)
 
 	self.movementDispersion = dispersion
 	self.crosshairSpread = math.max(self.crosshairSpread - dt, 0 )
-	self.tool:setDispersionFraction( clamp( self.movementDispersion + self.crosshairSpread, 0.0, 1.0 ) )
+	self.tool:setDispersionFraction( sm.util.clamp( self.movementDispersion + self.crosshairSpread, 0.0, 1.0 ) )
 end
 
 function Pistol:updateTP(dt, crouchWeight, normalWeight)
@@ -376,19 +376,15 @@ function Pistol:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWe
 	local finalAngle = ( 0.5 + angle * 0.5 )
 	self.tool:updateAnimation( "spudgun_spine_bend", finalAngle, self.spineWeight )
 
-	local totalOffsetZ = lerp( -22.0, -26.0, crouchWeight )
-	local totalOffsetY = lerp( 6.0, 12.0, crouchWeight )
-	local crouchTotalOffsetX = clamp( ( angle * 60.0 ) -15.0, -60.0, 40.0 )
-	local normalTotalOffsetX = clamp( ( angle * 50.0 ), -45.0, 50.0 )
-	local totalOffsetX = lerp( normalTotalOffsetX, crouchTotalOffsetX , crouchWeight )
-
+	local totalOffsetZ = sm.util.lerp( -22.0, -26.0, crouchWeight )
+	local totalOffsetY = sm.util.lerp( 6.0, 12.0, crouchWeight )
+	local crouchTotalOffsetX = sm.util.clamp( ( angle * 60.0 ) -15.0, -60.0, 40.0 )
+	local normalTotalOffsetX = sm.util.clamp( ( angle * 50.0 ), -45.0, 50.0 )
+	local totalOffsetX = sm.util.lerp( normalTotalOffsetX, crouchTotalOffsetX , crouchWeight )
 	local finalJointWeight = ( self.jointWeight )
-
-
 	self.tool:updateJoint( "jnt_hips", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), 0.35 * finalJointWeight * ( normalWeight ) )
 
 	local crouchSpineWeight = ( 0.35 / 3 ) * crouchWeight
-
 	self.tool:updateJoint( "jnt_spine1", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.10 + crouchSpineWeight )  * finalJointWeight )
 	self.tool:updateJoint( "jnt_spine2", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.10 + crouchSpineWeight ) * finalJointWeight )
 	self.tool:updateJoint( "jnt_spine3", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), ( 0.45 + crouchSpineWeight ) * finalJointWeight )
@@ -417,7 +413,6 @@ function Pistol.client_onEquip( self, animate )
 
 	local currentRenderablesTp = {}
 	local currentRenderablesFp = {}
-
 	for k,v in pairs( renderablesTp ) do currentRenderablesTp[#currentRenderablesTp+1] = v end
 	for k,v in pairs( renderablesFp ) do currentRenderablesFp[#currentRenderablesFp+1] = v end
 	for k,v in pairs( renderables ) do
@@ -467,10 +462,13 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 		sm.gui.setProgressFraction( 1 - (self.overdriveDuration.count / self.overdriveDuration.ticks) )
 	end
 
-	local primary = isAnyOf(lmb, {1,2})
-	local secondary = isAnyOf(rmb, {1,2})
-	local canFire_lmb = self.primaryCooldown:done()
-	local canFire_rmb = self.secondaryCooldown:done()
+	local primary = lmb == 1 or lmb == 2
+	local secondary = rmb == 1 or rmb == 2
+
+	local consumption = sm.game.getEnableAmmoConsumption()
+	local container = sm.localPlayer.getInventory()
+	local canFire_lmb = self.primaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, self.overdriveActive and 2 or 1))
+	local canFire_rmb = self.secondaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, 5))
 
 	if primary and canFire_lmb then
 		self.primaryCooldown:reset()
@@ -485,7 +483,7 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 		)
 	end
 
-	if secondary and not primary and canFire_rmb and canFire_lmb then
+	if secondary and not primary and canFire_rmb then
 		self.secondaryCooldown:reset()
 		self.crosshairSpread = 0.5
 		self.network:sendToServer(
@@ -512,8 +510,9 @@ end
 function Pistol:sv_onShoot( args )
 	local dir = args.dir
 	local pos = args.pos + dir
+	local strong = args.strong
 
-	if args.strong then
+	if strong then
 		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength )
 		if hit then
 			local hitPos = result.pointWorld
@@ -530,6 +529,12 @@ function Pistol:sv_onShoot( args )
 
 			args.hitPos = hitPos
 		end
+	end
+
+	if sm.game.getEnableAmmoConsumption() then
+		sm.container.beginTransaction()
+		sm.container.spend(self.tool:getOwner():getInventory(), obj_consumable_battery, strong and 5 or (self.overdriveActive and 2 or 1))
+		sm.container.endTransaction()
 	end
 
 	self.network:sendToClients("cl_onShoot", args)

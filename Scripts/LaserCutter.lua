@@ -4,6 +4,7 @@ dofile( "$SURVIVAL_DATA/Scripts/game/survival_shapes.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
+dofile "$CONTENT_DATA/Scripts/util.lua"
 
 ---@class Cutter : ToolClass
 ---@field owner Player
@@ -29,6 +30,7 @@ Cutter.lineStats = {
 }
 Cutter.beamStopSeconds = 1
 Cutter.unitDamageTicks = 10
+Cutter.maxCutSize = 7
 
 local renderables = {
     "$CONTENT_DATA/Tools/LaserCutter/char_cuttertool.rend",
@@ -64,9 +66,8 @@ function Cutter.client_onCreate( self )
 	self.cutSize = 1
 end
 
-
 function Cutter:client_onReload()
-	self.cutSize = self.cutSize + 2
+	self.cutSize = math.min(self.cutSize + 2, self.maxCutSize)
 	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
 	sm.audio.play("PaintTool - ColorPick")
 	--self.network:sendToServer("sv_updateLineThickness", self.cutSize)
@@ -131,55 +132,25 @@ function Cutter:cl_cut( dt )
 		if hit then
 			target = result:getShape() or result:getCharacter() or result:getHarvestable()
 
-			if target then
+			if target and sm.exists(target) then
 				local beamEnd =  result.pointWorld
 				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineStats.spinSpeed, false )
-
 				self.lastPos = beamEnd
 				self.beamStopTimer = self.beamStopSeconds
-
-				if self.isLocal then
-					local type = type(target)
-					if type == "Shape" then
-						self.network:sendToServer( "sv_cut",
-							{
-								shape = target,
-								pos = beamEnd,
-								normal = result.normalWorld,
-								size = self.cutSize
-							}
-						)
-					elseif type == "Character" then
-						self.unitDamageTimer:tick()
-
-						if self.unitDamageTimer:done() then
-							self.unitDamageTimer:reset()
-							sm.projectile.projectileAttack(
-								projectile_potato,
-								45,
-								beamEnd,
-								(target.worldPosition - beamEnd),
-								self.owner
-							)
-						end
-					else
-						self.network:sendToServer( "sv_explode", beamEnd)
-					end
-				end
+				if self.isLocal then self.normal = result.normalWorld end
 			end
 		end
 	else
-		--for some fucking reason, if I dont stop this multiple times, it wont stop
 		self.activeSound:stop()
 
 		if self.line.effect:isPlaying() then
-			self.line:stop()
 			self.beamStopTimer = self.beamStopSeconds
 
 			if self.isLocal then
 				self.unitDamageTimer:reset()
 			end
 		end
+		self.line:stop()
 	end
 
 	if (not hit or not target) and self.line.effect:isPlaying() then
@@ -236,12 +207,24 @@ function Cutter:sv_cut( args )
 			vec3_one,
 			effectData
 		)
+
+		self:sv_consumeAmmo(args.ammo)
 	end
 end
 
-function Cutter:sv_explode( pos )
-	sm.physics.explode( pos, 3, 1, 1, 1 )
+function Cutter:sv_explode( args )
+	sm.physics.explode( args.pos, 3, 1, 1, 1 )
+	self:sv_consumeAmmo(args.ammo)
 end
+
+function Cutter:sv_consumeAmmo(ammo)
+	if sm.game.getEnableAmmoConsumption() then
+		sm.container.beginTransaction()
+		sm.container.spend(self.tool:getOwner():getInventory(), obj_consumable_battery, ammo)
+		sm.container.endTransaction()
+	end
+end
+
 
 
 function Cutter:sv_updateFiring( firing )
@@ -254,14 +237,54 @@ end
 
 
 
+function Cutter:client_onFixedUpdate()
+	if not self.isLocal or not self.tool:isEquipped() then return end
+
+	local target = self.target
+	if target and sm.exists(target) then
+		local beamEnd = self.lastPos
+		local _type = type(target)
+		local canFire, ammo = self:canFire(_type, target)
+		if canFire then
+			if _type == "Shape" then
+				self.network:sendToServer( "sv_cut",
+					{
+						shape = target,
+						pos = beamEnd,
+						normal = self.normal,
+						size = self.cutSize,
+						ammo = ammo
+					}
+				)
+			elseif _type == "Character" then
+				self.unitDamageTimer:tick()
+				if self.unitDamageTimer:done() then
+					self.unitDamageTimer:reset()
+					sm.projectile.projectileAttack(
+						cutterpotato,
+						45,
+						beamEnd,
+						(target.worldPosition - beamEnd):normalize(),
+						self.owner
+					)
+
+					self.network:sendToServer("sv_consumeAmmo", ammo)
+				end
+			else
+				self.network:sendToServer( "sv_explode", { pos = beamEnd, ammo = ammo } )
+			end
+		end
+	end
+end
+
 function Cutter:client_onUpdate(dt)
-	local target = self:cl_cut(dt)
+	self.target = self:cl_cut(dt)
 	local isSprinting =  self.tool:isSprinting()
 	local isCrouching =  self.tool:isCrouching()
 	local equipped = self.tool:isEquipped()
 
 	if self.isLocal then
-		self:updateFP(dt, equipped, target, isSprinting, isCrouching)
+		self:updateFP(dt, equipped, self.target, isSprinting, isCrouching)
 	end
 
 	local crouchWeight = self.tool:isCrouching() and 1.0 or 0.0
@@ -302,7 +325,7 @@ function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
 	self.movementDispersion = dispersion
 	local spreadFactor = self.firing and 0.25 or 0
 	spreadFactor = target ~= nil and spreadFactor * 2 or spreadFactor
-	self.tool:setDispersionFraction( clamp( self.movementDispersion + spreadFactor, 0.0, 1.0 ) )
+	self.tool:setDispersionFraction( sm.util.clamp( self.movementDispersion + spreadFactor, 0.0, 1.0 ) )
 	self.tool:setCrossHairAlpha( 1.0 )
 	self.tool:setInteractionTextSuppressed( false )
 end
@@ -371,11 +394,11 @@ function Cutter:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWe
 	local finalAngle = ( 0.5 + angle * 0.5 )
 	self.tool:updateAnimation( "spudgun_spine_bend", finalAngle, self.spineWeight )
 
-	local totalOffsetZ = lerp( -22.0, -26.0, crouchWeight )
-	local totalOffsetY = lerp( 6.0, 12.0, crouchWeight )
-	local crouchTotalOffsetX = clamp( ( angle * 60.0 ) -15.0, -60.0, 40.0 )
-	local normalTotalOffsetX = clamp( ( angle * 50.0 ), -45.0, 50.0 )
-	local totalOffsetX = lerp( normalTotalOffsetX, crouchTotalOffsetX , crouchWeight )
+	local totalOffsetZ = sm.util.lerp( -22.0, -26.0, crouchWeight )
+	local totalOffsetY = sm.util.lerp( 6.0, 12.0, crouchWeight )
+	local crouchTotalOffsetX = sm.util.clamp( ( angle * 60.0 ) -15.0, -60.0, 40.0 )
+	local normalTotalOffsetX = sm.util.clamp( ( angle * 50.0 ), -45.0, 50.0 )
+	local totalOffsetX = sm.util.lerp( normalTotalOffsetX, crouchTotalOffsetX , crouchWeight )
 	local finalJointWeight = ( self.jointWeight )
 
 	self.tool:updateJoint( "jnt_hips", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), 0.35 * finalJointWeight * ( normalWeight ) )
@@ -415,13 +438,17 @@ function Cutter.client_onEquip( self, animate )
 		currentRenderablesTp[#currentRenderablesTp+1] = v
 		currentRenderablesFp[#currentRenderablesFp+1] = v
 	end
-	self:loadAnimations()
 
 	self.tool:setTpRenderables( currentRenderablesTp )
-	setTpAnimation( self.tpAnimations, "pickup", 0.0001 )
-
 	if self.isLocal then
 		self.tool:setFpRenderables( currentRenderablesFp )
+		self.target = nil
+		self.normal = vec3_zero
+	end
+
+	self:loadAnimations()
+	setTpAnimation( self.tpAnimations, "pickup", 0.0001 )
+	if self.isLocal then
 		swapFpAnimation( self.fpAnimations, "unequip", "equip", 0.2 )
 	end
 end
@@ -443,6 +470,9 @@ function Cutter.client_onUnequip( self, animate )
 			if self.fpAnimations.currentAnimation ~= "unequip" then
 				swapFpAnimation( self.fpAnimations, "equip", "unequip", 0.2 )
 			end
+
+			self.target = nil
+			self.normal = vec3_zero
 		end
 	end
 end
@@ -551,4 +581,14 @@ function Cutter.calculateFirePosition( self )
 
 	local firePosition = GetOwnerPosition( self.tool ) + fireOffset
 	return firePosition
+end
+
+function Cutter:canFire(_type, target)
+	if not sm.game.getEnableAmmoConsumption() then return true, 0 end
+
+	if not sm.exists(target) then return false, 0 end
+
+	local container = sm.localPlayer.getInventory()
+	local quantity = (_type == "Shape" and sm.item.isBlock(target.uuid)) and self.cutSize^2 or 1
+	return container:canSpend(obj_consumable_battery, quantity), quantity
 end

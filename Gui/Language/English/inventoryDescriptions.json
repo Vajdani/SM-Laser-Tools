@@ -1,12 +1,12 @@
 {
     //Tools
     "99c5dde3-1c24-41f4-9fc0-fd183c88673e": {
-        "title": "Laser Cutter",
-        "description": "Cut anything to your heart's desires! Robots are also vulnerable to the laser beam.\n\nIncrease/Decrease the cutting size with R/Q."
+        "description": "A modified Connection Tool that uses a laser beam to cut parts and damage enemies!\n\n#ffffffControls#919191: \n#df7f00Left Click#919191: Activate the laser beam\n#df7f00R#919191/#df7f00Q#919191: Increase/decrease the amount of blocks the laser destroys",
+        "title": "Laser Cutter"
     },
     "e3bd2dd1-1bb0-4964-b46c-d4d58cfec074": {
         "title": "Laser Pistol",
-        "description": "Shoots piercing projectiles of death! This bad boy is also capable of firing a higly explosive projectile! Press the reload key(default: R) to activate overdrive!"
+        "description": "A modified Laser Cutter that shoots piercing laser projectiles!\n\n#ffffffControls#919191: \n#df7f00Left Click#919191: Shoot laser projectile\n#df7f00Right Click#919191: Create a powerful explosion \n#df7f00R#919191: Activate #df7f00Overdrive #919191mode: The Laser Pistol shoots explosive laser projectiles instead of piercing laser projectiles"
     },
     "3f5c15b0-d0a6-4ee3-a178-5643a61402cf": {
         "title": "Laser Katana",
@@ -16,6 +16,6 @@
     //Interactables
     "7b39bac2-a64c-4256-b530-e2e3fd611e24": {
         "title": "Mountable Laser Cutter",
-        "description": "The mountable version of the Laser Cutter! You can adjust the range and damage dealt to bots by interacting with the part."
+        "description": "The mountable version of the Laser Cutter!\nConnect it to a Battery Container and logic input to activate it.\nA few settings can be tuned by interacting with it."
     }
 }

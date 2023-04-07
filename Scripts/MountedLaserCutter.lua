@@ -9,7 +9,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 MountedLaserCutter = class()
 MountedLaserCutter.maxParentCount = -1
 MountedLaserCutter.maxChildCount = 0
-MountedLaserCutter.connectionInput = sm.interactable.connectionType.logic --bit.bor( sm.interactable.connectionType.logic, sm.interactable.connectionType.ammo )
+MountedLaserCutter.connectionInput = sm.interactable.connectionType.logic + sm.interactable.connectionType.electricity --bit.bor( sm.interactable.connectionType.logic, sm.interactable.connectionType.ammo )
 MountedLaserCutter.connectionOutput = sm.interactable.connectionType.none
 MountedLaserCutter.colorNormal = sm.color.new( 0xcb0a00ff )
 MountedLaserCutter.colorHighlight = sm.color.new( 0xee0a00ff )
@@ -52,7 +52,8 @@ function MountedLaserCutter.sv_init( self )
 end
 
 function MountedLaserCutter.server_onFixedUpdate( self )
-	if not self:shouldFire() then return end
+	local active, container = self:getInputs()
+	if not active then return end
 
 	local selfDir = self.shape.up
 	local selfPos = self.shape.worldPosition + barrelAdjust * selfDir
@@ -63,8 +64,12 @@ function MountedLaserCutter.server_onFixedUpdate( self )
 
 	local hitPos = result.pointWorld
 	local target = result:getShape() or result:getCharacter() or result:getHarvestable()
-	if not target or not sm.exists(target) then return end
+	if not target or not sm.exists(target) or (sm.game.getEnableAmmoConsumption() and (not container or not container:canSpend(obj_consumable_battery, 1))) then return end
 
+	self:sv_fire(target, hitPos, result, container)
+end
+
+function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 	local type = type(target)
 	if type == "Shape" then
 		sm.effect.playEffect(
@@ -86,15 +91,23 @@ function MountedLaserCutter.server_onFixedUpdate( self )
 		if self.sv.unitDamageTimer:done() then
 			self.sv.unitDamageTimer:reset()
 			sm.projectile.shapeProjectileAttack(
-				projectile_potato,
+				cutterpotato,
 				self.sv.data.damage,
 				self.shape:transformPoint(hitPos),
-				(target.worldPosition - hitPos),
+				self.shape.xAxis,
 				self.shape
 			)
+		else
+			return
 		end
 	else
 		sm.physics.explode( hitPos, 3, 1, 1, 1 )
+	end
+
+	if container then
+		sm.container.beginTransaction()
+		sm.container.spend(container, obj_consumable_battery, 1)
+		sm.container.endTransaction()
 	end
 end
 
@@ -117,8 +130,8 @@ function MountedLaserCutter.client_onCreate( self )
 	self.cl.range = self.defaultRange
 
 	self.cl.gui = sm.gui.createGuiFromLayout( "$CONTENT_DATA/Gui/Mounted.layout", false )
-	self.cl.gui:setTextAcceptedCallback( "input_dmg", "cl_input_dmg" )
-	self.cl.gui:setTextAcceptedCallback( "input_range", "cl_input_range" )
+	self.cl.gui:setTextChangedCallback( "input_dmg", "cl_input_dmg" )
+	self.cl.gui:setTextChangedCallback( "input_range", "cl_input_range" )
 	self.cl.gui:setIconImage( "icon", self.shape.uuid )
 	self.cl.gui:setButtonCallback( "laser", "cl_input_laser" )
 	self.cl.gui:setText( "laser", off )
@@ -135,8 +148,10 @@ end
 function MountedLaserCutter:cl_input_dmg( widget, value )
 	local num = tonumber(value)
 	if num == nil then
-		self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
-		sm.audio.play("RaftShark")
+		if value ~= "" then
+			self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
+			sm.audio.play("RaftShark")
+		end
 		return
 	end
 
@@ -147,8 +162,10 @@ end
 function MountedLaserCutter:cl_input_range( widget, value )
 	local num = tonumber(value)
 	if num == nil then
-		self.cl.gui:setText( "input_range", tostring(self.cl.range) )
-		sm.audio.play("RaftShark")
+		if value ~= "" then
+			self.cl.gui:setText( "input_range", tostring(self.cl.range) )
+			sm.audio.play("RaftShark")
+		end
 		return
 	end
 
@@ -165,19 +182,21 @@ function MountedLaserCutter:cl_updateGui( args )
 	self.cl.range = args.range
 	self.cl.lineAlways = args.line
 
-	self.cl.gui:setText( "input_dmg", string.format("%.3f", tostring(self.cl.damage) ) )
-	self.cl.gui:setText( "input_range", string.format("%.3f", tostring(self.cl.range) ) )
+	self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
+	self.cl.gui:setText( "input_range", tostring(self.cl.range) )
 	self.cl.gui:setText( "laser", self.cl.lineAlways and on or off )
 end
 
 function MountedLaserCutter:client_onInteract( char, state )
 	if not state then return end
 
+	self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
+	self.cl.gui:setText( "input_range", tostring(self.cl.range) )
 	self.cl.gui:open()
 end
 
 function MountedLaserCutter.client_onUpdate( self, dt )
-	local active = self:shouldFire()
+	local active = self:getInputs()
 	local hit, result = false, nil
 	local selfDir = self.shape.up
 	local selfPos = self.shape.worldPosition + barrelAdjust * selfDir
@@ -231,13 +250,17 @@ end
 
 
 
-function MountedLaserCutter:shouldFire()
+function MountedLaserCutter:getInputs()
 	local parents = self.interactable:getParents()
+	local active = false
+	local container
 	for k, parent in pairs(parents) do
-		if parent.active then
-			return true
+		if parent.active then active = true end
+
+		if parent:hasOutputType(sm.interactable.connectionType.electricity) then
+			container = parent:getContainer(0)
 		end
 	end
 
-	return false
+	return active, container
 end
