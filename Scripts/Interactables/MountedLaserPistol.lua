@@ -109,6 +109,7 @@ function MountedLaserPistol:client_onCreate()
 	self.cl_boltValue = 0
 	self.cl_activeSound = sm.effect.createEffect( "Cutter_active_sound", self.interactable )
 	self.cl_shootEffect = sm.effect.createEffect("Pistol_shoot", self.interactable)
+	self.cl_shootEffect:setOffsetPosition(barrelAdjust)
 	self.cl_poweronEffect = sm.effect.createEffect("Pistol_overdrive_on", self.interactable)
 
 	self.interactable:setSubMeshVisible("glow", false)

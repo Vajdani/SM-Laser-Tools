@@ -5,6 +5,11 @@ local ToolItems = {
 
 local oldGetToolProxyItem = GetToolProxyItem
 function getToolProxyItemHook( toolUuid )
-	return oldGetToolProxyItem( toolUuid ) or ToolItems[tostring( toolUuid )]
+	local item = oldGetToolProxyItem( toolUuid )
+	if not item then
+		item = ToolItems[tostring( toolUuid )]
+	end
+
+	return item
 end
 GetToolProxyItem = getToolProxyItemHook
