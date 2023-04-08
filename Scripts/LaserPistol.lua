@@ -78,7 +78,7 @@ sm.tool.preloadRenderables( renderables )
 sm.tool.preloadRenderables( renderablesTp )
 sm.tool.preloadRenderables( renderablesFp )
 
-function Pistol.client_onCreate( self )
+function Pistol:client_onCreate()
 	self.isLocal = self.tool:isLocal()
 	self.owner = self.tool:getOwner()
 
@@ -195,7 +195,7 @@ function Pistol:sv_onOverdriveLaserHit( pos )
 end
 
 
-function Pistol:client_onFixedUpdate( dt )
+function Pistol:client_onFixedUpdate()
 	if not self.isLocal then return end
 
 	self.primaryCooldown:tick()
@@ -402,7 +402,7 @@ function Pistol:updateCam(dt)
 end
 
 
-function Pistol.client_onEquip( self, animate )
+function Pistol:client_onEquip( animate )
 	if animate then
 		sm.audio.play( "ConnectTool - Equip", self.tool:getPosition() )
 	end
@@ -439,7 +439,8 @@ function Pistol.client_onEquip( self, animate )
 	end
 end
 
-function Pistol.client_onUnequip( self, animate )
+function Pistol:client_onUnequip( animate )
+
 	if sm.exists( self.tool ) then
 		if animate then
 			sm.audio.play( "ConnectTool - Unequip", self.tool:getPosition() )

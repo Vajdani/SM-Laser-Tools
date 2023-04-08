@@ -420,7 +420,7 @@ end
 
 
 
-function Cutter.client_onEquip( self, animate )
+function Cutter:client_onEquip( animate )
 	if animate then
 		sm.audio.play( "ConnectTool - Equip", self.tool:getPosition() )
 	end
@@ -453,7 +453,7 @@ function Cutter.client_onEquip( self, animate )
 	end
 end
 
-function Cutter.client_onUnequip( self, animate )
+function Cutter:client_onUnequip( animate )
 	self.line.effect:stopImmediate()
 	self.firing = false
 
@@ -477,8 +477,8 @@ function Cutter.client_onUnequip( self, animate )
 	end
 end
 
-function Cutter.client_onEquippedUpdate( self, primaryState, secondaryState )
-	local firing = primaryState == 1 or primaryState == 2
+function Cutter:client_onEquippedUpdate( lmb )
+	local firing = lmb == 1 or lmb == 2
 	if firing ~= self.firing then
 		self.network:sendToServer("sv_updateFiring", firing)
 	end

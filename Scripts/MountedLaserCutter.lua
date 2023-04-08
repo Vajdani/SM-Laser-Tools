@@ -27,15 +27,7 @@ local barrelAdjust = sm.vec3.one() * 0.4
 local on = "#269e44On"
 local off = "#9e2626Off"
 
-function MountedLaserCutter.server_onCreate( self )
-	self:sv_init()
-end
-
-function MountedLaserCutter.server_onRefresh( self )
-	self:sv_init()
-end
-
-function MountedLaserCutter.sv_init( self )
+function MountedLaserCutter:server_onCreate()
 	self.sv = {}
 	self.sv.data = self.storage:load()
 	if self.sv.data == nil then
@@ -51,7 +43,7 @@ function MountedLaserCutter.sv_init( self )
 	self.sv.unitDamageTimer:start( self.unitDamageTicks )
 end
 
-function MountedLaserCutter.server_onFixedUpdate( self )
+function MountedLaserCutter:server_onFixedUpdate()
 	local active, container = self:getInputs()
 	if not active then return end
 
@@ -122,7 +114,7 @@ end
 
 
 
-function MountedLaserCutter.client_onCreate( self )
+function MountedLaserCutter:client_onCreate()
 	self.cl = {}
 	self.cl.boltValue = 0.0
 
@@ -195,7 +187,7 @@ function MountedLaserCutter:client_onInteract( char, state )
 	self.cl.gui:open()
 end
 
-function MountedLaserCutter.client_onUpdate( self, dt )
+function MountedLaserCutter:client_onUpdate( dt )
 	local active = self:getInputs()
 	local hit, result = false, nil
 	local selfDir = self.shape.up

@@ -56,7 +56,7 @@ sm.tool.preloadRenderables( renderables )
 sm.tool.preloadRenderables( renderablesTp )
 sm.tool.preloadRenderables( renderablesFp )
 
-function Railgun.client_onCreate( self )
+function Railgun:client_onCreate()
 	self.shootEffect = sm.effect.createEffect( "SpudgunBasic - BasicMuzzel" )
 	self.shootEffectFP = sm.effect.createEffect( "SpudgunBasic - FPBasicMuzzel" )
 
@@ -72,7 +72,7 @@ end
 
 
 
-function Railgun.loadAnimations( self )
+function Railgun:loadAnimations()
 
 	self.tpAnimations = createTpAnimations(
 		self.tool,
@@ -182,7 +182,7 @@ function Railgun.loadAnimations( self )
 
 end
 
-function Railgun.client_onUpdate( self, dt )
+function Railgun:client_onUpdate( dt )
 
 	-- First person animation
 	local isSprinting =  self.tool:isSprinting()
@@ -398,7 +398,7 @@ function Railgun.client_onUpdate( self, dt )
 	self.tool:updateFpCamera( 30.0, sm.vec3.new( 0.0, 0.0, 0.0 ), self.aimWeight, bobbing )
 end
 
-function Railgun.client_onEquip( self, animate )
+function Railgun:client_onEquip( animate )
 
 	if animate then
 		sm.audio.play( "PotatoRifle - Equip", self.tool:getPosition() )
@@ -433,7 +433,7 @@ function Railgun.client_onEquip( self, animate )
 	end
 end
 
-function Railgun.client_onUnequip( self, animate )
+function Railgun:client_onUnequip( animate )
 
 	self.wantEquipped = false
 	self.equipped = false
@@ -455,34 +455,34 @@ function Railgun.client_onUnequip( self, animate )
 	end
 end
 
-function Railgun.sv_n_onAim( self, aiming )
+function Railgun:sv_n_onAim( aiming )
 	self.network:sendToClients( "cl_n_onAim", aiming )
 end
 
-function Railgun.cl_n_onAim( self, aiming )
+function Railgun:cl_n_onAim( aiming )
 	if not self.isLocal and self.tool:isEquipped() then
 		self:onAim( aiming )
 	end
 end
 
-function Railgun.onAim( self, aiming )
+function Railgun:onAim( aiming )
 	self.aiming = aiming
 	if self.tpAnimations.currentAnimation == "idle" or self.tpAnimations.currentAnimation == "aim" or self.tpAnimations.currentAnimation == "relax" and self.aiming then
 		setTpAnimation( self.tpAnimations, self.aiming and "aim" or "idle", 5.0 )
 	end
 end
 
-function Railgun.sv_n_onShoot( self, dir )
+function Railgun:sv_n_onShoot( dir )
 	self.network:sendToClients( "cl_n_onShoot", dir )
 end
 
-function Railgun.cl_n_onShoot( self, dir )
+function Railgun:cl_n_onShoot( dir )
 	if not self.isLocal and self.tool:isEquipped() then
 		self:onShoot( dir )
 	end
 end
 
-function Railgun.onShoot( self, dir )
+function Railgun:onShoot( dir )
 
 	self.tpAnimations.animations.idle.time = 0
 	self.tpAnimations.animations.shoot.time = 0
@@ -498,7 +498,7 @@ function Railgun.onShoot( self, dir )
 
 end
 
-function Railgun.calculateFirePosition( self )
+function Railgun:calculateFirePosition()
 	local crouching = self.tool:isCrouching()
 	local firstPerson = self.tool:isInFirstPersonView()
 	local dir = sm.localPlayer.getDirection()
@@ -525,7 +525,7 @@ function Railgun.calculateFirePosition( self )
 	return firePosition
 end
 
-function Railgun.calculateTpMuzzlePos( self )
+function Railgun:calculateTpMuzzlePos()
 	local crouching = self.tool:isCrouching()
 	local dir = sm.localPlayer.getDirection()
 	local pitch = math.asin( dir.z )
@@ -560,7 +560,7 @@ function Railgun.calculateTpMuzzlePos( self )
 end
 
 ---@return Vec3
-function Railgun.calculateFpMuzzlePos( self )
+function Railgun:calculateFpMuzzlePos()
 	local fovScale = ( sm.camera.getFov() - 45 ) / 45
 
 	local up = sm.localPlayer.getUp()
@@ -589,7 +589,7 @@ function Railgun.calculateFpMuzzlePos( self )
 	return self.tool:getFpBonePos( "pejnt_barrel" ) + sm.vec3.lerp( muzzlePos45, muzzlePos90, fovScale )
 end
 
-function Railgun.cl_onPrimaryUse( self, type ) --state )
+function Railgun:cl_onPrimaryUse( type ) --state )
 	--[[
 	if self.fireCooldownTimer <= 0.0 and state == sm.tool.interactState.start then
 		if not sm.game.getEnableAmmoConsumption() or sm.container.canSpend( sm.localPlayer.getInventory(), obj_plantables_potato, 1 ) then
@@ -724,27 +724,19 @@ function Railgun.cl_onPrimaryUse( self, type ) --state )
 	end
 end
 
-function Railgun.cl_onSecondaryUse( self, state )
-	if state == sm.tool.interactState.start and not self.aiming then
-		self.aiming = true
+function Railgun:cl_onSecondaryUse( state )
+	local aiming = state == 1 or state == 2
+	if aiming ~= self.aiming then
+		self.aiming = aiming
 		self.tpAnimations.animations.idle.time = 0
 
-		self:onAim( self.aiming )
-		self.tool:setMovementSlowDown( self.aiming )
-		self.network:sendToServer( "sv_n_onAim", self.aiming )
-	end
-
-	if self.aiming and (state == sm.tool.interactState.stop or state == sm.tool.interactState.null) then
-		self.aiming = false
-		self.tpAnimations.animations.idle.time = 0
-
-		self:onAim( self.aiming )
-		self.tool:setMovementSlowDown( self.aiming )
-		self.network:sendToServer( "sv_n_onAim", self.aiming )
+		self:onAim( aiming )
+		self.tool:setMovementSlowDown( aiming )
+		self.network:sendToServer( "sv_n_onAim", aiming )
 	end
 end
 
-function Railgun.client_onEquippedUpdate( self, lmb, rmb )
+function Railgun:client_onEquippedUpdate( lmb, rmb )
 	local tick = sm.game.getCurrentTick()
 	local canCharge = tick - self.chargedAttackStartTick >= self.chargedAttackBegin
 

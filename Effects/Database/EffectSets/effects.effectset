@@ -71,7 +71,7 @@
 				"parameters" : [ "minColor", "maxColor" ]
 			}
 		]
-	},
+	}/*,
 	"Katana_swing":
 	{
 		"effectList":
@@ -89,5 +89,5 @@
 				"delay": 0.0
 			}
 		]
-	}
+	}*/
 }

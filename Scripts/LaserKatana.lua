@@ -708,7 +708,7 @@ end
 
 
 -- #region Equip
-function Katana.client_onEquip(self, animate)
+function Katana:client_onEquip( animate )
 	if animate then
 		sm.audio.play("Sledgehammer - Equip", self.tool:getPosition())
 	end
@@ -719,8 +719,10 @@ function Katana.client_onEquip(self, animate)
 	local currentRenderablesFp = {}
 	for k, v in pairs(renderablesTp) do currentRenderablesTp[#currentRenderablesTp + 1] = v end
 	for k, v in pairs(renderablesFp) do currentRenderablesFp[#currentRenderablesFp + 1] = v end
-	for k, v in pairs(renderables) do currentRenderablesTp[#currentRenderablesTp + 1] = v end
-	for k, v in pairs(renderables) do currentRenderablesFp[#currentRenderablesFp + 1] = v end
+	for k, v in pairs(renderables) do
+		currentRenderablesTp[#currentRenderablesTp + 1] = v
+		currentRenderablesFp[#currentRenderablesFp + 1] = v
+	end
 
 	local col = self.cutPlaneColours.max
 	self.tool:setTpRenderables(currentRenderablesTp)
@@ -742,7 +744,7 @@ function Katana.client_onEquip(self, animate)
 	end
 end
 
-function Katana.client_onUnequip(self, animate)
+function Katana:client_onUnequip( animate )
 	self.equipped = false
 	if sm.exists(self.tool) then
 		if animate then

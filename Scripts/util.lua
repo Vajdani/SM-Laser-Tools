@@ -222,7 +222,7 @@ GetToolProxyItem = getToolProxyItemHook
 
 -- #region Legally obtained things
 
---thanks QMark
+--Thanks to Questionable Mark for all of these functions
 ---@param vector Vec3
 ---@return Vec3 right
 function calculateRightVector(vector)
