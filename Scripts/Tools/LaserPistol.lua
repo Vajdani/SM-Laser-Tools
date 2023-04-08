@@ -352,6 +352,7 @@ function Pistol:client_onUnequip( animate )
 	end
 end
 
+local interactionText = "<img bg='gui_keybinds_bg' spacing='4'>gui_icon_refill_battery.png</img>".."<p textShadow='false' bg='gui_keybinds_bg' color='#ffffff' spacing='9'>%d / %d</p>"
 function Pistol:client_onEquippedUpdate( lmb, rmb )
 	if self.overdriveActive then
 		sm.gui.setProgressFraction( 1 - (self.overdriveDuration.count / self.overdriveDuration.ticks) )
@@ -362,8 +363,11 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 
 	local consumption = sm.game.getEnableAmmoConsumption()
 	local container = sm.localPlayer.getInventory()
-	local canFire_lmb = self.primaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, self.overdriveActive and 2 or 1))
+	local primaryAmount = self.overdriveActive and 2 or 1
+	local canFire_lmb = self.primaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, primaryAmount))
 	local canFire_rmb = self.secondaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, 5))
+
+	sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, obj_consumable_battery), primaryAmount))
 
 	if primary and canFire_lmb then
 		self.primaryCooldown:reset()

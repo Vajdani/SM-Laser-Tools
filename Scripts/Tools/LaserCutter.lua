@@ -477,11 +477,15 @@ function Cutter:client_onUnequip( animate )
 	end
 end
 
+local interactionText = "<img bg='gui_keybinds_bg' spacing='4'>gui_icon_refill_battery.png</img>".."<p textShadow='false' bg='gui_keybinds_bg' color='#ffffff' spacing='9'>%d / %d</p>"
 function Cutter:client_onEquippedUpdate( lmb )
 	local firing = lmb == 1 or lmb == 2
 	if firing ~= self.firing then
 		self.network:sendToServer("sv_updateFiring", firing)
 	end
+
+	local container = sm.localPlayer.getInventory()
+	sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, obj_consumable_battery), self.cutSize^2))
 
 	return true, true
 end
