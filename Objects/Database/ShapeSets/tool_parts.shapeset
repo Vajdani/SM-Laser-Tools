@@ -1,34 +1,36 @@
 {
-	"partList": [
-		{
-			"uuid": "c5d3db44-b21a-41c7-b8ba-b2d9edaf7f0a",
-			"name": "obj_tool_lasercutter",
-			"renderable": "$CONTENT_DATA/Tools/LaserCutter/Preview/char_lasercutter_preview.rend",
-			"color": "ffffff",
-			"box": {
-				"x": 1,
-				"y": 1,
-				"z": 1
-			},
-			"physicsMaterial": "Plastic",
-			"ratings": {},
-			"stackSize": 1,
-			"showInInventory": false
-		},
-		{
-			"uuid": "1d8a0366-5867-4768-a487-e34e608d0db9",
-			"name": "obj_tool_laserpistol",
-			"renderable": "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.rend",
-			"color": "ffffff",
-			"box": {
-				"x": 1,
-				"y": 1,
-				"z": 1
-			},
-			"physicsMaterial": "Plastic",
-			"ratings": {},
-			"stackSize": 1,
-			"showInInventory": false
-		}
-	]
+   "partList" : [
+      {
+         "box" : {
+            "x" : 1,
+            "y" : 1,
+            "z" : 1
+         },
+         "color" : "ffffff",
+         "name" : "obj_tool_lasercutter",
+         "physicsMaterial" : "Plastic",
+         "ratings" : {},
+         "renderable" : "$CONTENT_DATA/Tools/LaserCutter/Preview/char_lasercutter_preview.rend",
+         "rotationSet" : "PropY",
+         "showInInventory" : false,
+         "stackSize" : 1,
+         "uuid" : "c5d3db44-b21a-41c7-b8ba-b2d9edaf7f0a"
+      },
+      {
+         "box" : {
+            "x" : 1,
+            "y" : 1,
+            "z" : 1
+         },
+         "color" : "ffffff",
+         "name" : "obj_tool_laserpistol",
+         "physicsMaterial" : "Plastic",
+         "ratings" : {},
+         "renderable" : "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.rend",
+         "rotationSet" : "PropY",
+         "showInInventory" : false,
+         "stackSize" : 1,
+         "uuid" : "1d8a0366-5867-4768-a487-e34e608d0db9"
+      }
+   ]
 }

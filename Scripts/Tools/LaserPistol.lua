@@ -27,7 +27,6 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field secondaryCooldown table
 ---@field overdriveCooldown table
 ---@field overdriveDuration table
----@field lasers Laser[]
 ---@field colour Color
 ---@field shootEffect Effect
 ---@field poweronEffect Effect
@@ -44,23 +43,7 @@ Pistol.cooldowns = {
 	overdrive = 10 * 40,
 	overdrive_dur = 5 * 40
 }
-Pistol.laserSpeed = 50
-Pistol.laserLength = 0.75
-Pistol.laserDamage = 100
-Pistol.strongLength = 1000
-Pistol.explodeStats = {
-	level = 8,
-	destRadius = 10,
-	impRadius = 25,
-	magnitude = 125,
-	effect = "PropaneTank - ExplosionBig"
-}
 Pistol.defaultColour = sm.color.new("#f4ff00")
-Pistol.killTypes = {
-	terrainSurface = true,
-	terrainAsset = true,
-	limiter = true
-}
 
 local renderables = {
     "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
@@ -82,7 +65,6 @@ function Pistol:client_onCreate()
 	self.isLocal = self.tool:isLocal()
 	self.owner = self.tool:getOwner()
 
-	self.lasers = {}
 	self.lerpProgress = 1
 	self.lerpBlock = false
 	self.colour = self.defaultColour
@@ -144,55 +126,13 @@ function Pistol:cl_onOverdriveUpdate(toggle)
 	if not toggle then return end
 	self.lerpProgress = 0
 	self.colour = self.lineStats.colour_strong
-	self.tool:setFpColor(self.colour)
 	self.tool:setTpColor(self.colour)
+	if self.isLocal then
+		self.tool:setFpColor(self.colour)
+	end
 	self.poweronEffect:start()
 end
 
-
-
-function Pistol:sv_onWeakLaserHit( args )
-	local result = args.ray
-	---@type Shape|Character
-	local target = result.target
-	if not target or not sm.exists(target) then return end
-
-	local pos = result.pointWorld
-	local type = type(target)
-
-	if type == "Shape" then
-		if sm.exists(target) then
-			sm.effect.playEffect(
-				"Sledgehammer - Destroy",
-				pos,
-				sm.vec3.zero(),
-				sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
-				sm.vec3.one(),
-				{ Material = target:getMaterialId() }
-			)
-
-			if sm.item.isBlock( target.uuid ) then
-				target:destroyBlock( target:getClosestBlockLocalPosition(pos) )
-			else
-				target:destroyShape()
-			end
-		end
-	elseif type == "Character" then
-		sm.projectile.projectileAttack(
-			cutterpotato,
-			self.laserDamage,
-			pos,
-			(target.worldPosition - pos),
-			self.tool:getOwner()
-		)
-	else
-		sm.physics.explode( pos, 3, 1, 1, 1 )
-	end
-end
-
-function Pistol:sv_onOverdriveLaserHit( pos )
-	sm.physics.explode( pos, 5, 2.5, 5, 50, "PropaneTank - ExplosionSmall" )
-end
 
 
 function Pistol:client_onFixedUpdate()
@@ -215,8 +155,6 @@ function Pistol:client_onFixedUpdate()
 end
 
 function Pistol:client_onUpdate( dt )
-	self:updateLasers(dt)
-
 	if self.lerpProgress <= 1 and not self.lerpBlock then
 		self.lerpProgress = self.lerpProgress + dt
 		local colour = ColourLerp( self.colour, self.defaultColour, self.lerpProgress )
@@ -246,50 +184,6 @@ function Pistol:client_onUpdate( dt )
 	self:updateTP(dt, crouchWeight, normalWeight)
 	self:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
 	self:updateCam(dt)
-end
-
-function Pistol:updateLasers(dt)
-	for k, laser in pairs(self.lasers) do
-		laser.lifeTime = laser.lifeTime - dt
-
-		local currentPos, dir = laser.pos, laser.dir
-		local hit, result = false, nil
-		if not laser.strong then
-			hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), self.owner.character )
-		end
-
-		local shouldDelete = result and self.killTypes[result.type] == true or laser.lifeTime <= 0 or laser.line.thickness == 0
-		if hit or shouldDelete then
-			if self.isLocal and hit then
-				if laser.overdrive then
-					self.network:sendToServer("sv_onOverdriveLaserHit", result.pointWorld )
-				elseif not shouldDelete then
-					self.network:sendToServer("sv_onWeakLaserHit",
-						{
-							ray = RayResultToTable(result),
-							dir = laser.dir,
-							normal = result.normalWorld
-						}
-					)
-				end
-			end
-
-			if shouldDelete or laser.overdrive then
-				laser.line:destroy()
-				self.lasers[k] = nil
-			end
-		end
-
-		if not shouldDelete then
-			if laser.strong then
-				laser.line:update(currentPos, currentPos + dir, dt)
-			else
-				local newPos = currentPos + dir * dt * self.laserSpeed * (hit and 0.1 or 1)
-				laser.pos = newPos
-				laser.line:update(newPos, newPos + dir * self.laserLength, dt)
-			end
-		end
-	end
 end
 
 function Pistol:updateFP(dt, equipped, isSprinting, isCrouching)
@@ -500,77 +394,35 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 	return true, true
 end
 
----@class ShootData
----@field pos Vec3
----@field dir Vec3
----@field strong boolean
----@field hitPos Vec3
----@field overdrive boolean
-
 ---@param args ShootData
-function Pistol:sv_onShoot( args )
-	local dir = args.dir
-	local pos = args.pos + dir
-	local strong = args.strong
-
-	if strong then
-		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength )
-		if hit then
-			local hitPos = result.pointWorld
-			local stats = self.explodeStats
-
-			sm.physics.explode(
-				hitPos,
-				stats.level,
-				stats.destRadius,
-				stats.impRadius,
-				stats.magnitude,
-				stats.effect
-			)
-
-			args.hitPos = hitPos
-		end
-	end
+function Pistol:sv_onShoot( args, caller )
+	local overdrive = self.overdriveActive
+	args.owner = caller.character
+	args.overdrive = overdrive
+	sm.event.sendToTool(g_pManager, "sv_createProjectile", args)
+	self.network:sendToClients("cl_onShoot", args)
 
 	if sm.game.getEnableAmmoConsumption() then
 		sm.container.beginTransaction()
-		sm.container.spend(self.tool:getOwner():getInventory(), obj_consumable_battery, strong and 5 or (self.overdriveActive and 2 or 1))
+		sm.container.spend(self.tool:getOwner():getInventory(), obj_consumable_battery, args.strong and 5 or (overdrive and 2 or 1))
 		sm.container.endTransaction()
 	end
-
-	self.network:sendToClients("cl_onShoot", args)
 end
 
 ---@param args ShootData
 function Pistol:cl_onShoot( args )
-	local dir = args.dir
-	local pos = args.pos + dir
-	local strong = args.strong
-	local hitPos = args.hitPos
-	local overdrive = self.overdriveActive
-
 	setTpAnimation( self.tpAnimations, "shoot", 10.0 )
 	if self.isLocal then
 		setFpAnimation( self.fpAnimations, "shoot", 0.05 )
 	end
 
-	local laser = {
-		line = Line_gun(),
-		pos = pos,
-		dir = strong and (hitPos and hitPos - pos or dir * self.strongLength) or dir,
-		strong = strong,
-		overdrive = overdrive,
-		lifeTime = 15,
-	}
-
-	local colour =  (strong or overdrive) and self.lineStats.colour_strong or self.lineStats.colour_weak
-	laser.line:init( self.lineStats.thickness, colour, strong )
-	laser.line:update( pos, pos + laser.dir * self.laserLength, 0.16 )
-	self.lasers[#self.lasers+1] = laser
-
+	local overdrive = self.overdriveActive
+	local colour =  (args.strong or overdrive) and self.lineStats.colour_strong or self.lineStats.colour_weak
 	if not overdrive then
-		self.tool:setFpColor(colour)
 		self.tool:setTpColor(colour)
+		if self.isLocal then
+			self.tool:setFpColor(colour)
+		end
 		self.colour = colour
 		self.lerpProgress = 0
 	end

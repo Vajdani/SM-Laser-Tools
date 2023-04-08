@@ -7,7 +7,7 @@
          "script" : {
             "class" : "Cutter",
             "data" : {},
-            "file" : "$CONTENT_DATA/Scripts/LaserCutter.lua"
+            "file" : "$CONTENT_DATA/Scripts/Tools/LaserCutter.lua"
          },
          "uuid" : "99c5dde3-1c24-41f4-9fc0-fd183c88673e"
       },
@@ -18,7 +18,7 @@
          "script" : {
             "class" : "Pistol",
             "data" : {},
-            "file" : "$CONTENT_DATA/Scripts/LaserPistol.lua"
+            "file" : "$CONTENT_DATA/Scripts/Tools/LaserPistol.lua"
          },
          "uuid" : "e3bd2dd1-1bb0-4964-b46c-d4d58cfec074"
       },
@@ -29,7 +29,7 @@
          "script" : {
             "class" : "Katana",
             "data" : {},
-            "file" : "$CONTENT_DATA/Scripts/LaserKatana.lua"
+            "file" : "$CONTENT_DATA/Scripts/Tools/LaserKatana.lua"
          },
          "showInInventory" : false,
          "uuid" : "3f5c15b0-d0a6-4ee3-a178-5643a61402cf"
@@ -41,19 +41,19 @@
          "script" : {
             "class" : "Railgun",
             "data" : {},
-            "file" : "$CONTENT_DATA/Scripts/Railgun.lua"
+            "file" : "$CONTENT_DATA/Scripts/Tools/Railgun.lua"
          },
          "showInInventory" : false,
          "uuid" : "704fdad0-99bf-45a7-b24e-dfbeb028b54f"
       },
       {
-         "name" : "Hook",
+         "name" : "ProjectileManager",
          "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.rend",
          "previewRotation" : [ 1, 0, 0, 0, 0, -1, 0, 1, 0 ],
          "script" : {
-            "class" : "Hook",
+            "class" : "ProjectileManager",
             "data" : {},
-            "file" : "$CONTENT_DATA/Scripts/Hook.lua"
+            "file" : "$CONTENT_DATA/Scripts/ProjectileManager.lua"
          },
          "autoTool": true,
          "uuid" : "47ea67f7-f013-4be3-b95d-f454898214c4"

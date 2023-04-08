@@ -8,6 +8,7 @@ vec3_x = sm.vec3.new(1,0,0)
 vec3_y = sm.vec3.new(1,0,0)
 defaultQuat = sm.quat.identity()
 cutterpotato = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
+pistolcoil = sm.uuid.new("64f6e8ad-abe6-47c7-b924-f7593637dcc1")
 -- #endregion
 
 
@@ -63,7 +64,17 @@ end
 -- #endregion
 
 
+
 -- #region Classes
+---@class ShootData
+---@field pos Vec3
+---@field dir Vec3
+---@field strong boolean
+---@field hitPos Vec3
+---@field overdrive boolean
+---@field owner Character|Shape
+---@field tick integer
+
 -- #region Line_gun
 local line_up = sm.vec3.new(1,0,0)
 ---@class Line_gun
@@ -209,16 +220,7 @@ end
 -- #endregion
 -- #endregion
 
-local ToolItems = {
-	["99c5dde3-1c24-41f4-9fc0-fd183c88673e"] = sm.uuid.new("c5d3db44-b21a-41c7-b8ba-b2d9edaf7f0a"), --Laser Cutter
-	["e3bd2dd1-1bb0-4964-b46c-d4d58cfec074"] = sm.uuid.new("1d8a0366-5867-4768-a487-e34e608d0db9") --Laser Pistol
-}
 
-local oldGetToolProxyItem = GetToolProxyItem
-function getToolProxyItemHook( toolUuid )
-	return oldGetToolProxyItem( toolUuid ) or ToolItems[tostring( toolUuid )]
-end
-GetToolProxyItem = getToolProxyItemHook
 
 -- #region Legally obtained things
 

@@ -4,10 +4,10 @@
 			"color": "df7f01",
 			"flammable": false,
 			"hull": {
-				"col": "$GAME_DATA/Objects/Collision/obj_interactive_mountablespudgun_col.obj",
+				"col": "$CONTENT_DATA/Objects/Mesh/obj_mountablelasercutter_col.obj",
 				"x": 1,
 				"y": 1,
-				"z": 4
+				"z": 3
 			},
 			"name": "obj_interactive_mountablelasercutter",
 			"physicsMaterial": "Mechanical",
@@ -17,68 +17,52 @@
 				"durability": 5,
 				"friction": 4
 			},
-			"renderable": {
-				"lodList": [
-					{
-						"mesh": "$GAME_DATA/Objects/Mesh/interactive/obj_interactive_mountablespudgun_off.fbx",
-						"pose0": "$GAME_DATA/Objects/Mesh/interactive/obj_interactive_mountablespudgun_on.fbx",
-						"subMeshMap": {
-							"barrel_basic": {
-								"material": "DifAsgNor",
-								"textureList": [
-									"$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_dif.tga",
-									"$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_asg.tga",
-									"$GAME_DATA/Character/Char_Tools/Char_spudgun/Barrel/Barrel_basic/char_spudgun_barrel_basic_nor.tga"
-								]
-							},
-							"mounted_spudgun": {
-								"material": "PoseAnimDifAsgNor",
-								"textureList": [
-									"$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_dif.tga",
-									"$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_asg.tga",
-									"$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_nor.tga"
-								]
-							}
-						}
-					}
-				]
-			},
+			"renderable": "$CONTENT_DATA/Objects/Renderables/obj_mountablelasercutter.rend",
 			"rotationSet": "PropYZ",
 			"scripted": {
 				"classname": "MountedLaserCutter",
-				"filename": "$CONTENT_DATA/Scripts/MountedLaserCutter.lua"
+				"filename": "$CONTENT_DATA/Scripts/Interactables/MountedLaserCutter.lua"
 			},
 			"sticky": "-Z-Y+Y-X+X",
 			"uuid": "7b39bac2-a64c-4256-b530-e2e3fd611e24"
 		},
 		{
-			"uuid": "b6cedcb3-8cee-4132-843f-c9efed50af7c",
-			"name": "cutter_beam",
-			"renderable": {
-				"lodList": [
-					{
-						"subMeshList": [
-							{
-								"textureList": [
-									"$GAME_DATA/Objects/Textures/industrial/obj_atlas_generic_dif.tga",
-									"$CONTENT_DATA/Objects/obj_atlas_generic_asg.tga",
-									"$GAME_DATA/Objects/Textures/industrial/obj_atlas_generic_nor.tga",
-									"$GAME_DATA/Objects/Textures/fittings/obj_fittings_small_pipe_ao.tga"
-								],
-								"material": "DifAsgNorAo"
-							}
-						],
-						"mesh": "$GAME_DATA/Objects/Mesh/fittings/small_2way_pipe.fbx",
-						"includes": [
-							"POSITION",
-							"UV0",
-							"UV1",
-							"NORMAL",
-							"TANGENTS"
-						]
-					}
-				]
+			"color": "df7f01",
+			"flammable": false,
+			"hull": {
+				"col": "$GAME_DATA/Objects/Collision/obj_interactive_mountablespudgun_col.obj",
+				"x": 1,
+				"y": 1,
+				"z": 4
 			},
+			"name": "obj_interactive_mountablelaserpistol",
+			"physicsMaterial": "Mechanical",
+			"ratings": {
+				"buoyancy": 2,
+				"density": 7,
+				"durability": 5,
+				"friction": 4
+			},
+			"renderable": "$CONTENT_DATA/Objects/Renderables/obj_mountablelaserpistol.rend",
+			"rotationSet": "PropYZ",
+			"scripted": {
+				"classname": "MountedLaserPistol",
+				"filename": "$CONTENT_DATA/Scripts/Interactables/MountedLaserPistol.lua"
+			},
+			"sticky": "-Z-Y+Y-X+X",
+			"uuid": "09889d41-e439-4b2c-8490-b0205a536d3d"
+		},
+		{
+			"color": "7a7a7a",
+			"hull": {
+				"col": "$GAME_DATA/Objects/Collision/small_2way_pipe.obj",
+				"margin": 0.250,
+				"x": 1,
+				"y": 1,
+				"z": 1
+			},
+			"name": "cutter_beam",
+			"physicsMaterial": "Metal",
 			"previewRotation": [
 				0,
 				0,
@@ -90,18 +74,66 @@
 				1,
 				0
 			],
-			"color": "7a7a7a",
-			"hull": {
-				"x": 1,
-				"y": 1,
-				"z": 1,
-				"margin": 0.25,
-				"col": "$GAME_DATA/Objects/Collision/small_2way_pipe.obj"
+			"renderable": {
+				"lodList": [
+					{
+						"includes": [
+							"POSITION",
+							"UV0",
+							"UV1",
+							"NORMAL",
+							"TANGENTS"
+						],
+						"mesh": "$GAME_DATA/Objects/Mesh/fittings/small_2way_pipe.fbx",
+						"subMeshList": [
+							{
+								"material": "DifAsgNorAo",
+								"textureList": [
+									"$GAME_DATA/Objects/Textures/industrial/obj_atlas_generic_dif.tga",
+									"$CONTENT_DATA/Objects/Textures/obj_atlas_generic_asg.tga",
+									"$GAME_DATA/Objects/Textures/industrial/obj_atlas_generic_nor.tga",
+									"$GAME_DATA/Objects/Textures/fittings/obj_fittings_small_pipe_ao.tga"
+								]
+							}
+						]
+					}
+				]
 			},
 			"rotationSet": "PropXmm",
+			"showInInventory": false,
 			"sticky": "-X+X",
+			"uuid": "b6cedcb3-8cee-4132-843f-c9efed50af7c"
+		},
+		{
+			"color": "ffffff",
+			"box": {
+				"x": 1,
+				"y": 1,
+				"z": 1
+			},
+			"name": "pistol_coil",
 			"physicsMaterial": "Metal",
-			"showInInventory": false
+			"renderable": {
+				"lodList": [
+					{
+						"subMeshList": [
+							{
+								"material": "DifAsgNor",
+								"textureList": [
+									"$GAME_DATA/Textures/Default/default_dif.tga",
+									"$CONTENT_DATA/Objects/Textures/obj_atlas_generic_asg.tga",
+									"$GAME_DATA/Textures/Default/default_dif.tga"
+								]
+							}
+						],
+						"mesh": "$CONTENT_DATA/Effects/Mesh/obj_mountablelaserpistol_glow.fbx"
+					}
+				]
+			},
+			"rotationSet": "PropY",
+			"showInInventory": false,
+			"sticky": "-Y+Y",
+			"uuid": "64f6e8ad-abe6-47c7-b924-f7593637dcc1"
 		}
 	]
 }

@@ -23,24 +23,24 @@ MountedLaserCutter.spinSpeed = 250
 MountedLaserCutter.beamStopSeconds = 1
 MountedLaserCutter.unitDamageTicks = 10
 
-local barrelAdjust = sm.vec3.one() * 0.4
+local barrelAdjust = sm.vec3.new(0,-0.02,0.278)
 local on = "#269e44On"
 local off = "#9e2626Off"
 
 function MountedLaserCutter:server_onCreate()
 	self.sv = {}
-	self.sv.data = self.storage:load()
-	if self.sv.data == nil then
-		self.sv.data = {}
-		self.sv.data.damage = self.defaultDamage
-		self.sv.data.range = self.defaultRange
-		self.sv.data.line = false
+	self.sv_data = self.storage:load()
+	if self.sv_data == nil then
+		self.sv_data = {}
+		self.sv_data.damage = self.defaultDamage
+		self.sv_data.range = self.defaultRange
+		self.sv_data.line = false
 	end
 
-	self:sv_updateGui({ dmg = self.sv.data.damage, range = self.sv.data.range, line = self.sv.data.line })
+	self:sv_updateGui({ dmg = self.sv_data.damage, range = self.sv_data.range, line = self.sv_data.line })
 
-	self.sv.unitDamageTimer = Timer()
-	self.sv.unitDamageTimer:start( self.unitDamageTicks )
+	self.sv_unitDamageTimer = Timer()
+	self.sv_unitDamageTimer:start( self.unitDamageTicks )
 end
 
 function MountedLaserCutter:server_onFixedUpdate()
@@ -48,8 +48,8 @@ function MountedLaserCutter:server_onFixedUpdate()
 	if not active then return end
 
 	local selfDir = self.shape.up
-	local selfPos = self.shape.worldPosition + barrelAdjust * selfDir
-	local endPos = selfPos + selfDir * self.sv.data.range
+	local selfPos = self.shape.worldPosition + self.shape.worldRotation * barrelAdjust
+	local endPos = selfPos + selfDir * self.sv_data.range
 	local hit, result = sm.physics.raycast( selfPos, endPos )
 
 	if not hit then return end
@@ -79,12 +79,12 @@ function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 			target:destroyShape( 0 )
 		end
 	elseif type == "Character" then
-		self.sv.unitDamageTimer:tick()
-		if self.sv.unitDamageTimer:done() then
-			self.sv.unitDamageTimer:reset()
+		self.sv_unitDamageTimer:tick()
+		if self.sv_unitDamageTimer:done() then
+			self.sv_unitDamageTimer:reset()
 			sm.projectile.shapeProjectileAttack(
 				cutterpotato,
-				self.sv.data.damage,
+				self.sv_data.damage,
 				self.shape:transformPoint(hitPos),
 				self.shape.xAxis,
 				self.shape
@@ -104,10 +104,10 @@ function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 end
 
 function MountedLaserCutter:sv_updateGui( args )
-	self.sv.data.damage = args.dmg
-	self.sv.data.range = args.range
-	self.sv.data.line = args.line
-	self.storage:save( self.sv.data )
+	self.sv_data.damage = args.dmg
+	self.sv_data.range = args.range
+	self.sv_data.line = args.line
+	self.storage:save( self.sv_data )
 
 	self.network:sendToClients( "cl_updateGui", args )
 end
@@ -115,129 +115,134 @@ end
 
 
 function MountedLaserCutter:client_onCreate()
-	self.cl = {}
-	self.cl.boltValue = 0.0
+	self.cl_boltValue = 0.0
 
-	self.cl.damage = self.defaultDamage
-	self.cl.range = self.defaultRange
+	self.cl_damage = self.defaultDamage
+	self.cl_range = self.defaultRange
 
-	self.cl.gui = sm.gui.createGuiFromLayout( "$CONTENT_DATA/Gui/Mounted.layout", false )
-	self.cl.gui:setTextChangedCallback( "input_dmg", "cl_input_dmg" )
-	self.cl.gui:setTextChangedCallback( "input_range", "cl_input_range" )
-	self.cl.gui:setIconImage( "icon", self.shape.uuid )
-	self.cl.gui:setButtonCallback( "laser", "cl_input_laser" )
-	self.cl.gui:setText( "laser", off )
+	self.cl_gui = sm.gui.createGuiFromLayout( "$CONTENT_DATA/Gui/Mounted.layout", false )
+	self.cl_gui:setTextChangedCallback( "input_dmg", "cl_input_dmg" )
+	self.cl_gui:setTextChangedCallback( "input_range", "cl_input_range" )
+	self.cl_gui:setIconImage( "icon", self.shape.uuid )
+	self.cl_gui:setButtonCallback( "laser", "cl_input_laser" )
+	self.cl_gui:setText( "laser", off )
 
-	self.cl.line = Line_cutter()
-	self.cl.line:init( self.lineThickness, self.lineColour, 0.4 )
-	self.cl.lineAlways = false
-	self.cl.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.interactable )
+	self.cl_line = Line_cutter()
+	self.cl_line:init( self.lineThickness, self.shape.color, 0.4 )
+	self.cl_lineAlways = false
+	self.cl_activeSound = sm.effect.createEffect( "Cutter_active_sound", self.interactable )
 
-	self.cl.lastPos = sm.vec3.zero()
-	self.cl.beamStopTimer = self.beamStopSeconds
+	self.cl_lastPos = sm.vec3.zero()
+	self.cl_beamStopTimer = self.beamStopSeconds
 end
 
 function MountedLaserCutter:cl_input_dmg( widget, value )
 	local num = tonumber(value)
 	if num == nil then
 		if value ~= "" then
-			self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
+			self.cl_gui:setText( "input_dmg", tostring(self.cl_damage) )
 			sm.audio.play("RaftShark")
 		end
 		return
 	end
 
-	self.cl.damage = num
-	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range, line = self.cl.lineAlways })
+	self.cl_damage = num
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl_damage, range = self.cl_range, line = self.cl_lineAlways })
 end
 
 function MountedLaserCutter:cl_input_range( widget, value )
 	local num = tonumber(value)
 	if num == nil then
 		if value ~= "" then
-			self.cl.gui:setText( "input_range", tostring(self.cl.range) )
+			self.cl_gui:setText( "input_range", tostring(self.cl_range) )
 			sm.audio.play("RaftShark")
 		end
 		return
 	end
 
-	self.cl.range = num
-	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range, line = self.cl.lineAlways })
+	self.cl_range = num
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl_damage, range = self.cl_range, line = self.cl_lineAlways })
 end
 
 function MountedLaserCutter:cl_input_laser()
-	self.network:sendToServer("sv_updateGui", { dmg = self.cl.damage, range = self.cl.range, line = not self.cl.lineAlways })
+	self.network:sendToServer("sv_updateGui", { dmg = self.cl_damage, range = self.cl_range, line = not self.cl_lineAlways })
 end
 
 function MountedLaserCutter:cl_updateGui( args )
-	self.cl.damage = args.dmg
-	self.cl.range = args.range
-	self.cl.lineAlways = args.line
+	self.cl_damage = args.dmg
+	self.cl_range = args.range
+	self.cl_lineAlways = args.line
 
-	self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
-	self.cl.gui:setText( "input_range", tostring(self.cl.range) )
-	self.cl.gui:setText( "laser", self.cl.lineAlways and on or off )
+	self.cl_gui:setText( "input_dmg", tostring(self.cl_damage) )
+	self.cl_gui:setText( "input_range", tostring(self.cl_range) )
+	self.cl_gui:setText( "laser", self.cl_lineAlways and on or off )
 end
 
 function MountedLaserCutter:client_onInteract( char, state )
 	if not state then return end
 
-	self.cl.gui:setText( "input_dmg", tostring(self.cl.damage) )
-	self.cl.gui:setText( "input_range", tostring(self.cl.range) )
-	self.cl.gui:open()
+	self.cl_gui:setText( "input_dmg", tostring(self.cl_damage) )
+	self.cl_gui:setText( "input_range", tostring(self.cl_range) )
+	self.cl_gui:open()
 end
 
 function MountedLaserCutter:client_onUpdate( dt )
 	local active = self:getInputs()
 	local hit, result = false, nil
 	local selfDir = self.shape.up
-	local selfPos = self.shape.worldPosition + barrelAdjust * selfDir
+	local selfPos = self.shape.worldPosition + self.shape.worldRotation * barrelAdjust
 	local target
 
 	if active then
-		if not self.cl.activeSound:isPlaying() then
-			self.cl.activeSound:start()
+		if not self.cl_activeSound:isPlaying() then
+			self.cl_activeSound:start()
 		end
 
-		local endPos = selfPos + selfDir * self.cl.range
+		local endPos = selfPos + selfDir * self.cl_range
 		hit, result = sm.physics.raycast( selfPos, endPos )
 
 		target = result:getShape() or result:getCharacter()
 
 		if hit and target then
-			self.cl.lastPos = result.pointWorld
-			self.cl.beamStopTimer = self.beamStopSeconds
-			self.cl.line:update( selfPos, result.pointWorld, dt, 250, false )
-		elseif self.cl.lineAlways then
-			self.cl.lastPos = endPos
-			self.cl.beamStopTimer = self.beamStopSeconds
-			self.cl.line:update( selfPos, hit and result.pointWorld or endPos, dt, 250, false )
+			self.cl_lastPos = result.pointWorld
+			self.cl_beamStopTimer = self.beamStopSeconds
+			self.cl_line:update( selfPos, result.pointWorld, dt, 250, false )
+		elseif self.cl_lineAlways then
+			self.cl_lastPos = endPos
+			self.cl_beamStopTimer = self.beamStopSeconds
+			self.cl_line:update( selfPos, hit and result.pointWorld or endPos, dt, 250, false )
 		end
-	elseif self.cl.activeSound:isPlaying() then
-		self.cl.activeSound:stop()
+	elseif self.cl_activeSound:isPlaying() then
+		self.cl_activeSound:stop()
 	end
 
-	if (not active or not hit or not target) and self.cl.line.effect:isPlaying() then
-		self.cl.beamStopTimer = math.max(self.cl.beamStopTimer - dt, 0)
-		self.cl.line:update( selfPos, self.cl.lastPos, dt, 250, true )
+	if (not active or not hit or not target) and self.cl_line.effect:isPlaying() then
+		self.cl_beamStopTimer = math.max(self.cl_beamStopTimer - dt, 0)
+		self.cl_line:update( selfPos, self.cl_lastPos, dt, 250, true )
 
-		if self.cl.beamStopTimer <= 0 then
-			self.cl.line:stop()
+		if self.cl_beamStopTimer <= 0 then
+			self.cl_line:stop()
 		end
 	end
 
 	local max = active and (hit and 1 or 0.5) or 0
-	self.cl.boltValue = sm.util.lerp(self.cl.boltValue, max, dt * 10)
+	self.cl_boltValue = sm.util.lerp(self.cl_boltValue, max, dt * 10)
 
-	if self.cl.boltValue ~= self.cl.prevBoltValue then
-		self.interactable:setPoseWeight( 0, self.cl.boltValue )
-		self.cl.prevBoltValue = self.cl.boltValue
+	if self.cl_boltValue ~= self.cl_prevBoltValue then
+		self.interactable:setPoseWeight( 0, self.cl_boltValue )
+		self.cl_prevBoltValue = self.cl_boltValue
+	end
+
+	local col = self.shape.color
+	if self.cl_line.colour ~= col then
+		self.cl_line.colour = col
+		self.cl_line.effect:setParameter("color", col)
 	end
 end
 
 function MountedLaserCutter:client_onDestroy()
-	self.cl.line:stop()
-	self.cl.gui:close()
+	self.cl_line:stop()
+	self.cl_gui:close()
 end
 
 
@@ -249,7 +254,7 @@ function MountedLaserCutter:getInputs()
 	for k, parent in pairs(parents) do
 		if parent.active then active = true end
 
-		if parent:hasOutputType(sm.interactable.connectionType.electricity) then
+		if parent:hasOutputType(512) then
 			container = parent:getContainer(0)
 		end
 	end

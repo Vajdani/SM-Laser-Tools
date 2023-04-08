@@ -1,0 +1,34 @@
+{
+    "lodList": [
+        {
+            "mesh": "$CONTENT_DATA/Objects/Mesh/obj_mountablelasercutter_off.fbx",
+            "pose0": "$CONTENT_DATA/Objects/Mesh/obj_mountablelasercutter_on.fbx",
+            "subMeshList": [
+                {
+                    "material": "PoseAnimDifAsgNor",
+                    "textureList": [
+                        "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_dif.tga",
+                        "$GAME_DATA/Objects/Textures/interactive/obj_interactive_mountablespudgun_asg.tga",
+                        "$CONTENT_DATA/Objects/Textures/obj_interactive_mountablespudgun_nor.tga"
+                    ]
+                },
+                {
+                    "material": "DifAsgNor",
+                    "textureList": [
+                        "$SURVIVAL_DATA/Objects/Textures/fittings/obj_fittings_pipesbig2_dif.tga",
+                        "$SURVIVAL_DATA/Objects/Textures/fittings/obj_fittings_pipesbig2_asg.tga",
+                        "$SURVIVAL_DATA/Objects/Textures/fittings/obj_fittings_pipesbig2_nor.tga"
+                    ]
+                },
+                {
+                    "material": "DifAsgNor",
+                    "textureList": [
+                        "$CONTENT_DATA/Tools/LaserCutter/Textures/obj_industrial_satellite_dif.tga",
+                        "$GAME_DATA/Objects/Textures/industrial/obj_industrial_satellite_asg.tga",
+                        "$GAME_DATA/Objects/Textures/industrial/obj_industrial_satellite_nor.tga"
+                    ]
+                }
+            ]
+        }
+    ]
+}
