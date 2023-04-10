@@ -89,7 +89,7 @@ function Line_gun:init( thickness, colour, strong )
     self.effect = sm.effect.createEffect("ShapeRenderable")
 	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
     self.effect:setParameter("color", colour)
-    self.effect:setScale( sm.vec3.one() * thickness )
+    self.effect:setScale( vec3_one * thickness )
 	self.sound = sm.effect.createEffect( "Cutter_beam_sound" )
 
 	self.colour = colour
@@ -162,7 +162,7 @@ function Line_cutter:init( thickness, colour, dyingShrink )
     self.effect = sm.effect.createEffect("ShapeRenderable")
 	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
     self.effect:setParameter("color", colour)
-    self.effect:setScale( sm.vec3.one() * thickness )
+    self.effect:setScale( vec3_one * thickness )
 	self.sound = sm.effect.createEffect( "Cutter_beam_sound" )
 
 	self.colour = colour

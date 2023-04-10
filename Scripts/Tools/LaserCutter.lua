@@ -79,7 +79,7 @@ function Cutter:client_onToggle()
 	self.cutSize = math.max(self.cutSize - 2, 1)
 	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
 	sm.audio.play("PaintTool - ColorPick")
-	--network:sendToServer("sv_updateLineThickness", self.cutSize)
+	--self.network:sendToServer("sv_updateLineThickness", self.cutSize)
 
 	return true
 end
@@ -92,12 +92,31 @@ function Cutter:cl_updateLineThickness(num)
 	self.line:setThicknessMultiplier(num)
 end
 
+function Cutter:sv_updateFiring( firing )
+	self.network:sendToClients( "cl_updateFiring", firing )
+end
+
+function Cutter:cl_updateFiring( firing )
+	self.firing = firing
+end
+
+
 
 function Cutter:cl_getBeamStart()
 	local char = self.owner.character
 	return self.tool:isInFirstPersonView() and
 	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 or
 	self.tool:getTpBonePos( "pipe" )
+end
+
+function Cutter:canFire(_type, target)
+	if not sm.game.getEnableAmmoConsumption() then return true, 0 end
+
+	if not sm.exists(target) then return false, 0 end
+
+	local container = sm.localPlayer.getInventory()
+	local quantity = (_type == "Shape" and sm.item.isBlock(target.uuid)) and self.cutSize^2 or 1
+	return container:canSpend(plasma, quantity), quantity
 end
 
 function Cutter:cl_updateDyingBeam( dt )
@@ -182,35 +201,11 @@ function Cutter:sv_cut( args )
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
 			local destroyPos = pos - shape.worldRotation * (size - normal) * (1 / 12)
 			shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
-
-			--[[
-			for i = 0, size.x - 1 do
-				for j = 0, size.y - 1 do
-					for k = 0, size.z - 1 do
-						sm.effect.playEffect(
-							"Sledgehammer - Destroy",
-							destroyPos + (sm.vec3.new(i, j, k) - normal) * 0.25,
-							vec3_zero,
-							effectRot,
-							vec3_one,
-							effectData
-						)
-					end
-				end
-			end
-			]]
 		else
 			shape:destroyShape()
 		end
 
-		sm.effect.playEffect(
-			"Sledgehammer - Destroy",
-			pos,
-			vec3_zero,
-			effectRot,
-			vec3_one,
-			effectData
-		)
+		sm.effect.playEffect( "Sledgehammer - Destroy", pos, vec3_zero, effectRot, vec3_one, effectData )
 	end
 
 	self:sv_consumeAmmo(args.ammo)
@@ -227,16 +222,6 @@ function Cutter:sv_consumeAmmo(ammo)
 		sm.container.spend(self.tool:getOwner():getInventory(), plasma, ammo)
 		sm.container.endTransaction()
 	end
-end
-
-
-
-function Cutter:sv_updateFiring( firing )
-	self.network:sendToClients( "cl_updateFiring", firing )
-end
-
-function Cutter:cl_updateFiring( firing )
-	self.firing = firing
 end
 
 
@@ -594,14 +579,4 @@ function Cutter.calculateFirePosition( self )
 
 	local firePosition = GetOwnerPosition( self.tool ) + fireOffset
 	return firePosition
-end
-
-function Cutter:canFire(_type, target)
-	if not sm.game.getEnableAmmoConsumption() then return true, 0 end
-
-	if not sm.exists(target) then return false, 0 end
-
-	local container = sm.localPlayer.getInventory()
-	local quantity = (_type == "Shape" and sm.item.isBlock(target.uuid)) and self.cutSize^2 or 1
-	return container:canSpend(plasma, quantity), quantity
 end

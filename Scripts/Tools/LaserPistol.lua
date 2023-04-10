@@ -6,14 +6,6 @@ dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 dofile "$CONTENT_DATA/Scripts/util.lua"
 
----@class Laser
----@field line Line_gun
----@field pos Vec3
----@field dir Vec3
----@field strong boolean
----@field overdrive boolean
----@field lifeTime number
-
 ---@class Pistol : ToolClass
 ---@field owner Player
 ---@field fpAnimations table
@@ -400,7 +392,7 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 	return true, true
 end
 
----@param args ShootData
+---@param args LaserProjectile
 function Pistol:sv_onShoot( args, caller )
 	local overdrive = self.overdriveActive
 	args.owner = caller.character
@@ -415,7 +407,7 @@ function Pistol:sv_onShoot( args, caller )
 	end
 end
 
----@param args ShootData
+---@param args LaserProjectile
 function Pistol:cl_onShoot( args )
 	setTpAnimation( self.tpAnimations, "shoot", 10.0 )
 	if self.isLocal then

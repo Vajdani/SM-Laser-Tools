@@ -64,7 +64,8 @@ end
 function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 	local type = type(target)
 	if type == "Shape" then
-		if sm.item.getFeatureData(target.uuid).classname == "Package" then
+		local data = sm.item.getFeatureData(target.uuid)
+		if data and data.classname == "Package" then
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
 		else
 			sm.effect.playEffect(
