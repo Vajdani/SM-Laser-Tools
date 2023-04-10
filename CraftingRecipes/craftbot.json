@@ -63,5 +63,65 @@
 		],
 		"itemId": "7b39bac2-a64c-4256-b530-e2e3fd611e24",
 		"quantity": 1.0
+	},
+	{
+		"craftTime": 10.0,
+		"ingredientList": [
+			{
+				"itemId": "454ad69d-bac2-4b06-9386-6267bcbfece2",
+				"quantity": 1.0
+			},
+			{
+				"itemId": "5530e6a0-4748-4926-b134-50ca9ecb9dcf",
+				"quantity": 5.0
+			},
+			{
+				"itemId": "5f41af56-df4c-4837-9b3c-10781335757f",
+				"quantity": 5.0
+			}
+		],
+		"itemId": "09889d41-e439-4b2c-8490-b0205a536d3d",
+		"quantity": 1.0
+	},
+	{
+		"craftTime" : 5.0,
+		"ingredientList" : 
+		[
+			
+			{
+				"itemId" : "1f7ac0bb-ad45-4246-9817-59bdf7f7ab39",
+				"quantity" : 25.0
+			},
+			
+			{
+				"itemId" : "f74c2891-79a9-45e0-982e-4896651c2e25",
+				"quantity" : 5.0
+			}
+		],
+		"itemId" : "69c063fe-385a-4135-8f5e-6247aec89769",
+		"quantity" : 100.0
+	},
+	{
+		"itemId": "c1a53e1d-3c0e-464f-bea8-ee003c58518b",
+		"quantity": 1,
+		"craftTime": 57,
+		"ingredientList": [
+			{
+				"quantity": 20,
+				"itemId": "1016cafc-9f6b-40c9-8713-9019d399783f"
+			},
+			{
+				"quantity": 10,
+				"itemId": "f152e4df-bc40-44fb-8d20-3b3ff70cdfe3"
+			},
+			{
+				"quantity": 10,
+				"itemId": "c7322cd1-3158-41d9-b15a-eff2f2f8d9f7"
+			},
+			{
+				"quantity": 2,
+				"itemId": "36335664-6e61-4d44-9876-54f9660a8565"
+			}
+		]
 	}
 ]
