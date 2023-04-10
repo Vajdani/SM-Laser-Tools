@@ -589,77 +589,10 @@ function Railgun:calculateFpMuzzlePos()
 	return self.tool:getFpBonePos( "pejnt_barrel" ) + sm.vec3.lerp( muzzlePos45, muzzlePos90, fovScale )
 end
 
-function Railgun:cl_onPrimaryUse( type ) --state )
-	--[[
-	if self.fireCooldownTimer <= 0.0 and state == sm.tool.interactState.start then
-		if not sm.game.getEnableAmmoConsumption() or sm.container.canSpend( sm.localPlayer.getInventory(), obj_plantables_potato, 1 ) then
-			local firstPerson = self.tool:isInFirstPersonView()
-
-			local dir = sm.localPlayer.getDirection()
-
-			local firePos = self:calculateFirePosition()
-			local fakePosition = self:calculateTpMuzzlePos()
-			local fakePositionSelf = fakePosition
-			if firstPerson then
-				fakePositionSelf = self:calculateFpMuzzlePos()
-			end
-
-			-- Aim assist
-			if not firstPerson then
-				local raycastPos = sm.camera.getPosition() + sm.camera.getDirection() * sm.camera.getDirection():dot( GetOwnerPosition( self.tool ) - sm.camera.getPosition() )
-				local hit, result = sm.localPlayer.getRaycast( 250, raycastPos, sm.camera.getDirection() )
-				if hit then
-					local norDir = sm.vec3.normalize( result.pointWorld - firePos )
-					local dirDot = norDir:dot( dir )
-
-					if dirDot > 0.96592583 then -- max 15 degrees off
-						dir = norDir
-					else
-						local radsOff = math.asin( dirDot )
-						dir = sm.vec3.lerp( dir, norDir, math.tan( radsOff ) / 3.7320508 ) -- if more than 15, make it 15
-					end
-				end
-			end
-
-			dir = dir:rotate( math.rad( 0.955 ), sm.camera.getRight() ) -- 50 m sight calibration
-
-			-- Spread
-			local fireMode = self.aiming and self.aimFireMode or self.normalFireMode
-			local recoilDispersion = 1.0 - ( math.max(fireMode.minDispersionCrouching, fireMode.minDispersionStanding ) + fireMode.maxMovementDispersion )
-
-			local spreadFactor = fireMode.spreadCooldown > 0.0 and clamp( self.spreadCooldownTimer / fireMode.spreadCooldown, 0.0, 1.0 ) or 0.0
-			spreadFactor = clamp( self.movementDispersion + spreadFactor * recoilDispersion, 0.0, 1.0 )
-			local spreadDeg =  fireMode.spreadMinAngle + ( fireMode.spreadMaxAngle - fireMode.spreadMinAngle ) * spreadFactor
-
-			dir = sm.noise.gunSpread( dir, spreadDeg )
-
-			local owner = self.tool:getOwner()
-			if owner then
-				sm.projectile.projectileAttack( projectile_potato, Damage, firePos, dir * fireMode.fireVelocity, owner, fakePosition, fakePositionSelf )
-			end
-
-			-- Timers
-			self.fireCooldownTimer = fireMode.fireCooldown
-			self.spreadCooldownTimer = math.min( self.spreadCooldownTimer + fireMode.spreadIncrement, fireMode.spreadCooldown )
-			self.sprintCooldownTimer = self.sprintCooldown
-
-			-- Send TP shoot over network and dircly to self
-			self:onShoot( dir )
-			self.network:sendToServer( "sv_n_onShoot", dir )
-
-			-- Play FP shoot animation
-			setFpAnimation( self.fpAnimations, self.aiming and "aimShoot" or "shoot", 0.05 )
-		else
-			local fireMode = self.aiming and self.aimFireMode or self.normalFireMode
-			self.fireCooldownTimer = fireMode.fireCooldown
-			sm.audio.play( "PotatoRifle - NoAmmo" )
-		end
-	end
-	]]
-
+function Railgun:cl_onPrimaryUse( type )
 	if type == 1 then
 		if self.fireCooldownTimer <= 0.0  then
-			--if not sm.game.getEnableAmmoConsumption() or sm.container.canSpend( sm.localPlayer.getInventory(), obj_plantables_potato, 1 ) then
+			if not sm.game.getEnableAmmoConsumption() or sm.container.canSpend( sm.localPlayer.getInventory(), plasma, 1 ) then
 				local firstPerson = self.tool:isInFirstPersonView()
 				local dir = sm.localPlayer.getDirection()
 				local firePos = self:calculateFirePosition()
@@ -698,7 +631,7 @@ function Railgun:cl_onPrimaryUse( type ) --state )
 
 				dir = sm.noise.gunSpread( dir, spreadDeg )
 
-				sm.projectile.projectileAttack( projectile_potato, self.damage, firePos, dir * fireMode.fireVelocity, self.tool:getOwner(), fakePosition, fakePositionSelf )
+				sm.projectile.projectileAttack( projectile_railgun, self.damage, firePos, dir * fireMode.fireVelocity, self.tool:getOwner(), fakePosition, fakePositionSelf )
 
 				self.fireCooldownTimer = fireMode.fireCooldown
 				self.spreadCooldownTimer = math.min( self.spreadCooldownTimer + fireMode.spreadIncrement, fireMode.spreadCooldown )
@@ -707,13 +640,11 @@ function Railgun:cl_onPrimaryUse( type ) --state )
 				self:onShoot()
 				self.network:sendToServer( "sv_n_onShoot" )
 				setFpAnimation( self.fpAnimations, self.aiming and "aimShoot" or "shoot", 0.05 )
-			--[[
 			else
 				local fireMode = self.aiming and self.aimFireMode or self.normalFireMode
 				self.fireCooldownTimer = fireMode.fireCooldown
 				sm.audio.play( "PotatoRifle - NoAmmo" )
 			end
-			]]
 		end
 	elseif type == 2 then
 		self.network:sendToServer("sv_pierce", sm.localPlayer.getRaycastStart())
@@ -753,11 +684,6 @@ function Railgun:client_onEquippedUpdate( lmb, rmb )
 		self.network:sendToServer("sv_updateCharge", false)
 	end
 
-	--[[if lmb ~= self.prevlmb then
-		self:cl_onPrimaryUse( lmb )
-		self.prevlmb = lmb
-	end]]
-
 	if rmb ~= self.prevrmb then
 		self:cl_onSecondaryUse( rmb )
 		self.prevrmb = rmb
@@ -790,8 +716,10 @@ function Railgun:sv_pierce( rayStart )
 	local playerChar = player.character
 	local dir = playerChar.direction
 	local rayLength = self.range
+	local endPos
 	for i = 1, self.maxTries do
-		local hit, result = sm.physics.raycast( rayStart, rayStart + dir * rayLength )
+		endPos = rayStart + dir * rayLength
+		local hit, result = sm.physics.raycast( rayStart, endPos, playerChar )
 		if not hit or result.type ~= "character" then break end
 
 		local char = result:getCharacter()
@@ -799,9 +727,31 @@ function Railgun:sv_pierce( rayStart )
 		rayLength = rayLength - (rayStart - pos):length()
 		rayStart = pos
 		if char ~= playerChar then
-			sm.projectile.projectileAttack( projectile_potato, self.railDamage, result.pointWorld, dir * 10, player )
+			sm.projectile.projectileAttack(
+				projectile_cutter,
+				self.railDamage,
+				result.pointWorld,
+				dir * 10,
+				player
+			)
+
+			sm.effect.playEffect("Railgun_target_hit", rayStart)
 		end
 	end
+
+	sm.event.sendToTool(
+		g_pManager,
+		"sv_createProjectile",
+		{
+			pos = rayStart,
+			dir = dir,
+			hitPos = endPos,
+			strong = true,
+			noHitscan = true
+		}
+	)
+
+	sm.effect.playEffect("Railgun_target_hit", endPos)
 end
 
 function Railgun:client_onToggle()

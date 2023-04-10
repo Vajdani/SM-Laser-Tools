@@ -22,6 +22,34 @@
          "radius" : 0.250,
          "spin" : 7.0,
          "uuid" : "4ed831d7-71af-4f94-b50f-e67b17f80312"
+      },
+      {
+         "attachedEffect" : "PotatoProjectile - Hit",
+         "audiomass" : 250.0,
+         "destruction" : {
+            "destructionLevels" : [
+               {
+                  "chance" : 1.0,
+                  "qualityLevel" : 1
+               }
+            ]
+         },
+         "ammo": 
+			{ 
+				"uuid": "69c063fe-385a-4135-8f5e-6247aec89769", 
+				"cost": 1
+			},
+         "effect" : "PotatoProjectile - Hit",
+         "effectmaterial" : "Potato",
+         "enableGravity" : true,
+         "enableImpactEffect" : true,
+         "friction" : 0.2000000029802322,
+         "mass" : 3.0,
+         "mesh" : "$GAME_DATA/Projectiles/Renderables/potato.rend",
+         "name" : "railgunprojectile",
+         "radius" : 0.250,
+         "spin" : 7.0,
+         "uuid" : "caccde30-8f1b-45ca-a4c3-e1a949724a9b"
       }
    ]
 }

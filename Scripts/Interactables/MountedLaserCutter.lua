@@ -111,7 +111,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 	elseif isChar then
 		self.sv_unitDamageTimer:reset()
 		sm.projectile.shapeProjectileAttack(
-			cutterpotato,
+			projectile_cutter,
 			self.sv_data.damage,
 			self.shape:transformPoint(hitPos),
 			self.shape.yAxis,

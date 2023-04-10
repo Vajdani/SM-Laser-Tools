@@ -45,11 +45,10 @@ function ProjectileManager:server_onCreate()
 end
 
 function ProjectileManager:sv_createProjectile(args)
-    local dir = args.dir
-	local pos = args.pos + dir
 	local strong = args.strong
-
-	if strong then
+	if strong and args.noHitscan ~= true then
+		local dir = args.dir
+		local pos = args.pos + dir
 		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength )
 		if hit then
 			local hitPos = result.pointWorld
@@ -106,7 +105,7 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 		end
 	elseif type == "Character" then
 		sm.projectile.projectileAttack(
-			cutterpotato,
+			projectile_cutter,
 			self.laserDamage,
 			pos,
 			(target.worldPosition - pos),

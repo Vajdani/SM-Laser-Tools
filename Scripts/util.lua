@@ -7,7 +7,8 @@ vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)
 vec3_y = sm.vec3.new(1,0,0)
 defaultQuat = sm.quat.identity()
-cutterpotato = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
+projectile_cutter = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
+projectile_railgun = sm.uuid.new("caccde30-8f1b-45ca-a4c3-e1a949724a9b")
 pistolcoil = sm.uuid.new("64f6e8ad-abe6-47c7-b924-f7593637dcc1")
 plasma = sm.uuid.new("69c063fe-385a-4135-8f5e-6247aec89769")
 connectionType_plasma = 4096
@@ -86,7 +87,6 @@ end
 ---@field hitPos Vec3
 ---@field overdrive boolean
 ---@field owner Character|Shape
----@field tick integer
 
 -- #region Line_gun
 local line_up = sm.vec3.new(1,0,0)

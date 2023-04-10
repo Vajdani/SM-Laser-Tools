@@ -71,6 +71,24 @@
 				"parameters" : [ "minColor", "maxColor" ]
 			}
 		]
+	},
+	"Railgun_target_hit" : {
+		"effectList" : [
+			{
+				"audio" : [ "WeldTool - Sparks" ],
+				"delay" : 0.0,
+				"offset" : [ 0.0, 0.0, 0.0 ],
+				"type" : "audio"
+			},
+			{
+				"type": "particle",
+				"name": "construct_welding",
+				"offset": { "x": 0.0, "y": 0.0, "z": 0.0 },
+				"direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
+				"attached": true,
+				"delay": 0.0
+			}
+		]
 	}/*,
 	"Katana_swing":
 	{

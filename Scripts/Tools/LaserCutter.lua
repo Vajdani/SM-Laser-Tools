@@ -251,7 +251,7 @@ function Cutter:client_onFixedUpdate()
 				if self.unitDamageTimer:done() then
 					self.unitDamageTimer:reset()
 					sm.projectile.projectileAttack(
-						cutterpotato,
+						projectile_cutter,
 						45,
 						beamEnd,
 						(target.worldPosition - beamEnd):normalize(),
