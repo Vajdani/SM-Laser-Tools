@@ -63,12 +63,23 @@ function ColourLerp(c1, c2, t)
     local b = sm.util.lerp(c1.b, c2.b, t)
     return sm.color.new(r,g,b)
 end
+
+function checkPipedNeighbours(parentShape, containers)
+	for _k, shape in pairs(parentShape:getPipedNeighbours()) do
+		local int = shape.interactable
+		local id = shape.id
+		if int:hasOutputType(connectionType_plasma) and containers[id] == nil then
+			containers[id] = int:getContainer(0)
+			checkPipedNeighbours(shape, containers)
+		end
+	end
+end
 -- #endregion
 
 
 
 -- #region Classes
----@class ShootData
+---@class LaserProjectile
 ---@field pos Vec3
 ---@field dir Vec3
 ---@field strong boolean

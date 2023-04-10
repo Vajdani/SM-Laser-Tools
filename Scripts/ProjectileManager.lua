@@ -155,7 +155,11 @@ function ProjectileManager:client_onUpdate(dt)
 		local currentPos, dir = laser.pos, laser.dir
 		local hit, result = false, nil
 		if not laser.strong then
-			hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), owner )
+			if sm.exists(owner) then
+				hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), owner )
+			else
+				hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2))
+			end
 		end
 
 		local shouldDelete = result and self.killTypes[result.type] == true or laser.lifeTime <= 0 or laser.line.thickness == 0

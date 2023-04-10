@@ -45,6 +45,10 @@ function MountedLaserPistol:server_onCreate()
 	self.sv_overdriveDuration = Timer()
 	self.sv_overdriveDuration:start( self.overdriveDurationTicks )
 	self.sv_overdriveActive = false
+
+	self.sv_parentCount = -1
+	self.sv_containers = {}
+	self:getInputs(false)
 end
 
 function MountedLaserPistol:server_onFixedUpdate()
@@ -52,15 +56,15 @@ function MountedLaserPistol:server_onFixedUpdate()
 	self.sv_secondaryTimer:tick()
 	self.sv_overdriveCooldown:tick()
 
-	local primary, secondary, overdrive, containers = self:getInputs()
+	local primary, secondary, overdrive = self:getInputs()
 	if primary and self.sv_primaryTimer:done() then
 		self.sv_primaryTimer:reset()
-		self:sv_fire(containers, false)
+		self:sv_fire(false)
 	end
 
 	if secondary and not primary and self.sv_secondaryTimer:done() then
 		self.sv_secondaryTimer:reset()
-		self:sv_fire(containers, true, 5)
+		self:sv_fire(true, 5)
 	end
 
 	if overdrive and self.sv_overdriveCooldown:done() and not self.sv_overdriveActive then
@@ -81,12 +85,11 @@ function MountedLaserPistol:server_onFixedUpdate()
 	end
 end
 
----@param containers Container[]
-function MountedLaserPistol:sv_fire(containers, strong, quantity)
+function MountedLaserPistol:sv_fire(strong, quantity)
 	if sm.game.getEnableAmmoConsumption() then
 		local spent = false
 		local _quantity = quantity or (self.sv_overdriveActive and 2 or 1)
-		for k, container in pairs(containers) do
+		for k, container in pairs(self.sv_containers) do
 			if container:canSpend(plasma, _quantity) then
 				sm.container.beginTransaction()
 				sm.container.spend(container, plasma, _quantity)
@@ -194,7 +197,7 @@ end
 
 function MountedLaserPistol:getInputs(client)
 	local parents = self.interactable:getParents()
-	local primary, secondary, overdrive = false, false, false
+	local primary, secondary, overdrive, hasChecked = false, false, false, false
 	local containers = {}
 	for k, parent in pairs(parents) do
 		if parent:hasOutputType(1) and parent.active then
@@ -208,23 +211,17 @@ function MountedLaserPistol:getInputs(client)
 			end
 		end
 
-		if not client and parent:hasOutputType(connectionType_plasma) then
+		if not client and parent:hasOutputType(connectionType_plasma)
+		   and (self.shape.body:hasChanged(sm.game.getServerTick() - 1) or #parents ~= self.sv_parentCount) and not hasChecked then
 			local parentShape = parent.shape
 			containers[parentShape.id] = parentShape.interactable:getContainer(0)
 			checkPipedNeighbours(parentShape, containers)
+
+			self.sv_containers = containers
+			self.sv_parentCount = #parents
+			hasChecked = true
 		end
 	end
 
-	return primary, secondary, overdrive, containers
-end
-
-function checkPipedNeighbours(parentShape, containers)
-	for _k, shape in pairs(parentShape:getPipedNeighbours()) do
-		local int = shape.interactable
-		local id = shape.id
-		if int:hasOutputType(connectionType_plasma) and containers[id] == nil then
-			containers[id] = int:getContainer(0)
-			checkPipedNeighbours(shape, containers)
-		end
-	end
+	return primary, secondary, overdrive
 end

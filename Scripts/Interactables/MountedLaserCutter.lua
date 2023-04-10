@@ -41,10 +41,14 @@ function MountedLaserCutter:server_onCreate()
 
 	self.sv_unitDamageTimer = Timer()
 	self.sv_unitDamageTimer:start( self.unitDamageTicks )
+
+	self.sv_parentCount = -1
+	self.sv_containers = {}
+	self:getInputs(false)
 end
 
 function MountedLaserCutter:server_onFixedUpdate()
-	local active, container = self:getInputs()
+	local active = self:getInputs(false)
 	if not active then return end
 
 	local selfDir = self.shape.up
@@ -56,14 +60,35 @@ function MountedLaserCutter:server_onFixedUpdate()
 
 	local hitPos = result.pointWorld
 	local target = result:getShape() or result:getCharacter() or result:getHarvestable()
-	if not target or not sm.exists(target) or (sm.game.getEnableAmmoConsumption() and (not container or not container:canSpend(plasma, 1))) then return end
+	if not target or not sm.exists(target) then return end
 
-	self:sv_fire(target, hitPos, result, container)
+	self:sv_fire(target, hitPos, result)
 end
 
-function MountedLaserCutter:sv_fire(target, hitPos, result, container)
-	local type = type(target)
-	if type == "Shape" then
+function MountedLaserCutter:sv_fire(target, hitPos, result)
+	local _type = type(target)
+	local isChar = _type == "Character"
+	if isChar and not self.sv_unitDamageTimer:done() then
+		self.sv_unitDamageTimer:tick()
+		return
+	end
+
+	if sm.game.getEnableAmmoConsumption() then
+		local spent = false
+		for k, container in pairs(self.sv_containers) do
+			if container:canSpend(plasma, 1) then
+				sm.container.beginTransaction()
+				sm.container.spend(container, plasma, 1)
+				sm.container.endTransaction()
+				spent = true
+				break
+			end
+		end
+
+		if not spent then return end
+	end
+
+	if _type == "Shape" then
 		local data = sm.item.getFeatureData(target.uuid)
 		if data and data.classname == "Package" then
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
@@ -83,28 +108,17 @@ function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 				target:destroyShape( 0 )
 			end
 		end
-	elseif type == "Character" then
-		self.sv_unitDamageTimer:tick()
-		if self.sv_unitDamageTimer:done() then
-			self.sv_unitDamageTimer:reset()
-			sm.projectile.shapeProjectileAttack(
-				cutterpotato,
-				self.sv_data.damage,
-				self.shape:transformPoint(hitPos),
-				self.shape.xAxis,
-				self.shape
-			)
-		else
-			return
-		end
+	elseif isChar then
+		self.sv_unitDamageTimer:reset()
+		sm.projectile.shapeProjectileAttack(
+			cutterpotato,
+			self.sv_data.damage,
+			self.shape:transformPoint(hitPos),
+			self.shape.yAxis,
+			self.shape
+		)
 	else
 		sm.physics.explode( hitPos, 3, 1, 1, 1 )
-	end
-
-	if container then
-		sm.container.beginTransaction()
-		sm.container.spend(container, plasma, 1)
-		sm.container.endTransaction()
 	end
 end
 
@@ -192,7 +206,7 @@ function MountedLaserCutter:client_onInteract( char, state )
 end
 
 function MountedLaserCutter:client_onUpdate( dt )
-	local active = self:getInputs()
+	local active = self:getInputs(true)
 	local hit, result = false, nil
 	local selfDir = self.shape.up
 	local selfPos = self.shape.worldPosition + self.shape.worldRotation * barrelAdjust
@@ -252,17 +266,25 @@ end
 
 
 
-function MountedLaserCutter:getInputs()
+function MountedLaserCutter:getInputs(client)
 	local parents = self.interactable:getParents()
-	local active = false
-	local container
+	local active, hasChecked = false, false
+	local containers = {}
+
 	for k, parent in pairs(parents) do
 		if parent.active then active = true end
 
-		if parent:hasOutputType(connectionType_plasma) then
-			container = parent:getContainer(0)
+		if not client and parent:hasOutputType(connectionType_plasma)
+		   and (self.shape.body:hasChanged(sm.game.getServerTick() - 1) or #parents ~= self.sv_parentCount) and not hasChecked then
+			local parentShape = parent.shape
+			containers[parentShape.id] = parentShape.interactable:getContainer(0)
+			checkPipedNeighbours(parentShape, containers)
+
+			self.sv_containers = containers
+			self.sv_parentCount = #parents
+			hasChecked = true
 		end
 	end
 
-	return active, container
+	return active
 end
