@@ -9,7 +9,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 MountedLaserPistol = class()
 MountedLaserPistol.maxParentCount = -1
 MountedLaserPistol.maxChildCount = 0
-MountedLaserPistol.connectionInput = sm.interactable.connectionType.logic + sm.interactable.connectionType.electricity --bit.bor( sm.interactable.connectionType.logic, sm.interactable.connectionType.ammo )
+MountedLaserPistol.connectionInput = sm.interactable.connectionType.logic + connectionType_plasma
 MountedLaserPistol.connectionOutput = sm.interactable.connectionType.none
 MountedLaserPistol.colorNormal = sm.color.new( 0xcb0a00ff )
 MountedLaserPistol.colorHighlight = sm.color.new( 0xee0a00ff )
@@ -52,16 +52,15 @@ function MountedLaserPistol:server_onFixedUpdate()
 	self.sv_secondaryTimer:tick()
 	self.sv_overdriveCooldown:tick()
 
-	local primary, secondary, overdrive, container = self:getInputs()
-	local freeFire = not sm.game.getEnableAmmoConsumption()
-	if primary and self.sv_primaryTimer:done() and (freeFire or container and container:canSpend(obj_consumable_battery, 1)) then
+	local primary, secondary, overdrive, containers = self:getInputs()
+	if primary and self.sv_primaryTimer:done() then
 		self.sv_primaryTimer:reset()
-		self:sv_fire(container, false)
+		self:sv_fire(containers, false)
 	end
 
-	if secondary and not primary and self.sv_secondaryTimer:done() and (freeFire or container and container:canSpend(obj_consumable_battery, 5)) then
+	if secondary and not primary and self.sv_secondaryTimer:done() then
 		self.sv_secondaryTimer:reset()
-		self:sv_fire(container, true, 5)
+		self:sv_fire(containers, true, 5)
 	end
 
 	if overdrive and self.sv_overdriveCooldown:done() and not self.sv_overdriveActive then
@@ -82,11 +81,22 @@ function MountedLaserPistol:server_onFixedUpdate()
 	end
 end
 
-function MountedLaserPistol:sv_fire(container, strong, quantity)
-	if container then
-		sm.container.beginTransaction()
-		sm.container.spend(container, obj_consumable_battery, quantity or (self.sv_overdriveActive and 2 or 1))
-		sm.container.endTransaction()
+---@param containers Container[]
+function MountedLaserPistol:sv_fire(containers, strong, quantity)
+	if sm.game.getEnableAmmoConsumption() then
+		local spent = false
+		local _quantity = quantity or (self.sv_overdriveActive and 2 or 1)
+		for k, container in pairs(containers) do
+			if container:canSpend(plasma, _quantity) then
+				sm.container.beginTransaction()
+				sm.container.spend(container, plasma, _quantity)
+				sm.container.endTransaction()
+				spent = true
+				break
+			end
+		end
+
+		if not spent then return end
 	end
 
 	sm.event.sendToTool(
@@ -129,7 +139,7 @@ function MountedLaserPistol:client_onCreate()
 end
 
 function MountedLaserPistol:client_onUpdate( dt )
-	local primary = self:getInputs()
+	local primary = self:getInputs(true)
 	local sound = self.cl_activeSound
 	local playing = sound:isPlaying()
 	if primary and not playing then
@@ -182,10 +192,10 @@ end
 
 
 
-function MountedLaserPistol:getInputs()
+function MountedLaserPistol:getInputs(client)
 	local parents = self.interactable:getParents()
 	local primary, secondary, overdrive = false, false, false
-	local container
+	local containers = {}
 	for k, parent in pairs(parents) do
 		if parent:hasOutputType(1) and parent.active then
 			local colour = parent.shape.color:getHexStr():sub(1,6)
@@ -198,10 +208,23 @@ function MountedLaserPistol:getInputs()
 			end
 		end
 
-		if parent:hasOutputType(512) then
-			container = parent:getContainer(0)
+		if not client and parent:hasOutputType(connectionType_plasma) then
+			local parentShape = parent.shape
+			containers[parentShape.id] = parentShape.interactable:getContainer(0)
+			checkPipedNeighbours(parentShape, containers)
 		end
 	end
 
-	return primary, secondary, overdrive, container
+	return primary, secondary, overdrive, containers
+end
+
+function checkPipedNeighbours(parentShape, containers)
+	for _k, shape in pairs(parentShape:getPipedNeighbours()) do
+		local int = shape.interactable
+		local id = shape.id
+		if int:hasOutputType(connectionType_plasma) and containers[id] == nil then
+			containers[id] = int:getContainer(0)
+			checkPipedNeighbours(shape, containers)
+		end
+	end
 end

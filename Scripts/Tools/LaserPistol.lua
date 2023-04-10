@@ -364,10 +364,12 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 	local consumption = sm.game.getEnableAmmoConsumption()
 	local container = sm.localPlayer.getInventory()
 	local primaryAmount = self.overdriveActive and 2 or 1
-	local canFire_lmb = self.primaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, primaryAmount))
-	local canFire_rmb = self.secondaryCooldown:done() and (not consumption or container:canSpend(obj_consumable_battery, 5))
+	local canFire_lmb = self.primaryCooldown:done() and (not consumption or container:canSpend(plasma, primaryAmount))
+	local canFire_rmb = self.secondaryCooldown:done() and (not consumption or container:canSpend(plasma, 5))
 
-	sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, obj_consumable_battery), primaryAmount))
+	if consumption then
+		sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, plasma), primaryAmount))
+	end
 
 	if primary and canFire_lmb then
 		self.primaryCooldown:reset()
@@ -408,7 +410,7 @@ function Pistol:sv_onShoot( args, caller )
 
 	if sm.game.getEnableAmmoConsumption() then
 		sm.container.beginTransaction()
-		sm.container.spend(self.tool:getOwner():getInventory(), obj_consumable_battery, args.strong and 5 or (overdrive and 2 or 1))
+		sm.container.spend(self.tool:getOwner():getInventory(), plasma, args.strong and 5 or (overdrive and 2 or 1))
 		sm.container.endTransaction()
 	end
 end

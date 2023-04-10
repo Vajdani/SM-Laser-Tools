@@ -163,7 +163,11 @@ end
 function Cutter:sv_cut( args )
 	---@type Shape
 	local shape = args.shape
-	if sm.exists(shape) then
+	if not sm.exists(shape) then return end
+
+	if sm.item.getFeatureData(shape.uuid).classname == "Package" then
+		sm.event.sendToInteractable( shape.interactable, "sv_e_open" )
+	else
 		---@type Vec3
 		local pos = args.pos
 		---@type Vec3
@@ -172,7 +176,7 @@ function Cutter:sv_cut( args )
 		local effectRot = sm.vec3.getRotation( vec3_up, normal )
 		local effectData = { Material = material }
 
-    	if sm.item.isBlock( shape.uuid ) then
+		if sm.item.isBlock( shape.uuid ) then
 			normal = RoundVector(normal)
 			local cutSize = args.size
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
@@ -207,9 +211,9 @@ function Cutter:sv_cut( args )
 			vec3_one,
 			effectData
 		)
-
-		self:sv_consumeAmmo(args.ammo)
 	end
+
+	self:sv_consumeAmmo(args.ammo)
 end
 
 function Cutter:sv_explode( args )
@@ -220,7 +224,7 @@ end
 function Cutter:sv_consumeAmmo(ammo)
 	if sm.game.getEnableAmmoConsumption() then
 		sm.container.beginTransaction()
-		sm.container.spend(self.tool:getOwner():getInventory(), obj_consumable_battery, ammo)
+		sm.container.spend(self.tool:getOwner():getInventory(), plasma, ammo)
 		sm.container.endTransaction()
 	end
 end
@@ -439,9 +443,12 @@ function Cutter:client_onEquip( animate )
 		currentRenderablesFp[#currentRenderablesFp+1] = v
 	end
 
+	local col = sm.color.new("#ff0008")
 	self.tool:setTpRenderables( currentRenderablesTp )
+	self.tool:setTpColor(col)
 	if self.isLocal then
 		self.tool:setFpRenderables( currentRenderablesFp )
+		self.tool:setFpColor(col)
 		self.target = nil
 		self.normal = vec3_zero
 	end
@@ -484,8 +491,10 @@ function Cutter:client_onEquippedUpdate( lmb )
 		self.network:sendToServer("sv_updateFiring", firing)
 	end
 
-	local container = sm.localPlayer.getInventory()
-	sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, obj_consumable_battery), self.cutSize^2))
+	if sm.game.getEnableAmmoConsumption() then
+		local container = sm.localPlayer.getInventory()
+		sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, plasma), self.cutSize^2))
+	end
 
 	return true, true
 end
@@ -594,5 +603,5 @@ function Cutter:canFire(_type, target)
 
 	local container = sm.localPlayer.getInventory()
 	local quantity = (_type == "Shape" and sm.item.isBlock(target.uuid)) and self.cutSize^2 or 1
-	return container:canSpend(obj_consumable_battery, quantity), quantity
+	return container:canSpend(plasma, quantity), quantity
 end

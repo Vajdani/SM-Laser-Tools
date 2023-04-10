@@ -61,7 +61,7 @@
 				"y": 1,
 				"z": 1
 			},
-			"name": "cutter_beam",
+			"name": "obj_cutter_beam",
 			"physicsMaterial": "Metal",
 			"previewRotation": [
 				0,
@@ -105,17 +105,18 @@
 			"uuid": "b6cedcb3-8cee-4132-843f-c9efed50af7c"
 		},
 		{
-			"color": "ffffff",
 			"box": {
 				"x": 1,
 				"y": 1,
 				"z": 1
 			},
-			"name": "pistol_coil",
+			"color": "ffffff",
+			"name": "obj_pistol_coil",
 			"physicsMaterial": "Metal",
 			"renderable": {
 				"lodList": [
 					{
+						"mesh": "$CONTENT_DATA/Effects/Mesh/obj_mountablelaserpistol_glow.fbx",
 						"subMeshList": [
 							{
 								"material": "DifAsgNor",
@@ -125,8 +126,7 @@
 									"$GAME_DATA/Textures/Default/default_dif.tga"
 								]
 							}
-						],
-						"mesh": "$CONTENT_DATA/Effects/Mesh/obj_mountablelaserpistol_glow.fbx"
+						]
 					}
 				]
 			},
@@ -134,6 +134,136 @@
 			"showInInventory": false,
 			"sticky": "-Y+Y",
 			"uuid": "64f6e8ad-abe6-47c7-b924-f7593637dcc1"
+		},
+		{
+			"box": {
+				"x": 4,
+				"y": 3,
+				"z": 3
+			},
+			"color": "f1a400",
+			"flammable": false,
+			"name": "obj_container_plasma",
+			"physicsMaterial": "Metal",
+			"pipe": {
+				"openings": [
+					{
+						"side": "-X",
+						"x": -2.0,
+						"y": 0,
+						"z": 0
+					},
+					{
+						"side": "Y",
+						"x": 0.50,
+						"y": 1.50,
+						"z": 0
+					}
+				]
+			},
+			"ratings": {
+				"buoyancy": 6,
+				"density": 5,
+				"durability": 6,
+				"friction": 4
+			},
+			"renderable": {
+				"lodList": [
+					{
+						"mesh": "$SURVIVAL_DATA/Objects/Mesh/containers/obj_containers_battery.fbx",
+						"pose0": "$SURVIVAL_DATA/Objects/Mesh/containers/obj_containers_battery_pose0.fbx",
+						"pose1": "$SURVIVAL_DATA/Objects/Mesh/containers/obj_containers_battery_pose1.fbx",
+						"subMeshMap": {
+							"connectionpoint": {
+								"material": "2PoseAnimDifAsgNor",
+								"textureList": [
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_interactive_container_connectorpoint_dif.tga",
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_interactive_container_connectorpoint_asg.tga",
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_interactive_container_connectorpoint_nor.tga"
+								]
+							},
+							"containerbattery": {
+								"material": "DifAsgNor",
+								"textureList": [
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_battery_dif.tga",
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_battery_asg.tga",
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_battery_nor.tga"
+								]
+							},
+							"screen": {
+								"custom": {
+									"uv0": {
+										"u": 1,
+										"v": 0.1670
+									}
+								},
+								"material": "UVAnimDifAsgNor",
+								"textureList": [
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_screen_dif.tga",
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_screen_asg.tga",
+									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_screen_nor.tga"
+								]
+							}
+						}
+					}
+				]
+			},
+			"restrictions": {
+				"usable": true
+			},
+			"rotationSet": "PropYZ",
+			"scripted": {
+				"classname": "PlasmaContainer",
+				"data": {
+					"filterUid": "69c063fe-385a-4135-8f5e-6247aec89769",
+					"stackSize": 100
+				},
+				"filename": "$CONTENT_DATA/Scripts/Interactables/PlasmaContainer.lua"
+			},
+			"uuid": "c1a53e1d-3c0e-464f-bea8-ee003c58518b"
+		},
+		{
+			"box": {
+				"x": 2,
+				"y": 2,
+				"z": 2
+			},
+			"color": "f1a400",
+			"consumable": true,
+			"flammable": true,
+			"itemStack": {},
+			"name": "obj_consumable_plasma",
+			"physicsMaterial": "Plastic",
+			"ratings": {
+				"buoyancy": 7,
+				"density": 2,
+				"durability": 2,
+				"friction": 4
+			},
+			"renderable": {
+				"lodList": [
+					{
+						"mesh": "$SURVIVAL_DATA/Objects/Mesh/consumable/obj_consumable_battery.fbx",
+						"subMeshList": [
+							{
+								"material": "DifAsgNor",
+								"textureList": [
+									"$SURVIVAL_DATA/Objects/Textures/consumable/obj_consumable_battery_dif.tga",
+									"$SURVIVAL_DATA/Objects/Textures/consumable/obj_consumable_battery_asg.tga",
+									"$SURVIVAL_DATA/Objects/Textures/consumable/obj_consumable_battery_nor.tga"
+								]
+							}
+						]
+					}
+				]
+			},
+			"restrictions": {
+				"erasable": true
+			},
+			"rotationSet": "PropY",
+			"stackSize": 100,
+			"sticky": "-Y+Y",
+			"uuid": "69c063fe-385a-4135-8f5e-6247aec89769"
 		}
 	]
 }

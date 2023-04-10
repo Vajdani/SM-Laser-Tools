@@ -9,6 +9,8 @@ vec3_y = sm.vec3.new(1,0,0)
 defaultQuat = sm.quat.identity()
 cutterpotato = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
 pistolcoil = sm.uuid.new("64f6e8ad-abe6-47c7-b924-f7593637dcc1")
+plasma = sm.uuid.new("69c063fe-385a-4135-8f5e-6247aec89769")
+connectionType_plasma = 4096
 -- #endregion
 
 

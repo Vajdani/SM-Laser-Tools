@@ -9,7 +9,7 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 MountedLaserCutter = class()
 MountedLaserCutter.maxParentCount = -1
 MountedLaserCutter.maxChildCount = 0
-MountedLaserCutter.connectionInput = sm.interactable.connectionType.logic + sm.interactable.connectionType.electricity --bit.bor( sm.interactable.connectionType.logic, sm.interactable.connectionType.ammo )
+MountedLaserCutter.connectionInput = sm.interactable.connectionType.logic + connectionType_plasma
 MountedLaserCutter.connectionOutput = sm.interactable.connectionType.none
 MountedLaserCutter.colorNormal = sm.color.new( 0xcb0a00ff )
 MountedLaserCutter.colorHighlight = sm.color.new( 0xee0a00ff )
@@ -56,7 +56,7 @@ function MountedLaserCutter:server_onFixedUpdate()
 
 	local hitPos = result.pointWorld
 	local target = result:getShape() or result:getCharacter() or result:getHarvestable()
-	if not target or not sm.exists(target) or (sm.game.getEnableAmmoConsumption() and (not container or not container:canSpend(obj_consumable_battery, 1))) then return end
+	if not target or not sm.exists(target) or (sm.game.getEnableAmmoConsumption() and (not container or not container:canSpend(plasma, 1))) then return end
 
 	self:sv_fire(target, hitPos, result, container)
 end
@@ -64,19 +64,23 @@ end
 function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 	local type = type(target)
 	if type == "Shape" then
-		sm.effect.playEffect(
-			"Sledgehammer - Destroy",
-			hitPos,
-			sm.vec3.zero(),
-			sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
-			sm.vec3.one(),
-			{ Material = target:getMaterialId() }
-		)
-
-		if sm.item.isBlock( target.uuid ) then
-			target:destroyBlock( target:getClosestBlockLocalPosition(hitPos) )
+		if sm.item.getFeatureData(target.uuid).classname == "Package" then
+			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
 		else
-			target:destroyShape( 0 )
+			sm.effect.playEffect(
+				"Sledgehammer - Destroy",
+				hitPos,
+				sm.vec3.zero(),
+				sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
+				sm.vec3.one(),
+				{ Material = target:getMaterialId() }
+			)
+
+			if sm.item.isBlock( target.uuid ) then
+				target:destroyBlock( target:getClosestBlockLocalPosition(hitPos) )
+			else
+				target:destroyShape( 0 )
+			end
 		end
 	elseif type == "Character" then
 		self.sv_unitDamageTimer:tick()
@@ -98,7 +102,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 
 	if container then
 		sm.container.beginTransaction()
-		sm.container.spend(container, obj_consumable_battery, 1)
+		sm.container.spend(container, plasma, 1)
 		sm.container.endTransaction()
 	end
 end
@@ -254,7 +258,7 @@ function MountedLaserCutter:getInputs()
 	for k, parent in pairs(parents) do
 		if parent.active then active = true end
 
-		if parent:hasOutputType(512) then
+		if parent:hasOutputType(connectionType_plasma) then
 			container = parent:getContainer(0)
 		end
 	end

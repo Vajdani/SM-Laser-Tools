@@ -85,7 +85,9 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 	local type = type(target)
 
 	if type == "Shape" then
-		if sm.exists(target) then
+		if sm.item.getFeatureData(target.uuid).classname == "Package" then
+			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
+		else
 			sm.effect.playEffect(
 				"Sledgehammer - Destroy",
 				pos,
