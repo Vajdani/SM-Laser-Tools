@@ -184,7 +184,8 @@ function Cutter:sv_cut( args )
 	local shape = args.shape
 	if not sm.exists(shape) then return end
 
-	if sm.item.getFeatureData(shape.uuid).classname == "Package" then
+	local data = sm.item.getFeatureData(shape.uuid)
+	if data and data.classname == "Package" then
 		sm.event.sendToInteractable( shape.interactable, "sv_e_open" )
 	else
 		---@type Vec3
