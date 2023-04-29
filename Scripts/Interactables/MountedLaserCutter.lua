@@ -51,8 +51,9 @@ function MountedLaserCutter:server_onFixedUpdate()
 	local active = self:getInputs(false)
 	if not active then return end
 
-	local selfDir = self.shape.up
-	local selfPos = self.shape.worldPosition + self.shape.worldRotation * barrelAdjust
+	local shape = self.shape
+	local selfDir = GetAccurateShapeUp(shape)
+	local selfPos = GetAccurateShapePosition(shape) + self.shape.worldRotation * barrelAdjust
 	local endPos = selfPos + selfDir * self.sv_data.range
 	local hit, result = sm.physics.raycast( selfPos, endPos )
 
@@ -208,8 +209,9 @@ end
 function MountedLaserCutter:client_onUpdate( dt )
 	local active = self:getInputs(true)
 	local hit, result = false, nil
-	local selfDir = self.shape.up
-	local selfPos = self.shape.worldPosition + self.shape.worldRotation * barrelAdjust
+	local shape = self.shape
+	local selfDir = GetAccurateShapeUp(shape)
+	local selfPos = GetAccurateShapePosition(shape) + self.shape.worldRotation * barrelAdjust
 	local target
 
 	if active then

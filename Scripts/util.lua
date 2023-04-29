@@ -1,4 +1,5 @@
 -- #region Constants
+RAD90 = math.rad(90)
 camAdjust = sm.vec3.new(0,0,0.575)
 camAdjust_crouch = sm.vec3.new(0,0,0.3)
 vec3_up = sm.vec3.new(0,0,1)
@@ -74,6 +75,45 @@ function checkPipedNeighbours(parentShape, containers)
 			checkPipedNeighbours(shape, containers)
 		end
 	end
+end
+
+---@param shape Shape
+---@return Vec3
+function GetAccurateShapePosition(shape)
+    return shape:getInterpolatedWorldPosition() + shape.velocity * 0.0125
+end
+
+---@param shape Shape
+---@return Vec3
+function GetAccurateShapeUp(shape)
+    local ang = shape.body.angularVelocity
+    local length = ang:length()
+    local dir = shape:getInterpolatedUp()
+    if length < FLT_EPSILON then return dir end
+
+    return dir:rotate(length * 0.025, ang)
+end
+
+---@param shape Shape
+---@return Vec3
+function GetAccurateShapeRight(shape)
+    local ang = shape.body.angularVelocity
+    local length = ang:length()
+    local dir = shape:getInterpolatedRight()
+    if length < FLT_EPSILON then return dir end
+
+    return dir:rotate(length * 0.025, ang)
+end
+
+---@param shape Shape
+---@return Vec3
+function GetAccurateShapeAt(shape)
+    local ang = shape.body.angularVelocity
+    local length = ang:length()
+    local dir = shape:getInterpolatedAt()
+    if length < FLT_EPSILON then return dir end
+
+    return dir:rotate(length * 0.025, ang)
 end
 -- #endregion
 
