@@ -100,7 +100,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 				sm.vec3.zero(),
 				sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
 				sm.vec3.one(),
-				{ Material = target:getMaterialId() }
+				{ Material = target.materialId, Color = target.color }
 			)
 
 			if sm.item.isBlock( target.uuid ) then
