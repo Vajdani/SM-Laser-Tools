@@ -192,9 +192,9 @@ function Cutter:sv_cut( args )
 		local pos = args.pos
 		---@type Vec3
 		local normal = args.normal
-		local material = shape:getMaterialId()
+		local material = shape.materialId
 		local effectRot = sm.vec3.getRotation( vec3_up, normal )
-		local effectData = { Material = material }
+		local effectData = { Material = material, Color = shape.color }
 
 		if sm.item.isBlock( shape.uuid ) then
 			normal = RoundVector(normal)
