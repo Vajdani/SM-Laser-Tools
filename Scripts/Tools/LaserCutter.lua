@@ -18,8 +18,6 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field activeSound Effect
 ---@field isLocal boolean
 ---@field blendTime number
----@field aimBlendSpeed number
----@field aimWeight number
 ---@field cutSize number
 Cutter = class()
 Cutter.beamLength = 15
@@ -31,6 +29,9 @@ Cutter.lineStats = {
 Cutter.beamStopSeconds = 1
 Cutter.unitDamageTicks = 10
 Cutter.maxCutSize = 7
+
+local camOffsetTp = sm.vec3.new( 0.65, 0.0, 0.05 )
+local camOffsetFp = vec3_zero
 
 local renderables = {
     "$CONTENT_DATA/Tools/LaserCutter/char_lasercutter.rend",
@@ -55,7 +56,7 @@ function Cutter.client_onCreate( self )
 	self.line = Line_cutter()
 	self.line:init( self.lineStats.thickness, self.lineStats.colour, 0.1 )
 	self.beamStopTimer = self.beamStopSeconds
-	self.lastPos = sm.vec3.zero()
+	self.lastPos = vec3_zero
 
 	self:loadAnimations()
 
@@ -290,7 +291,9 @@ function Cutter:client_onUpdate(dt)
 	local normalWeight = 1.0 - crouchWeight
 	self:updateTP(dt, equipped, crouchWeight, normalWeight)
 	self:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
-	self:updateCam(dt)
+
+	self.tool:updateCamera( 2.8, 0, camOffsetTp, 0 )
+	self.tool:updateFpCamera( 0, vec3_zero, 0, 1 )
 end
 
 function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
@@ -408,15 +411,6 @@ function Cutter:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWe
 	self.tool:updateJoint( "jnt_head", sm.vec3.new( totalOffsetX, totalOffsetY, totalOffsetZ ), 0.3 * finalJointWeight )
 end
 
-function Cutter:updateCam(dt)
-	local blend = 1 - ( (1 - 1 / self.aimBlendSpeed) ^ (dt * 60) )
-	self.aimWeight = sm.util.lerp( self.aimWeight,  0, blend )
-	local bobbing =  1
-	local fov = sm.camera.getDefaultFov() / 3
-	self.tool:updateCamera( 2.8, fov, sm.vec3.new( 0.65, 0.0, 0.05 ), self.aimWeight )
-	self.tool:updateFpCamera( fov, sm.vec3.new( 0.0, 0.0, 0.0 ), self.aimWeight, bobbing )
-end
-
 
 
 function Cutter:client_onEquip( animate )
@@ -424,8 +418,6 @@ function Cutter:client_onEquip( animate )
 		sm.audio.play( "ConnectTool - Equip", self.tool:getPosition() )
 	end
 
-	local cameraWeight, cameraFPWeight = self.tool:getCameraWeights()
-	self.aimWeight = math.max( cameraWeight, cameraFPWeight )
 	self.jointWeight = 0.0
 
 	local currentRenderablesTp = {}
@@ -559,34 +551,7 @@ function Cutter.loadAnimations( self )
 	}
 
 	self.movementDispersion = 0.0
-	self.aimBlendSpeed = 3.0
 	self.blendTime = 0.2
 	self.jointWeight = 0.0
 	self.spineWeight = 0.0
-	local cameraWeight, cameraFPWeight = self.tool:getCameraWeights()
-	self.aimWeight = math.max( cameraWeight, cameraFPWeight )
-end
-
-function Cutter.calculateFirePosition( self )
-	local crouching = self.tool:isCrouching()
-	local firstPerson = self.tool:isInFirstPersonView()
-	local dir = sm.localPlayer.getDirection()
-	local pitch = math.asin( dir.z )
-	local right = sm.localPlayer.getRight()
-
-	local fireOffset = sm.vec3.new( 0.0, 0.0, 0.0 )
-
-	if crouching then
-		fireOffset.z = 0.15
-	else
-		fireOffset.z = 0.45
-	end
-
-	if not firstPerson then
-		fireOffset = fireOffset + right * 0.25
-		fireOffset = fireOffset:rotate( math.rad( pitch ), right )
-	end
-
-	local firePosition = GetOwnerPosition( self.tool ) + fireOffset
-	return firePosition
 end
