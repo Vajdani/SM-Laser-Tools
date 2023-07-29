@@ -66,6 +66,15 @@ function Cutter.client_onCreate( self )
 	self.cutSize = 1
 end
 
+function Cutter:server_onCreate()
+	if true then return end
+
+	sm.container.beginTransaction()
+	sm.container.collect(self.tool:getOwner():getHotbar(), sm.uuid.new("3f5c15b0-d0a6-4ee3-a178-5643a61402cf"), 1)
+	sm.container.collect(self.tool:getOwner():getHotbar(), sm.uuid.new("704fdad0-99bf-45a7-b24e-dfbeb028b54f"), 1)
+	sm.container.endTransaction()
+end
+
 function Cutter:client_onReload()
 	self.cutSize = math.min(self.cutSize + 2, self.maxCutSize)
 	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
@@ -105,7 +114,7 @@ end
 function Cutter:cl_getBeamStart()
 	local char = self.owner.character
 	return self.tool:isInFirstPersonView() and
-	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 or
+	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 + char.velocity * 0.015 or
 	self.tool:getTpBonePos( "pipe" )
 end
 

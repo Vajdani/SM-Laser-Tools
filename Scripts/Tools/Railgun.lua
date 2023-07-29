@@ -710,40 +710,72 @@ function Railgun:cl_updateCharge( toggle )
 	]]
 end
 
----@param rayStart Vec3
-function Railgun:sv_pierce( rayStart )
+---@param origin Vec3
+function Railgun:sv_pierce( origin )
 	local player = self.tool:getOwner()
 	local playerChar = player.character
 	local dir = playerChar.direction
 	local rayLength = self.range
+	local rayStart = sm.vec3.new(origin.x, origin.y, origin.z)
 	local endPos
 	for i = 1, self.maxTries do
 		endPos = rayStart + dir * rayLength
 		local hit, result = sm.physics.raycast( rayStart, endPos, playerChar )
-		if not hit or result.type ~= "character" then break end
+		if not hit then break end
 
-		local char = result:getCharacter()
-		local pos = char.worldPosition
-		rayLength = rayLength - (rayStart - pos):length()
-		rayStart = pos
-		if char ~= playerChar then
-			sm.projectile.projectileAttack(
-				projectile_cutter,
-				self.railDamage,
-				result.pointWorld,
-				dir * 10,
-				player
-			)
+		local _type = result.type
+		print(i, _type)
+		local pointWorld = result.pointWorld
+		if _type == "character" then
+			local char = result:getCharacter()
+			rayLength = rayLength - (rayStart - char.worldPosition):length()
+			rayStart = pointWorld
+			if char ~= playerChar then
+				sm.projectile.projectileAttack(
+					projectile_cutter,
+					self.railDamage,
+					rayStart,
+					dir * 10,
+					player
+				)
 
-			sm.effect.playEffect("Railgun_target_hit", rayStart)
+				sm.effect.playEffect("Railgun_target_hit", rayStart)
+			end
+		elseif _type == "body" then
+			rayLength = rayLength - (rayStart - pointWorld):length()
+			rayStart = pointWorld - dir * 0.01
+
+			local shape = result:getShape()
+			local normal = result.normalWorld
+			local material = shape.materialId
+			local effectRot = sm.vec3.getRotation( vec3_up, normal )
+			local effectData = { Material = material, Color = shape.color }
+
+			if sm.item.isBlock( shape.uuid ) then
+				normal = RoundVector(normal)
+				local cutSize = 3
+				local absNormal = AbsVector(normal)
+				print(shape:getBoundingBox(), #result:getBody():getShapes())
+				local size = vec3_one * cutSize - absNormal * (cutSize - 1) + shape:getBoundingBox() * absNormal
+				local destroyPos = pointWorld - shape.worldRotation * (size - normal) * (1 / 12)
+				shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
+			else
+				shape:destroyShape()
+			end
+
+			sm.effect.playEffect( "Sledgehammer - Destroy", pointWorld, vec3_zero, effectRot, vec3_one, effectData )
+		else
+			break
 		end
 	end
+
+	print("")
 
 	sm.event.sendToTool(
 		g_pManager,
 		"sv_createProjectile",
 		{
-			pos = rayStart,
+			pos = origin,
 			dir = dir,
 			hitPos = endPos,
 			strong = true,
