@@ -123,8 +123,6 @@ sm.tool.preloadRenderables(renderablesFp)
 local Range = 4.5 --3.0
 local SwingStaminaSpend = 1.5
 local Damage = 45
-
-local vec3_1eighth = sm.vec3.new(0.125,0.125,0.125)
 -- #endregion
 
 
@@ -293,14 +291,6 @@ function Katana:isSwingAnim( params )
 
 	return isSwing
 end
-
---Thank you so much Programmer Alex
-function Katana:calculateCuttingPlanePos( target, worldPos )
-	local A = sm.item.isBlock(target.uuid) and target:getClosestBlockLocalPosition( worldPos ) * 0.25 or target.localPosition * 0.25
-	local B = target.localPosition * 0.25 - vec3_1eighth
-	local C = target:getBoundingBox()
-	return target:transformLocalPoint( A-(B+C*0.5) )
-end
 -- #endregion
 
 
@@ -393,7 +383,7 @@ function Katana:client_onUpdate(dt)
 			end
 
 			local shape = ray:getShape()
-			pos = hit and self:calculateCuttingPlanePos( shape, ray.pointWorld ) or self.tool:getTpBonePos("jnt_head")
+			pos = hit and getClosestBlockGlobalPosition( shape, ray.pointWorld ) or self.tool:getTpBonePos("jnt_head")
 			rot = hit and shape.worldRotation or sm.camera.getRotation()
 
 			self.cutPlane:setPosition(pos)

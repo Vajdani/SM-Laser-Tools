@@ -16,16 +16,16 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field tpAnimations table
 ---@field normalFireMode table
 ---@field activeSound Effect
+---@field cutVisualization Effect
 ---@field isLocal boolean
 ---@field blendTime number
 ---@field cutSize number
 Cutter = class()
 Cutter.beamLength = 15
-Cutter.lineStats = {
-	thickness = 0.05,
-	colour = sm.color.new(0,1,1),
-	spinSpeed = 250
-}
+Cutter.lineThickness = 0.05
+Cutter.lineColour = sm.color.new(0,1,1)
+Cutter.lineSpinSpeed = 250
+Cutter.lineShrink = 0.1
 Cutter.beamStopSeconds = 1
 Cutter.unitDamageTicks = 10
 Cutter.maxCutSize = 7
@@ -54,7 +54,7 @@ function Cutter.client_onCreate( self )
 	self.firing = false
 	self.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.owner.character )
 	self.line = Line_cutter()
-	self.line:init( self.lineStats.thickness, self.lineStats.colour, 0.1 )
+	self.line:init( self.lineThickness, self.lineColour, self.lineShrink )
 	self.beamStopTimer = self.beamStopSeconds
 	self.lastPos = vec3_zero
 
@@ -65,6 +65,10 @@ function Cutter.client_onCreate( self )
 	self.unitDamageTimer = Timer()
 	self.unitDamageTimer:start( self.unitDamageTicks )
 	self.cutSize = 1
+
+	self.cutVisualization = sm.effect.createEffect( "ShapeRenderable" )
+	self.cutVisualization:setParameter("visualization", true)
+	self.cutVisualization:setParameter("uuid", blk_plastic)
 end
 
 function Cutter:server_onCreate()
@@ -77,29 +81,23 @@ function Cutter:server_onCreate()
 end
 
 function Cutter:client_onReload()
+	if self.cutSize == self.maxCutSize then return true end
+
 	self.cutSize = math.min(self.cutSize + 2, self.maxCutSize)
 	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
 	sm.audio.play("PaintTool - ColorPick")
-	--self.network:sendToServer("sv_updateLineThickness", self.cutSize)
 
 	return true
 end
 
 function Cutter:client_onToggle()
+	if self.cutSize == 1 then return true end
+
 	self.cutSize = math.max(self.cutSize - 2, 1)
 	sm.gui.displayAlertText("Cutting Size: #df7f00"..tostring(self.cutSize), 2.5)
 	sm.audio.play("PaintTool - ColorPick")
-	--self.network:sendToServer("sv_updateLineThickness", self.cutSize)
 
 	return true
-end
-
-function Cutter:sv_updateLineThickness(num)
-	self.network:sendToClients("cl_updateLineThickness", num)
-end
-
-function Cutter:cl_updateLineThickness(num)
-	self.line:setThicknessMultiplier(num)
 end
 
 function Cutter:sv_updateFiring( firing )
@@ -132,7 +130,7 @@ end
 function Cutter:cl_updateDyingBeam( dt )
 	self.beamStopTimer = math.max(self.beamStopTimer - dt, 0)
 	local beamStart = self:cl_getBeamStart()
-	self.line:update( beamStart, self.lastPos, dt, self.lineStats.spinSpeed, true )
+	self.line:update( beamStart, self.lastPos, dt, self.lineSpinSpeed, true )
 
 	if self.beamStopTimer <= 0 then
 		self.line:stop()
@@ -163,7 +161,7 @@ function Cutter:cl_cut( dt )
 
 			if target and sm.exists(target) then
 				local beamEnd =  result.pointWorld
-				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineStats.spinSpeed, false )
+				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineSpinSpeed, false )
 				self.lastPos = beamEnd
 				self.beamStopTimer = self.beamStopSeconds
 				if self.isLocal then self.normal = result.normalWorld end
@@ -210,7 +208,7 @@ function Cutter:sv_cut( args )
 			normal = RoundVector(normal)
 			local cutSize = args.size
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
-			local destroyPos = pos - shape.worldRotation * (size - normal) * (1 / 12)
+			local destroyPos = pos - shape.worldRotation * (size + normal) * (1 / 12)
 			shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
 		else
 			shape:destroyShape()
@@ -293,7 +291,7 @@ function Cutter:client_onUpdate(dt)
 	self:updateSpine(dt, isCrouching, isSprinting, crouchWeight, normalWeight)
 
 	self.tool:updateCamera( 2.8, 0, camOffsetTp, 0 )
-	self.tool:updateFpCamera( 0, vec3_zero, 0, 1 )
+	self.tool:updateFpCamera( 0, camOffsetFp, 0, 1 )
 end
 
 function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
@@ -467,23 +465,49 @@ function Cutter:client_onUnequip( animate )
 
 			self.target = nil
 			self.normal = vec3_zero
+			self.cutVisualization:stop()
 		end
 	end
 end
 
-local interactionText = "<img bg='gui_keybinds_bg' spacing='4'>gui_icon_refill_battery.png</img>".."<p textShadow='false' bg='gui_keybinds_bg' color='#ffffff' spacing='9'>%d / %d</p>"
 function Cutter:client_onEquippedUpdate( lmb )
 	local firing = lmb == 1 or lmb == 2
 	if firing ~= self.firing then
 		self.network:sendToServer("sv_updateFiring", firing)
 	end
 
-	if sm.game.getEnableAmmoConsumption() then
-		local container = sm.localPlayer.getInventory()
-		sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, plasma), self.cutSize^2))
+	local canAfford = not sm.game.getEnableAmmoConsumption() or self:cl_displayAmmo()
+	local canDisplay = false
+	if canAfford then
+		local hit, result = sm.localPlayer.getRaycast(self.beamLength)
+		local target = result:getShape()
+		canDisplay = target and sm.item.isBlock(target.uuid)
+
+		if canDisplay then
+			local normal = result.normalWorld
+			self.cutVisualization:setScale((vec3_one * self.cutSize - RoundVector(AbsVector(normal)) * (self.cutSize - 1)) * 0.25)
+			self.cutVisualization:setPosition(getClosestBlockGlobalPosition(target, result.pointWorld))
+			self.cutVisualization:setRotation(target.worldRotation) --* sm.vec3.getRotation(vec3_up, normal))
+
+			if not self.cutVisualization:isPlaying() then self.cutVisualization:start() end
+		end
+	end
+
+	if not (canAfford and canDisplay) and self.cutVisualization:isPlaying() then
+		self.cutVisualization:stop()
 	end
 
 	return true, true
+end
+
+local interactionText = "<img bg='gui_keybinds_bg' spacing='4'>gui_icon_refill_battery.png</img>".."<p textShadow='false' bg='gui_keybinds_bg' color='#ffffff' spacing='9'>%d / %d</p>"
+function Cutter:cl_displayAmmo()
+	local container = sm.localPlayer.getInventory()
+	local plasmaCount = sm.container.totalQuantity(container, plasma)
+	local plasmaNeeded = self.cutSize^2
+	sm.gui.setInteractionText(interactionText:format(plasmaCount, plasmaNeeded))
+
+	return plasmaCount >= plasmaNeeded
 end
 
 

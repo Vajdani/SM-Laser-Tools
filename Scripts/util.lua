@@ -7,6 +7,7 @@ vec3_zero = sm.vec3.zero()
 vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)
 vec3_y = sm.vec3.new(1,0,0)
+vec3_1eighth = sm.vec3.new(0.125,0.125,0.125)
 defaultQuat = sm.quat.identity()
 projectile_cutter = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
 projectile_railgun = sm.uuid.new("caccde30-8f1b-45ca-a4c3-e1a949724a9b")
@@ -115,6 +116,14 @@ function GetAccurateShapeAt(shape)
 
     return dir:rotate(length * 0.025, ang)
 end
+
+--Thank you so much Programmer Alex
+function getClosestBlockGlobalPosition( target, worldPos )
+	local A = sm.item.isBlock(target.uuid) and target:getClosestBlockLocalPosition( worldPos ) * 0.25 or target.localPosition * 0.25
+	local B = target.localPosition * 0.25 - vec3_1eighth
+	local C = target:getBoundingBox()
+	return target:transformLocalPoint( A-(B+C*0.5) )
+end
 -- #endregion
 
 
@@ -208,7 +217,6 @@ Line_cutter = class()
 ---@field init function
 ---@field update function
 ---@field stop function
----@field setThicknessMultiplier function
 function Line_cutter:init( thickness, colour, dyingShrink )
     self.effect = sm.effect.createEffect("ShapeRenderable")
 	self.effect:setParameter("uuid", sm.uuid.new("b6cedcb3-8cee-4132-843f-c9efed50af7c"))
@@ -221,13 +229,7 @@ function Line_cutter:init( thickness, colour, dyingShrink )
 	self.currentThickness = thickness
 	self.spinTime = 0
 	self.dyingShrink = dyingShrink or 1
-	self.thicknessMultiplier = 1
 end
-
-function Line_cutter:setThicknessMultiplier( num )
-	self.thicknessMultiplier = num
-end
-
 
 ---@param startPos Vec3
 ---@param endPos Vec3
@@ -247,7 +249,7 @@ function Line_cutter:update( startPos, endPos, dt, spinSpeed, dying )
 	self.spinTime = self.spinTime + deltaTime * speed
 	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), line_up )
 
-	self.currentThickness = (dying and math.max(self.currentThickness - dt * self.dyingShrink, 0) or self.thickness) * self.thicknessMultiplier
+	self.currentThickness = (dying and math.max(self.currentThickness - deltaTime * self.dyingShrink, 0) or self.thickness)
 	local distance = sm.vec3.new(length, self.currentThickness, self.currentThickness)
 
 	self.effect:setPosition(startPos + delta * 0.5)
@@ -255,7 +257,7 @@ function Line_cutter:update( startPos, endPos, dt, spinSpeed, dying )
 	self.effect:setRotation(rot)
 
 	if self.currentThickness >= self.thickness * 0.25 then
-		sm.particle.createParticle( "cutter_block_destroy", endPos, sm.quat.identity(), self.colour )
+		sm.particle.createParticle( "cutter_block_destroy", endPos, defaultQuat, self.colour )
 	end
 
 	self.sound:setPosition(startPos)
