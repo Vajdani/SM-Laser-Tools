@@ -113,7 +113,7 @@ end
 function Cutter:cl_getBeamStart()
 	local char = self.owner.character
 	return self.tool:isInFirstPersonView() and
-	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 + char.velocity * 0.015 or
+	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 * ((sm.camera.getFov() - 45) / 45) + char.velocity * 0.015 or
 	self.tool:getTpBonePos( "pipe" )
 end
 
