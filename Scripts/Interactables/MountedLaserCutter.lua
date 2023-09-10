@@ -221,23 +221,18 @@ function MountedLaserCutter:client_onUpdate( dt )
 
 		local endPos = selfPos + selfDir * self.cl_range
 		hit, result = sm.physics.raycast( selfPos, endPos )
-
 		target = result:getShape() or result:getCharacter()
 
-		if hit and target then
-			self.cl_lastPos = result.pointWorld
+		if target or self.cl_lineAlways then
+			self.cl_lastPos = hit and result.pointWorld or endPos
 			self.cl_beamStopTimer = self.beamStopSeconds
-			self.cl_line:update( selfPos, result.pointWorld, dt, 250, false )
-		elseif self.cl_lineAlways then
-			self.cl_lastPos = endPos
-			self.cl_beamStopTimer = self.beamStopSeconds
-			self.cl_line:update( selfPos, hit and result.pointWorld or endPos, dt, 250, false )
+			self.cl_line:update( selfPos, self.cl_lastPos, dt, 250, false )
 		end
 	elseif self.cl_activeSound:isPlaying() then
 		self.cl_activeSound:stop()
 	end
 
-	if (not active or not hit or not target) and self.cl_line.effect:isPlaying() then
+	if (not active or not target) and self.cl_line.effect:isPlaying() then
 		self.cl_beamStopTimer = math.max(self.cl_beamStopTimer - dt, 0)
 		self.cl_line:update( selfPos, self.cl_lastPos, dt, 250, true )
 
@@ -246,7 +241,7 @@ function MountedLaserCutter:client_onUpdate( dt )
 		end
 	end
 
-	local max = active and (hit and 1 or 0.5) or 0
+	local max = active and ((target or self.cl_lineAlways) and 1 or 0.5) or 0
 	self.cl_boltValue = sm.util.lerp(self.cl_boltValue, max, dt * 10)
 
 	if self.cl_boltValue ~= self.cl_prevBoltValue then
