@@ -152,7 +152,7 @@ function ProjectileManager:client_onUpdate(dt)
 
         local owner = laser.owner
 		local currentPos, dir = laser.pos, laser.dir
-		local hit, result = false, nil
+		local hit, result = false, {}
 		if not laser.strong then
 			if sm.exists(owner) then
 				hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), owner )
@@ -161,7 +161,7 @@ function ProjectileManager:client_onUpdate(dt)
 			end
 		end
 
-		local shouldDelete = result and self.killTypes[result.type] == true or laser.lifeTime <= 0 or laser.line.thickness == 0
+		local shouldDelete = self.killTypes[result.type] == true or laser.lifeTime <= 0 or laser.line.thickness == 0
 		if hit or shouldDelete then
 			if self.sv_host == true and hit then
 				if laser.overdrive then
@@ -179,6 +179,15 @@ function ProjectileManager:client_onUpdate(dt)
 
 			if shouldDelete or laser.overdrive then
 				laser.line:destroy()
+
+				if not laser.strong then
+					sm.effect.playEffect(
+						"Laser_hit", hit and result.pointWorld or currentPos,
+						vec3_zero, defaultQuat, vec3_one,
+						{ Color = laser.line.colour }
+					)
+				end
+
 				self.cl_projectiles[k] = nil
 			end
 		end

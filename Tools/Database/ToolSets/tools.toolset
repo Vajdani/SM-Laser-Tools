@@ -2,8 +2,8 @@
    "toolList" : [
       {
          "name" : "Laser Cutter",
-         "previewRenderable" : "$CONTENT_DATA/Tools/LaserCutter/Preview/char_lasercutter_preview.rend",
-         "previewRotation" : [ 1, 0, 0, 0, 0, -1, 0, 1, 0 ],
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserCutter/char_lasercutter.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
          "script" : {
             "class" : "Cutter",
             "data" : {},
@@ -13,8 +13,8 @@
       },
       {
          "name" : "Laser Pistol",
-         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.rend",
-         "previewRotation" : [ 1, 0, 0, 0, 0, -1, 0, 1, 0 ],
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
          "script" : {
             "class" : "Pistol",
             "data" : {},
@@ -36,8 +36,8 @@
       },
       {
          "name" : "Railgun",
-         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.rend",
-         "previewRotation" : [ 1, 0, 0, 0, 0, -1, 0, 1, 0 ],
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
          "script" : {
             "class" : "Railgun",
             "data" : {},
@@ -48,8 +48,8 @@
       },
       {
          "name" : "ProjectileManager",
-         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/Preview/char_laserpistol_preview.rend",
-         "previewRotation" : [ 1, 0, 0, 0, 0, -1, 0, 1, 0 ],
+         "previewRenderable" : "$CONTENT_DATA/Tools/LaserPistol/char_laserpistol.rend",
+         "previewRotation" : [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ],
          "script" : {
             "class" : "ProjectileManager",
             "data" : {},
