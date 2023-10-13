@@ -6,7 +6,7 @@ vec3_up = sm.vec3.new(0,0,1)
 vec3_zero = sm.vec3.zero()
 vec3_one = sm.vec3.one()
 vec3_x = sm.vec3.new(1,0,0)
-vec3_y = sm.vec3.new(0,1,0)
+vec3_y = sm.vec3.new(1,0,0)
 vec3_1eighth = sm.vec3.new(0.125,0.125,0.125)
 defaultQuat = sm.quat.identity()
 projectile_cutter = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
@@ -138,6 +138,7 @@ end
 ---@field owner Character|Shape
 
 -- #region Line_gun
+local line_up = sm.vec3.new(1,0,0)
 ---@class Line_gun
 ---@field init function
 ---@field update function
@@ -150,11 +151,6 @@ function Line_gun:init( thickness, colour, strong )
     self.effect:setParameter("color", colour)
     self.effect:setScale( vec3_one * thickness )
 	self.sound = sm.effect.createEffect( "Cutter_beam_sound" )
-
-	if not strong then
-		self.trail = sm.effect.createEffect("Laser_trail")
-		self.trail:setParameter("Color", colour)
-	end
 
 	self.colour = colour
     self.thickness = thickness
@@ -175,11 +171,11 @@ function Line_gun:update( startPos, endPos, dt, spinSpeed )
         return
 	end
 
-	local rot = sm.vec3.getRotation(vec3_x, delta)
+	local rot = sm.vec3.getRotation(line_up, delta)
 	local speed = spinSpeed or 0
 	local deltaTime = dt or 0
 	self.spinTime = self.spinTime + deltaTime * speed
-	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), vec3_x )
+	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), line_up )
 
 	if self.strong then
 		self.thickness = math.max(self.thickness - dt * 0.5, 0)
@@ -190,35 +186,27 @@ function Line_gun:update( startPos, endPos, dt, spinSpeed )
 	self.effect:setScale(distance)
 	self.effect:setRotation(rot)
 
-	if self.trail then
-		self.trail:setPosition(startPos)
-		self.trail:setRotation(sm.vec3.getRotation(vec3_y, -delta))
-	end
-
 	--this shit kills my gpu if its done every frame
-	--[[if sm.game.getCurrentTick() % 4 == 0 then
+	if sm.game.getCurrentTick() % 4 == 0 then
 		sm.particle.createParticle( "cutter_block_destroy", endPos, defaultQuat, self.colour )
-	end]]
+	end
 
 	self.sound:setPosition(startPos)
 
     if not self.effect:isPlaying() then
         self.effect:start()
 		self.sound:start()
-		if self.trail then self.trail:start() end
     end
 end
 
 function Line_gun:stop()
 	self.effect:stopImmediate()
 	self.sound:stopImmediate()
-	if self.trail then self.trail:stop() end
 end
 
 function Line_gun:destroy()
 	self.effect:destroy()
 	self.sound:destroy()
-	if self.trail then self.trail:stop() end
 end
 -- #endregion
 
@@ -255,11 +243,11 @@ function Line_cutter:update( startPos, endPos, dt, spinSpeed, dying )
         return
 	end
 
-	local rot = sm.vec3.getRotation(vec3_x, delta)
+	local rot = sm.vec3.getRotation(line_up, delta)
 	local speed = spinSpeed or 0
 	local deltaTime = dt or 0
 	self.spinTime = self.spinTime + deltaTime * speed
-	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), vec3_x )
+	rot = rot * sm.quat.angleAxis( math.rad(self.spinTime), line_up )
 
 	self.currentThickness = (dying and math.max(self.currentThickness - deltaTime * self.dyingShrink, 0) or self.thickness)
 	local distance = sm.vec3.new(length, self.currentThickness, self.currentThickness)

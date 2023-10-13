@@ -1,8 +1,7 @@
 {
    "particleSystemList" : [
       "cutter_block_destroy.json",
-      "p_pistol_shoot.json",
-      "laser_trail.json"//,
+      "p_pistol_shoot.json"//,
       //"katana_swing.json"
    ]
 }
