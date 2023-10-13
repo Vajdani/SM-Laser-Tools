@@ -27,16 +27,27 @@ ProjectileManager.killTypes = {
 
 --Hook
 local gameHooked = false
-local oldEffect = sm.effect.createEffect
-function effectHook(name, obj, bone)
-    if not gameHooked and name == "SurvivalMusic" then
+local oldHud = sm.gui.createSurvivalHudGui
+function hudHook()
+    if not gameHooked then
         dofile("$CONTENT_a898c2c4-de95-4899-9442-697ced66b832/Scripts/vanilla_override.lua")
         gameHooked = true
     end
 
-	return oldEffect(name, obj, bone)
+	return oldHud()
 end
-sm.effect.createEffect = effectHook
+sm.gui.createSurvivalHudGui = hudHook
+
+local oldBind = sm.game.bindChatCommand
+function bindHook(command, params, callback, help)
+    if not gameHooked then
+        dofile("$CONTENT_a898c2c4-de95-4899-9442-697ced66b832/Scripts/vanilla_override.lua")
+        gameHooked = true
+    end
+
+	return oldBind(command, params, callback, help)
+end
+sm.game.bindChatCommand = bindHook
 
 function ProjectileManager:server_onCreate()
     g_pManager = self.tool
