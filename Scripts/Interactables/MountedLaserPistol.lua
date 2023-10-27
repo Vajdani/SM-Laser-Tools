@@ -27,7 +27,7 @@ local input_secondary = "eeeeee"
 local input_overdrive = "222222"
 local colour_weak = sm.color.new(0,1,1)
 local colour_strong = sm.color.new(0.75,0,0)
-local barrelAdjust = sm.vec3.new(0,-0.02,0.278)
+local barrelAdjust = sm.vec3.new(0,0,0.45)
 
 function MountedLaserPistol:server_onCreate()
 	self.sv_primaryTimer = Timer()

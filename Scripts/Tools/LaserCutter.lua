@@ -8,7 +8,6 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 
 ---@class Cutter : ToolClass
 ---@field owner Player
----@field beamStopTimer number
 ---@field unitDamageTimer table
 ---@field line table
 ---@field firing boolean
@@ -22,11 +21,11 @@ dofile "$CONTENT_DATA/Scripts/util.lua"
 ---@field cutSize number
 Cutter = class()
 Cutter.beamLength = 15
-Cutter.lineThickness = 0.05
+Cutter.lineThickness_fp = 0.075
+Cutter.lineThickness_tp = 0.2
 Cutter.lineColour = sm.color.new(0,1,1)
 Cutter.lineSpinSpeed = 250
-Cutter.lineShrink = 0.1
-Cutter.beamStopSeconds = 1
+Cutter.lineShrink = 0.4
 Cutter.unitDamageTicks = 10
 Cutter.maxCutSize = 7
 
@@ -54,8 +53,7 @@ function Cutter.client_onCreate( self )
 	self.firing = false
 	self.activeSound = sm.effect.createEffect( "Cutter_active_sound", self.owner.character )
 	self.line = Line_cutter()
-	self.line:init( self.lineThickness, self.lineColour, self.lineShrink )
-	self.beamStopTimer = self.beamStopSeconds
+	self.line:init( self.isLocal and self.lineThickness_fp or self.lineThickness_tp, self.lineColour, self.lineShrink )
 	self.lastPos = vec3_zero
 
 	self:loadAnimations()
@@ -128,11 +126,10 @@ function Cutter:canFire(_type, target)
 end
 
 function Cutter:cl_updateDyingBeam( dt )
-	self.beamStopTimer = math.max(self.beamStopTimer - dt, 0)
 	local beamStart = self:cl_getBeamStart()
 	self.line:update( beamStart, self.lastPos, dt, self.lineSpinSpeed, true )
 
-	if self.beamStopTimer <= 0 then
+	if self.line.currentThickness <= 0 then
 		self.line:stop()
 	end
 end
@@ -147,6 +144,14 @@ function Cutter:cl_cut( dt )
 	local playerDir = playerChar.direction
 	local hit = false
 	local result, target
+
+	if self.isLocal then
+		local isFP = self.tool:isInFirstPersonView()
+		if isFP ~= self.isFP then
+			self.isFP = isFP
+			self.line.thickness = isFP and self.lineThickness_fp or self.lineThickness_tp
+		end
+	end
 
 	if self.firing then
 		if not self.activeSound:isPlaying() then
@@ -163,19 +168,14 @@ function Cutter:cl_cut( dt )
 				local beamEnd =  result.pointWorld
 				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineSpinSpeed, false )
 				self.lastPos = beamEnd
-				self.beamStopTimer = self.beamStopSeconds
 				if self.isLocal then self.normal = result.normalWorld end
 			end
 		end
 	else
 		self.activeSound:stop()
 
-		if self.line.effect:isPlaying() then
-			self.beamStopTimer = self.beamStopSeconds
-
-			if self.isLocal then
-				self.unitDamageTimer:reset()
-			end
+		if self.isLocal and self.line.effect:isPlaying() then
+			self.unitDamageTimer:reset()
 		end
 		self.line:stop()
 	end

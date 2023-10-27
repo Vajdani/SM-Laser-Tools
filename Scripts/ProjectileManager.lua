@@ -59,8 +59,8 @@ function ProjectileManager:sv_createProjectile(args)
 	local strong = args.strong
 	if strong and args.noHitscan ~= true then
 		local dir = args.dir
-		local pos = args.pos + dir
-		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength )
+		local pos = args.pos
+		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength, args.owner )
 		if hit then
 			local hitPos = result.pointWorld
 			local stats = self.explodeStats
@@ -142,7 +142,7 @@ function ProjectileManager:cl_createProjectile(args)
 	if tool then
 		pos = tool:isInFirstPersonView() and tool:getFpBonePos("pipe") or tool:getTpBonePos("pipe")
 	else
-		pos = args.pos + dir
+		pos = args.pos
 	end
 
 	local laser = {
