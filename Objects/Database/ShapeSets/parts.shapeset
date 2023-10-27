@@ -63,42 +63,7 @@
 			},
 			"name": "obj_cutter_beam",
 			"physicsMaterial": "Metal",
-			"previewRotation": [
-				0,
-				0,
-				-1,
-				1,
-				0,
-				0,
-				0,
-				1,
-				0
-			],
-			"renderable": {
-				"lodList": [
-					{
-						"includes": [
-							"POSITION",
-							"UV0",
-							"UV1",
-							"NORMAL",
-							"TANGENTS"
-						],
-						"mesh": "$GAME_DATA/Objects/Mesh/fittings/small_2way_pipe.fbx",
-						"subMeshList": [
-							{
-								"material": "DifAsgNorAo",
-								"textureList": [
-									"$GAME_DATA/Objects/Textures/industrial/obj_atlas_generic_dif.tga",
-									"$CONTENT_DATA/Objects/Textures/obj_atlas_generic_asg.tga",
-									"$GAME_DATA/Objects/Textures/industrial/obj_atlas_generic_nor.tga",
-									"$GAME_DATA/Objects/Textures/fittings/obj_fittings_small_pipe_ao.tga"
-								]
-							}
-						]
-					}
-				]
-			},
+			"renderable": "$CONTENT_DATA/Objects/Renderables/obj_cutter_beam.rend",
 			"rotationSet": "PropXmm",
 			"showInInventory": false,
 			"sticky": "-X+X",

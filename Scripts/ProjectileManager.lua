@@ -100,11 +100,8 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
 		else
 			sm.effect.playEffect(
-				"Sledgehammer - Destroy",
-				pos,
-				sm.vec3.zero(),
-				sm.vec3.getRotation( sm.vec3.new(0,0,1), result.normalWorld ),
-				sm.vec3.one(),
+				"Sledgehammer - Destroy", pos, vec3_zero,
+				sm.vec3.getRotation( vec3_up, result.normalWorld ), vec3_one,
 				{ Material = target.materialId, Color = target.color }
 			)
 
@@ -136,10 +133,17 @@ end
 ---@param args LaserProjectile
 function ProjectileManager:cl_createProjectile(args)
     local dir = args.dir
-	local pos = args.pos + dir
 	local strong = args.strong
 	local hitPos = args.hitPos
 	local overdrive = args.overdrive
+
+	local tool = args.tool
+	local pos
+	if tool then
+		pos = tool:isInFirstPersonView() and tool:getFpBonePos("pipe") or tool:getTpBonePos("pipe")
+	else
+		pos = args.pos + dir
+	end
 
 	local laser = {
 		line = Line_gun(),
@@ -193,7 +197,7 @@ function ProjectileManager:client_onUpdate(dt)
 
 				if not laser.strong then
 					sm.effect.playEffect(
-						"Laser_hit", hit and result.pointWorld or currentPos,
+						"Laser_hit", hit and result.pointWorld or currentPos + dir * self.laserLength,
 						vec3_zero, defaultQuat, vec3_one,
 						{ Color = laser.line.colour }
 					)

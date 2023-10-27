@@ -118,6 +118,208 @@
 				"attached": false
 			}
 		]
+	},
+	"Laser_destroy":
+	{
+		"parameterList":
+		{
+			"Material": 0.0,
+			"Volume": 1.0
+		},
+		"effectList":
+		[
+			{
+				"type": "audio",
+				"name": "Collision - Debris",
+				"offset": { "x": 0.0, "y": 0.0, "z": 0.0 },
+				"parameters":
+				[
+					"Material"
+				],
+				"delay": 0.0
+			},
+			{
+				"type": "particle",
+				"name": "",
+				"parameters":
+				{
+					"Volume":
+					[
+						{
+							//Small 1 or 2 in size
+							"condition": "greater",
+							"value": 0.0,
+							"name": "p_destruct_plastic",
+							"parameters":
+							{
+								"Material":
+								[
+									{
+										"condition": "equal",
+										"value": 6.0,
+										"name": "p_destruct_stone"
+									},
+									{
+										"condition": "equal",
+										"value": 7.0,
+										"name": "p_destruct_wood_override"
+									},
+									{
+										"condition": "equal",
+										"value": 8.0,
+										"name": "p_destruct_plastic"
+									},
+									{
+										"condition": "equal",
+										"value": 9.0,
+										"name": "p_destruct_metal"
+									},
+									{
+										"condition": "equal",
+										"value": 4.0,
+										"name": "p_destruct_sand"
+									},
+									{
+										"condition": "equal",
+										"value": 10.0,
+										"name": "p_sledgehammer_destruct_glass"
+									},
+									{
+										"condition": "equal",
+										"value": 13.0,
+										"name": "p_sledgehammer_destruct_cardboard"
+									},
+									{
+										"condition": "equal",
+										"value": 19.0,
+										"name": "p_destruct_mechanical_override"
+									},
+									{
+										"condition": "equal",
+										"value": 20.0,
+										"name": "p_destruct_fruit"
+									}
+								]
+							}
+						},
+						{	
+							//Medium 3 or 4 in size
+							"condition": "greater",
+							"value": 2.0,
+							"name": "p_sledgehammer_destruct_cardboard",
+							"parameters":
+							{
+								"Material":
+								[
+									{
+										"condition": "equal",
+										"value": 6.0,
+										"name": "p_destruct_stone_medium"
+									},
+									{
+										"condition": "equal",
+										"value": 7.0,
+										"name": "p_destruct_wood_medium_override"
+									},
+									{
+										"condition": "equal",
+										"value": 8.0,
+										"name": "p_destruct_plastic_medium"
+									},
+									{
+										"condition": "equal",
+										"value": 9.0,
+										"name": "p_destruct_metal_medium"
+									},
+									{
+										"condition": "equal",
+										"value": 4.0,
+										"name": "p_destruct_sand"
+									},
+									{
+										"condition": "equal",
+										"value": 10.0,
+										"name": "p_sledgehammer_destruct_glass"
+									},
+									{
+										"condition": "equal",
+										"value": 13.0,
+										"name": "p_sledgehammer_destruct_cardboard"
+									},
+									{
+										"condition": "equal",
+										"value": 19.0,
+										"name": "p_destruct_mechanical_medium_override"
+									},
+									{
+										"condition": "equal",
+										"value": 20.0,
+										"name": "p_destruct_fruit"
+									}
+								]
+							}
+						},
+						{
+							//Big 5 or greater
+							"condition": "greater",
+							"value": 4.0,
+							"name": "p_sledgehammer_destruct_cardboard",
+							"parameters":
+							{
+								"Material":
+								[
+									{
+										"condition": "equal",
+										"value": 6.0,
+										"name": "p_destruct_stone_big"
+									},
+									{
+										"condition": "equal",
+										"value": 7.0,
+										"name": "p_destruct_wood_big_override"
+									},
+									{
+										"condition": "equal",
+										"value": 8.0,
+										"name": "p_destruct_plastic_big"
+									},
+									{
+										"condition": "equal",
+										"value": 9.0,
+										"name": "p_destruct_metal_big"
+									},
+									{
+										"condition": "equal",
+										"value": 4.0,
+										"name": "p_destruct_sand"
+									},
+									{
+										"condition": "equal",
+										"value": 10.0,
+										"name": "p_sledgehammer_destruct_glass"
+									},
+									{
+										"condition": "equal",
+										"value": 13.0,
+										"name": "p_sledgehammer_destruct_cardboard"
+									},
+									{
+										"condition": "equal",
+										"value": 19.0,
+										"name": "p_destruct_mechanical_big_override"
+									},
+									{
+										"condition": "equal",
+										"value": 20.0,
+										"name": "p_destruct_fruit"
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		]
 	}/*,
 	"Katana_swing":
 	{

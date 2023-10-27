@@ -345,6 +345,7 @@ function Pistol:client_onUnequip( animate )
 end
 
 local interactionText = "<img bg='gui_keybinds_bg' spacing='4'>gui_icon_refill_battery.png</img>".."<p textShadow='false' bg='gui_keybinds_bg' color='#ffffff' spacing='9'>%d / %d</p>"
+local totalQuantity = sm.container.totalQuantity
 function Pistol:client_onEquippedUpdate( lmb, rmb )
 	if self.overdriveActive then
 		sm.gui.setProgressFraction( 1 - (self.overdriveDuration.count / self.overdriveDuration.ticks) )
@@ -356,27 +357,25 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 	local consumption = sm.game.getEnableAmmoConsumption()
 	local container = sm.localPlayer.getInventory()
 	local primaryAmount = self.overdriveActive and 2 or 1
-	local canFire_lmb = self.primaryCooldown:done() and (not consumption or container:canSpend(plasma, primaryAmount))
-	local canFire_rmb = self.secondaryCooldown:done() and (not consumption or container:canSpend(plasma, 5))
 
 	if consumption then
-		sm.gui.setInteractionText(interactionText:format(sm.container.totalQuantity(container, plasma), primaryAmount))
+		sm.gui.setInteractionText(interactionText:format(totalQuantity(container, plasma), primaryAmount))
 	end
 
-	if primary and canFire_lmb then
+	if primary and self:canFireLmb(consumption, container, primaryAmount) then
 		self.primaryCooldown:reset()
 		self.crosshairSpread = 0.25
 		self.network:sendToServer(
 			"sv_onShoot",
 			{
-				pos = sm.camera.getPosition(),
+				pos = self.tool:isInFirstPersonView() and self.tool:getFpBonePos("pipe") or self.tool:getTpBonePos("pipe"), --sm.camera.getPosition(),
 				dir = sm.camera.getDirection(),
 				strong = false
 			}
 		)
 	end
 
-	if secondary and not primary and canFire_rmb then
+	if secondary and not primary and self:canFireRmb(consumption, container) then
 		self.secondaryCooldown:reset()
 		self.crosshairSpread = 0.5
 		self.network:sendToServer(
@@ -384,12 +383,21 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 			{
 				pos = sm.camera.getPosition(),
 				dir = sm.camera.getDirection(),
+				tool = self.tool,
 				strong = true
 			}
 		)
 	end
 
 	return true, true
+end
+
+function Pistol:canFireLmb(consumption, container, primaryAmount)
+	return self.primaryCooldown:done() and (not consumption or container:canSpend(plasma, primaryAmount))
+end
+
+function Pistol:canFireRmb(consumption, container)
+	return self.secondaryCooldown:done() and (not consumption or container:canSpend(plasma, 5))
 end
 
 ---@param args LaserProjectile

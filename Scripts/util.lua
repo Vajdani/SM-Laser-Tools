@@ -133,9 +133,10 @@ end
 ---@field pos Vec3
 ---@field dir Vec3
 ---@field strong boolean
----@field hitPos Vec3
+---@field hitPos? Vec3
 ---@field overdrive boolean
 ---@field owner Character|Shape
+---@field tool? Tool
 
 -- #region Line_gun
 ---@class Line_gun
@@ -210,15 +211,15 @@ function Line_gun:update( startPos, endPos, dt, spinSpeed )
 end
 
 function Line_gun:stop()
-	self.effect:stopImmediate()
-	self.sound:stopImmediate()
+	self.effect:stop()
+	self.sound:stop()
 	if self.trail then self.trail:stop() end
 end
 
 function Line_gun:destroy()
 	self.effect:destroy()
 	self.sound:destroy()
-	if self.trail then self.trail:stop() end
+	if self.trail then self.trail:destroy() end
 end
 -- #endregion
 
