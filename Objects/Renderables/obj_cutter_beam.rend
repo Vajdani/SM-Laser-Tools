@@ -1,11 +1,15 @@
 {
    "lodList" : [
       {
+         "includes" : [ "POSITION", "UV0", "UV1", "NORMAL", "TANGENTS" ],
          "mesh" : "$GAME_DATA/Objects/Mesh/fittings/small_2way_pipe.fbx",
          "subMeshList" : [
             {
-               "material" : "LightCone",
-               "textureList" : [ "$GAME_DATA/Textures/transparent.tga" ]
+               "material" : "DifAsg",
+               "textureList" : [
+                  "$GAME_DATA/Textures/transparent.tga",
+                  "$CONTENT_DATA/Objects/Textures/obj_atlas_generic_asg.TGA"
+               ]
             }
          ]
       }
