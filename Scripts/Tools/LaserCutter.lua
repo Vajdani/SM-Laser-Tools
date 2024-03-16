@@ -269,7 +269,11 @@ function Cutter:client_onFixedUpdate()
 					self.network:sendToServer("sv_consumeAmmo", ammo)
 				end
 			else
-				self.network:sendToServer( "sv_explode", { pos = beamEnd, ammo = ammo } )
+				self.unitDamageTimer:tick()
+				if self.unitDamageTimer:done() then
+					self.unitDamageTimer:reset()
+					self.network:sendToServer( "sv_explode", { pos = beamEnd, ammo = ammo } )
+				end
 			end
 		end
 	end

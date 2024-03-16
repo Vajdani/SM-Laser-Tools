@@ -69,7 +69,7 @@ end
 function MountedLaserCutter:sv_fire(target, hitPos, result)
 	local _type = type(target)
 	local isChar = _type == "Character"
-	if isChar and not self.sv_unitDamageTimer:done() then
+	if (isChar or _type == "Harvestable") and not self.sv_unitDamageTimer:done() then
 		self.sv_unitDamageTimer:tick()
 		return
 	end
@@ -119,6 +119,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 			self.shape
 		)
 	else
+		self.sv_unitDamageTimer:reset()
 		sm.physics.explode( hitPos, 3, 1, 1, 1 )
 	end
 end
