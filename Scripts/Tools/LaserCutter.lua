@@ -168,7 +168,7 @@ function Cutter:cl_cut( dt )
 				local beamEnd =  result.pointWorld
 				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineSpinSpeed, false )
 				self.lastPos = beamEnd
-				if self.isLocal then self.normal = result.normalWorld end
+				if self.isLocal then self.normal = result.normalLocal end
 			end
 		end
 	else
@@ -208,7 +208,7 @@ function Cutter:sv_cut( args )
 			normal = RoundVector(normal)
 			local cutSize = args.size
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
-			local destroyPos = pos - shape.worldRotation * (size + normal) * (1 / 12)
+			local destroyPos = pos - (size + normal) * (1 / 12)
 			shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
 		else
 			shape:destroyShape()
@@ -488,7 +488,7 @@ function Cutter:client_onEquippedUpdate( lmb )
 		canDisplay = target and sm.item.isBlock(target.uuid)
 
 		if canDisplay then
-			local normal = result.normalWorld
+			local normal = result.normalLocal
 			self.cutVisualization:setScale((vec3_one * self.cutSize - RoundVector(AbsVector(normal)) * (self.cutSize - 1)) * 0.25)
 			self.cutVisualization:setPosition(getClosestBlockGlobalPosition(target, result.pointWorld))
 			self.cutVisualization:setRotation(target.worldRotation) --* sm.vec3.getRotation(vec3_up, normal))
