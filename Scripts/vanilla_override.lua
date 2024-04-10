@@ -26,3 +26,16 @@ if _GetToolProxyItem then
 	end
 	_GetToolProxyItem = getToolProxyItemHook2
 end
+
+if FantGetToolProxyItem then
+	local oldGetToolProxyItem3 = FantGetToolProxyItem
+	function getToolProxyItemHook3( toolUuid )
+		local item = oldGetToolProxyItem3( toolUuid )
+		if not item then
+			item = ToolItems[tostring( toolUuid )]
+		end
+
+		return item
+	end
+	FantGetToolProxyItem = getToolProxyItemHook3
+end
