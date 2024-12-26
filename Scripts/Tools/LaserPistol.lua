@@ -368,9 +368,10 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 		self.network:sendToServer(
 			"sv_onShoot",
 			{
-				pos = self.tool:isInFirstPersonView() and self.tool:getFpBonePos("pipe") or self.tool:getTpBonePos("pipe"), --sm.camera.getPosition(),
+				pos = "pipe",
 				dir = sm.camera.getDirection(),
-				strong = false
+				strong = false,
+				tool = self.tool
 			}
 		)
 	end
@@ -381,10 +382,11 @@ function Pistol:client_onEquippedUpdate( lmb, rmb )
 		self.network:sendToServer(
 			"sv_onShoot",
 			{
-				pos = sm.camera.getPosition(),
+				pos = "pipe",
+				svpos = self.tool:isInFirstPersonView() and self.tool:getFpBonePos("pipe") or self.tool:getTpBonePos("pipe"),
 				dir = sm.camera.getDirection(),
-				tool = self.tool,
-				strong = true
+				strong = true,
+				tool = self.tool
 			}
 		)
 	end

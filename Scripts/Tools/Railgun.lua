@@ -743,7 +743,7 @@ function Railgun:sv_pierce( origin )
 			end
 		elseif _type == "body" then
 			rayLength = rayLength - (rayStart - pointWorld):length()
-			rayStart = pointWorld - dir * 0.01
+			rayStart = pointWorld + dir * 0.01
 
 			local shape = result:getShape()
 			local normal = result.normalWorld
@@ -775,11 +775,12 @@ function Railgun:sv_pierce( origin )
 		g_pManager,
 		"sv_createProjectile",
 		{
-			pos = origin,
+			pos = "pejnt_barrel",
 			dir = dir,
 			hitPos = endPos,
 			strong = true,
-			noHitscan = true
+			noHitscan = true,
+			tool = self.tool
 		}
 	)
 

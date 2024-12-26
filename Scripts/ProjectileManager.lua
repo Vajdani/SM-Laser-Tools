@@ -50,6 +50,8 @@ end
 sm.game.bindChatCommand = bindHook
 
 function ProjectileManager:server_onCreate()
+	if g_pManager then return end
+
     g_pManager = self.tool
 
     self.sv_host = true
@@ -59,7 +61,7 @@ function ProjectileManager:sv_createProjectile(args)
 	local strong = args.strong
 	if strong and args.noHitscan ~= true then
 		local dir = args.dir
-		local pos = args.pos
+		local pos = args.svpos
 		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength, args.owner )
 		if hit then
 			local hitPos = result.pointWorld
@@ -127,6 +129,9 @@ end
 
 
 function ProjectileManager:client_onCreate()
+	if g_cl_pManager then return end
+
+	g_cl_pManager = self.tool
     self.cl_projectiles = {}
 end
 
@@ -137,10 +142,9 @@ function ProjectileManager:cl_createProjectile(args)
 	local hitPos = args.hitPos
 	local overdrive = args.overdrive
 
-	local tool = args.tool
 	local pos
-	if tool then
-		pos = tool:isInFirstPersonView() and tool:getFpBonePos("pipe") or tool:getTpBonePos("pipe")
+	if type(args.pos) == "string" then
+		pos = args.tool:isInFirstPersonView() and args.tool:getFpBonePos(args.pos) or args.tool:getTpBonePos(args.pos)
 	else
 		pos = args.pos
 	end
@@ -162,6 +166,8 @@ function ProjectileManager:cl_createProjectile(args)
 end
 
 function ProjectileManager:client_onUpdate(dt)
+	if g_cl_pManager ~= self.tool then return end
+
     for k, laser in pairs(self.cl_projectiles) do
 		laser.lifeTime = laser.lifeTime - dt
 
