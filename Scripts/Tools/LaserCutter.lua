@@ -108,10 +108,10 @@ end
 
 
 
-function Cutter:cl_getBeamStart()
+function Cutter:cl_getBeamStart(dt)
 	local char = self.owner.character
 	return self.tool:isInFirstPersonView() and
-	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 * ((sm.camera.getFov() - 45) / 45) + char.velocity * 0.015 or
+	self.tool:getFpBonePos( "pipe" ) - char.direction * 0.15 * ((sm.camera.getFov() - 45) / 45) + char.velocity * (dt or 0.015) or
 	self.tool:getTpBonePos( "pipe" )
 end
 
@@ -126,7 +126,7 @@ function Cutter:canFire(_type, target)
 end
 
 function Cutter:cl_updateDyingBeam( dt )
-	local beamStart = self:cl_getBeamStart()
+	local beamStart = self:cl_getBeamStart(dt)
 	self.line:update( beamStart, self.lastPos, dt, self.lineSpinSpeed, true )
 
 	if self.line.currentThickness <= 0 then
@@ -166,7 +166,7 @@ function Cutter:cl_cut( dt )
 
 			if target and sm.exists(target) then
 				local beamEnd =  result.pointWorld
-				self.line:update( self:cl_getBeamStart(), beamEnd, dt, self.lineSpinSpeed, false )
+				self.line:update( self:cl_getBeamStart(dt), beamEnd, dt, self.lineSpinSpeed, false )
 				self.lastPos = beamEnd
 				if self.isLocal then self.normal = result.normalLocal end
 			end
@@ -233,6 +233,11 @@ function Cutter:sv_consumeAmmo(ammo)
 	end
 end
 
+function Cutter:sv_damageUnit(unit)
+	sm.event.sendToUnit(unit, "sv_e_takeDamage", { damage = 45 })
+	self:sv_consumeAmmo(1)
+end
+
 
 
 function Cutter:client_onFixedUpdate()
@@ -258,15 +263,8 @@ function Cutter:client_onFixedUpdate()
 				self.unitDamageTimer:tick()
 				if self.unitDamageTimer:done() then
 					self.unitDamageTimer:reset()
-					sm.projectile.projectileAttack(
-						projectile_cutter,
-						45,
-						beamEnd,
-						(target.worldPosition - beamEnd):normalize(),
-						self.owner
-					)
 
-					self.network:sendToServer("sv_consumeAmmo", ammo)
+					self.network:sendToServer( "sv_damageUnit", target:getUnit() )
 				end
 			else
 				self.unitDamageTimer:tick()

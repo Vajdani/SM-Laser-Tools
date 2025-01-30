@@ -39,3 +39,22 @@ if FantGetToolProxyItem then
 	end
 	FantGetToolProxyItem = getToolProxyItemHook3
 end
+
+
+
+for k, global in pairs(_G) do
+	if type(global) == "table" and global.server_onUnitUpdate then
+		function global:sv_e_takeDamage(args)
+			if not sm.exists(self.unit) then return end
+
+			local char = self.unit.character
+			if isAnyOf(char:getCharacterType(), g_tapebots) then
+				self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.headHit or false )
+			else
+				self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.hitPos or self.unit.character.worldPosition )
+			end
+		end
+
+		print("[LASER TOOLS] HOOKED UNIT CLASS", k)
+	end
+end

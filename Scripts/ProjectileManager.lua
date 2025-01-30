@@ -114,13 +114,10 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 			end
 		end
 	elseif type == "Character" then
-		sm.projectile.projectileAttack(
-			projectile_cutter,
-			self.laserDamage,
-			pos,
-			(target.worldPosition - pos),
-			self.tool:getOwner()
-		)
+		local unit = target:getUnit()
+		if sm.exists(unit) then
+			sm.event.sendToUnit(unit, "sv_e_takeDamage", { damage = self.laserDamage })
+		end
 	else
 		sm.physics.explode( pos, 3, 1, 1, 1 )
 	end
@@ -176,9 +173,9 @@ function ProjectileManager:client_onUpdate(dt)
 		local hit, result = false, {}
 		if not laser.strong then
 			if sm.exists(owner) then
-				hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), owner )
+				hit, result = sm.physics.spherecast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), 0.1, owner )
 			else
-				hit, result = sm.physics.raycast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2))
+				hit, result = sm.physics.spherecast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), 0.1)
 			end
 		end
 
@@ -213,11 +210,11 @@ function ProjectileManager:client_onUpdate(dt)
 			end
 		end
 
-		if not shouldDelete then
+		if not shouldDelete and (not hit or result.type == "character") then
 			if laser.strong then
 				laser.line:update(currentPos, currentPos + dir, dt)
 			else
-				local newPos = currentPos + dir * dt * self.laserSpeed * (hit and 0.1 or 1)
+				local newPos = currentPos + dir * dt * self.laserSpeed
 				laser.pos = newPos
 				laser.line:update(newPos, newPos + dir * self.laserLength, dt)
 			end
