@@ -111,13 +111,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 		end
 	elseif isChar then
 		self.sv_unitDamageTimer:reset()
-		sm.projectile.shapeProjectileAttack(
-			projectile_cutter,
-			self.sv_data.damage,
-			self.shape:transformPoint(hitPos),
-			self.shape.yAxis,
-			self.shape
-		)
+		SendDamageEventToCharacter(target, { damage = self.sv_data.damage })
 	else
 		self.sv_unitDamageTimer:reset()
 		sm.physics.explode( hitPos, 3, 1, 1, 1 )

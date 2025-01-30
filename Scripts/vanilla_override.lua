@@ -42,19 +42,32 @@ end
 
 
 
+dofile "$GAME_DATA/Scripts/game/BasePlayer.lua"
+
 for k, global in pairs(_G) do
-	if type(global) == "table" and global.server_onUnitUpdate then
-		function global:sv_e_takeDamage(args)
-			if not sm.exists(self.unit) then return end
+	if type(global) == "table" then
+		if global.server_onUnitUpdate then
+			function global:sv_e_takeDamage(args)
+				if not sm.exists(self.unit) then return end
 
-			local char = self.unit.character
-			if isAnyOf(char:getCharacterType(), g_tapebots) then
-				self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.headHit or false )
-			else
-				self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.hitPos or self.unit.character.worldPosition )
+				local char = self.unit.character
+				if isAnyOf(char:getCharacterType(), g_tapebots) then
+					self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.headHit or false )
+				else
+					self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.hitPos or self.unit.character.worldPosition )
+				end
 			end
-		end
 
-		print("[LASER TOOLS] HOOKED UNIT CLASS", k)
+			print("[LASER TOOLS] HOOKED UNIT CLASS", k)
+		elseif global.client_onCancel or global.server_onInventoryChanges then
+			function global:sv_e_takeDamage(args)
+				local char = self.player.character
+				if sm.exists(char) then
+					self:sv_takeDamage( args.damage or 0, args.impact or sm.vec3.zero(), args.hitPos or self.player.character.worldPosition )
+				end
+			end
+
+			print("[LASER TOOLS] HOOKED PLAYER CLASS", k)
+		end
 	end
 end

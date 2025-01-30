@@ -233,8 +233,8 @@ function Cutter:sv_consumeAmmo(ammo)
 	end
 end
 
-function Cutter:sv_damageUnit(unit)
-	sm.event.sendToUnit(unit, "sv_e_takeDamage", { damage = 45 })
+function Cutter:sv_damageCharacter(char)
+	SendDamageEventToCharacter(char, { damage = 45 })
 	self:sv_consumeAmmo(1)
 end
 
@@ -263,8 +263,7 @@ function Cutter:client_onFixedUpdate()
 				self.unitDamageTimer:tick()
 				if self.unitDamageTimer:done() then
 					self.unitDamageTimer:reset()
-
-					self.network:sendToServer( "sv_damageUnit", target:getUnit() )
+					self.network:sendToServer( "sv_damageCharacter", target )
 				end
 			else
 				self.unitDamageTimer:tick()

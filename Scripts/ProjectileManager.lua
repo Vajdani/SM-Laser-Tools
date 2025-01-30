@@ -114,10 +114,7 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 			end
 		end
 	elseif type == "Character" then
-		local unit = target:getUnit()
-		if sm.exists(unit) then
-			sm.event.sendToUnit(unit, "sv_e_takeDamage", { damage = self.laserDamage })
-		end
+		SendDamageEventToCharacter(target, { damage = self.laserDamage })
 	else
 		sm.physics.explode( pos, 3, 1, 1, 1 )
 	end

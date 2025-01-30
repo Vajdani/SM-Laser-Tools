@@ -9,7 +9,6 @@ vec3_x = sm.vec3.new(1,0,0)
 vec3_y = sm.vec3.new(0,1,0)
 vec3_1eighth = sm.vec3.new(0.125,0.125,0.125)
 defaultQuat = sm.quat.identity()
-projectile_cutter = sm.uuid.new("4ed831d7-71af-4f94-b50f-e67b17f80312")
 projectile_railgun = sm.uuid.new("caccde30-8f1b-45ca-a4c3-e1a949724a9b")
 pistolcoil = sm.uuid.new("64f6e8ad-abe6-47c7-b924-f7593637dcc1")
 plasma = sm.uuid.new("69c063fe-385a-4135-8f5e-6247aec89769")
@@ -21,6 +20,20 @@ connectionType_plasma = 4096
 ---@field target Shape|Character|Harvestable
 
 -- #region Functions
+---@param char Character
+function SendDamageEventToCharacter(char, args)
+	if not sm.exists(char) then return end
+
+	if char:isPlayer() then
+		sm.event.sendToPlayer(char:getPlayer(), "sv_e_takeDamage", args)
+	else
+		local unit = char:getUnit()
+		if not sm.exists(unit) then return end
+
+		sm.event.sendToUnit(unit, "sv_e_takeDamage", args)
+	end
+end
+
 ---@param rayResult RaycastResult
 ---@return RaycastResult_table
 function RayResultToTable( rayResult )

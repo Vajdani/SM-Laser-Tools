@@ -731,14 +731,7 @@ function Railgun:sv_pierce( origin )
 			rayLength = rayLength - (rayStart - char.worldPosition):length()
 			rayStart = pointWorld
 			if char ~= playerChar then
-				sm.projectile.projectileAttack(
-					projectile_cutter,
-					self.railDamage,
-					rayStart,
-					dir * 10,
-					player
-				)
-
+				SendDamageEventToCharacter(char, { damage = self.railDamage })
 				sm.effect.playEffect("Railgun_target_hit", rayStart)
 			end
 		elseif _type == "body" then
