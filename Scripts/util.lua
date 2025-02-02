@@ -47,7 +47,7 @@ function RayResultToTable( rayResult )
         pointLocal = rayResult.pointLocal,
         type = rayResult.type,
         fraction = rayResult.fraction,
-		target = rayResult:getShape() or rayResult:getCharacter() or rayResult:getHarvestable()
+		target = rayResult:getShape() or rayResult:getCharacter() or rayResult:getHarvestable() or (rayResult:getJoint() or {}).shapeA
     }
 end
 

@@ -162,7 +162,7 @@ function Cutter:cl_cut( dt )
 		hit, result = sm.physics.raycast( raycastStart, raycastStart + playerDir * self.beamLength, playerChar )
 
 		if hit then
-			target = result:getShape() or result:getCharacter() or result:getHarvestable()
+			target = result:getShape() or result:getCharacter() or result:getHarvestable() or result:getJoint()
 
 			if target and sm.exists(target) then
 				local beamEnd =  result.pointWorld
@@ -249,10 +249,10 @@ function Cutter:client_onFixedUpdate()
 		local _type = type(target)
 		local canFire, ammo = self:canFire(_type, target)
 		if canFire then
-			if _type == "Shape" then
+			if _type == "Shape" or _type == "Joint" then
 				self.network:sendToServer( "sv_cut",
 					{
-						shape = target,
+						shape = _type == "Joint" and target.shapeA or target,
 						pos = beamEnd,
 						normal = self.normal,
 						size = self.cutSize,
