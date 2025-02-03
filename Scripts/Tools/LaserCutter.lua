@@ -162,7 +162,12 @@ function Cutter:cl_cut( dt )
 		hit, result = sm.physics.raycast( raycastStart, raycastStart + playerDir * self.beamLength, playerChar )
 
 		if hit then
-			target = result:getShape() or result:getCharacter() or result:getHarvestable() or result:getJoint()
+			local shape = result:getShape()
+			if shape and ShouldSlip(shape.uuid) then
+				goto skip
+			end
+
+			target = shape or result:getCharacter() or result:getHarvestable() or result:getJoint()
 
 			if target and sm.exists(target) then
 				local beamEnd =  result.pointWorld
@@ -170,6 +175,8 @@ function Cutter:cl_cut( dt )
 				self.lastPos = beamEnd
 				if self.isLocal then self.normal = result.normalLocal end
 			end
+
+			::skip::
 		end
 	else
 		self.activeSound:stop()
@@ -192,7 +199,15 @@ function Cutter:sv_cut( args )
 	local shape = args.shape
 	if not sm.exists(shape) then return end
 
-	local data = sm.item.getFeatureData(shape.uuid)
+	local uuid = shape.uuid
+	if ShouldSlip(uuid) then return end
+
+	if sm.item.isHarvestablePart(uuid) then
+		sm.event.sendToInteractable(shape.interactable, "sv_onHit", 1000)
+		return
+	end
+
+	local data = sm.item.getFeatureData(uuid)
 	if data and data.classname == "Package" then
 		sm.event.sendToInteractable( shape.interactable, "sv_e_open" )
 	else
@@ -204,7 +219,7 @@ function Cutter:sv_cut( args )
 		local effectRot = sm.vec3.getRotation( vec3_up, normal )
 		local effectData = { Material = material, Color = shape.color }
 
-		if sm.item.isBlock( shape.uuid ) then
+		if sm.item.isBlock(uuid) then
 			normal = RoundVector(normal)
 			local cutSize = args.size
 			local size = vec3_one * cutSize - AbsVector(normal) * (cutSize - 1)
@@ -220,8 +235,14 @@ function Cutter:sv_cut( args )
 	self:sv_consumeAmmo(args.ammo)
 end
 
-function Cutter:sv_explode( args )
-	sm.physics.explode( args.pos, 3, 1, 1, 1 )
+function Cutter:sv_damageHarvestable( args )
+	local target, pos = args.target, args.pos
+	if (target:getData() or {}).blueprint ~= nil then
+		sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = pos })
+	else
+		sm.physics.explode( pos, 3, 1, 1, 1 )
+	end
+
 	self:sv_consumeAmmo(args.ammo)
 end
 
@@ -269,7 +290,7 @@ function Cutter:client_onFixedUpdate()
 				self.unitDamageTimer:tick()
 				if self.unitDamageTimer:done() then
 					self.unitDamageTimer:reset()
-					self.network:sendToServer( "sv_explode", { pos = beamEnd, ammo = ammo } )
+					self.network:sendToServer( "sv_damageHarvestable", { target = target, pos = beamEnd, ammo = ammo } )
 				end
 			end
 		end

@@ -71,3 +71,23 @@ for k, global in pairs(_G) do
 		end
 	end
 end
+
+
+
+if not WoodHarvestable then
+	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/WoodHarvestable.lua"
+end
+
+function WoodHarvestable:sv_e_onHit(args)
+	self:sv_onHit(args.damage, args.position)
+end
+
+
+
+if not StoneHarvestable then
+	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/StoneHarvestable.lua"
+end
+
+function StoneHarvestable:sv_e_onHit(args)
+	self:sv_onHit(args.damage, args.position)
+end

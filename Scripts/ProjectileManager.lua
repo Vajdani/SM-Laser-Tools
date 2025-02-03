@@ -95,9 +95,19 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 
 	local pos = result.pointWorld
 	local type = type(target)
+	local uuid = target.uuid
+
+	if ShouldSlip(uuid) == true then
+	 	return
+	end
 
 	if type == "Shape" then
-		local data = sm.item.getFeatureData(target.uuid)
+		if sm.item.isHarvestablePart(uuid) == true then
+			sm.event.sendToInteractable(target.interactable, "sv_onHit", 1000)
+			return
+		end
+
+		local data = sm.item.getFeatureData(uuid)
 		if data and data.classname == "Package" then
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
 		else
@@ -107,7 +117,7 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 				{ Material = target.materialId, Color = target.color }
 			)
 
-			if sm.item.isBlock( target.uuid ) then
+			if sm.item.isBlock(uuid) then
 				target:destroyBlock( target:getClosestBlockLocalPosition(pos) )
 			else
 				target:destroyShape()
@@ -116,7 +126,11 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 	elseif type == "Character" then
 		SendDamageEventToCharacter(target, { damage = self.laserDamage })
 	else
-		sm.physics.explode( pos, 3, 1, 1, 1 )
+		if (target:getData() or {}).blueprint ~= nil then
+			sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = pos })
+		else
+			sm.physics.explode( pos, 3, 1, 1, 1 )
+		end
 	end
 end
 
@@ -167,7 +181,7 @@ function ProjectileManager:client_onUpdate(dt)
 
         local owner = laser.owner
 		local currentPos, dir = laser.pos, laser.dir
-		local hit, result = false, {}
+		local hit, result = false, { dud = true }
 		if not laser.strong then
 			if sm.exists(owner) then
 				hit, result = sm.physics.spherecast( currentPos, currentPos + dir * sm.util.clamp(dt * 50, 1, 2), 0.1, owner )
@@ -207,7 +221,8 @@ function ProjectileManager:client_onUpdate(dt)
 			end
 		end
 
-		if not shouldDelete and (not hit or result.type == "character") then
+		local target = result.type and (result:getShape() or result:getHarvestable())
+		if not shouldDelete and (not hit or result.type == "character" or (target and ShouldSlip(target.uuid)) or result:getLiftData()) then
 			if laser.strong then
 				laser.line:update(currentPos, currentPos + dir, dt)
 			else

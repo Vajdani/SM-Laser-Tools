@@ -16,8 +16,15 @@ connectionType_plasma = 4096
 -- #endregion
 
 
----@class RaycastResult_table : RaycastResult
----@field target Shape|Character|Harvestable
+local slipOnContact = {}
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests.json").partList) do
+	slipOnContact[v.uuid] = true
+end
+
+function ShouldSlip(uuid)
+	return slipOnContact[tostring(uuid)] == true
+end
+
 
 -- #region Functions
 ---@param char Character
@@ -33,6 +40,9 @@ function SendDamageEventToCharacter(char, args)
 		sm.event.sendToUnit(unit, "sv_e_takeDamage", args)
 	end
 end
+
+---@class RaycastResult_table : RaycastResult
+---@field target Shape|Character|Harvestable
 
 ---@param rayResult RaycastResult
 ---@return RaycastResult_table
