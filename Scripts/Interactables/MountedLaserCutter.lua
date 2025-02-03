@@ -60,7 +60,8 @@ function MountedLaserCutter:server_onFixedUpdate()
 	if not hit then return end
 
 	local hitPos = result.pointWorld
-	local target = result:getShape() or result:getCharacter() or result:getHarvestable()
+	local joint = result:getJoint()
+	local target = result:getShape() or result:getCharacter() or result:getHarvestable() or joint and joint.shapeA
 	if not target or not sm.exists(target) then return end
 
 	self:sv_fire(target, hitPos, result)
@@ -89,8 +90,16 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 		if not spent then return end
 	end
 
+	local uuid = isChar and target:getCharacterType() or target.uuid
+	if ShouldLaserSkipTarget(uuid) then return end
+
 	if _type == "Shape" then
-		local data = sm.item.getFeatureData(target.uuid)
+		if sm.item.isHarvestablePart(uuid) then
+			sm.event.sendToInteractable(target.interactable, "sv_onHit", 1000)
+			return
+		end
+
+		local data = sm.item.getFeatureData(uuid)
 		if data and data.classname == "Package" then
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
 		else
@@ -103,7 +112,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 				{ Material = target.materialId, Color = target.color }
 			)
 
-			if sm.item.isBlock( target.uuid ) then
+			if sm.item.isBlock( uuid ) then
 				target:destroyBlock( target:getClosestBlockLocalPosition(hitPos) )
 			else
 				target:destroyShape( 0 )
@@ -114,7 +123,9 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 		SendDamageEventToCharacter(target, { damage = self.sv_data.damage })
 	else
 		self.sv_unitDamageTimer:reset()
-		sm.physics.explode( hitPos, 3, 1, 1, 1 )
+		if not sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = hitPos }) then
+			sm.physics.explode( hitPos, 3, 1, 1, 1 )
+		end
 	end
 end
 

@@ -16,12 +16,26 @@ connectionType_plasma = 4096
 -- #endregion
 
 
-local slipOnContact = {}
+local slipOnContact = {
+	["97fe0cf2-0591-4e98-9beb-9186f4fd83c8"] = true --hvs_loot
+}
 for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests.json").partList) do
 	slipOnContact[v.uuid] = true
 end
 
-function ShouldSlip(uuid)
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/HarvestableSets/hvs_farmables.json").harvestableList) do
+	if v.name:find("broken") then
+		slipOnContact[v.uuid] = true
+	end
+end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/HarvestableSets/hvs_plantables.json").harvestableList) do
+	if not v.name:find("mature") then
+		slipOnContact[v.uuid] = true
+	end
+end
+
+function ShouldLaserSkipTarget(uuid)
 	return slipOnContact[tostring(uuid)] == true
 end
 

@@ -44,6 +44,111 @@ end
 
 dofile "$GAME_DATA/Scripts/game/BasePlayer.lua"
 
+
+if not CottonPlant then
+	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/CottonPlant.lua"
+end
+
+function CottonPlant.server_onMelee( self, hitPos, attacker, damage, power, hitDirection )
+	self:sv_onHit()
+end
+
+function CottonPlant:sv_onHit()
+	if not self.harvested and sm.exists( self.harvestable ) then
+		sm.effect.playEffect( "Cotton - Picked", self.harvestable.worldPosition )
+
+		if SurvivalGame then
+			local harvest = {
+				lootUid = obj_resource_cotton,
+				lootQuantity = 1
+			}
+			local pos = self.harvestable:getPosition() + sm.vec3.new( 0, 0, 0.5 )
+			sm.projectile.harvestableCustomProjectileAttack( harvest, projectile_loot, 0, pos, sm.noise.gunSpread( sm.vec3.new( 0, 0, 1 ), 20 ) * 5, self.harvestable, 0 )
+		end
+		sm.harvestable.createHarvestable( hvs_farmables_growing_cottonplant, self.harvestable.worldPosition, self.harvestable.worldRotation )
+		sm.harvestable.destroy( self.harvestable )
+		self.harvested = true
+	end
+end
+
+
+if not PigmentFlower then
+	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/PigmentFlower.lua"
+end
+
+function PigmentFlower.server_onMelee( self, hitPos, attacker, damage, power, hitDirection )
+	self:sv_onHit()
+end
+
+function PigmentFlower:sv_onHit()
+	if not self.harvested and sm.exists( self.harvestable ) then
+		sm.effect.playEffect( "Pigmentflower - Picked", self.harvestable.worldPosition )
+
+		if SurvivalGame then
+			local harvest = {
+				lootUid = obj_resource_flower,
+				lootQuantity = 1
+			}
+			local pos = self.harvestable:getPosition() + sm.vec3.new( 0, 0, 0.5 )
+			sm.projectile.harvestableCustomProjectileAttack( harvest, projectile_loot, 0, pos, sm.noise.gunSpread( sm.vec3.new( 0, 0, 1 ), 20 ) * 5, self.harvestable, 0 )
+		end
+		sm.harvestable.createHarvestable( hvs_farmables_growing_pigmentflower, self.harvestable.worldPosition, self.harvestable.worldRotation )
+		sm.harvestable.destroy( self.harvestable )
+		self.harvested = true
+	end
+end
+
+
+if not OilGeyser then
+	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/OilGeyser.lua"
+end
+
+function OilGeyser:sv_onHit( params, player )
+	if not self.harvested and sm.exists( self.harvestable ) then
+		if SurvivalGame then
+			local harvest = {
+				lootUid = obj_resource_crudeoil,
+				lootQuantity = randomStackAmount( 1, 2, 4 )
+			}
+			local pos = self.harvestable:getPosition() + sm.vec3.new( 0, 0, 0.5 )
+			sm.projectile.harvestableCustomProjectileAttack( harvest, projectile_loot, 0, pos, sm.noise.gunSpread( sm.vec3.new( 0, 0, 1 ), 20 ) * 5, self.harvestable, 0 )
+
+		end
+
+		sm.effect.playEffect( "Oilgeyser - Picked", self.harvestable.worldPosition )
+		sm.harvestable.createHarvestable( hvs_farmables_growing_oilgeyser, self.harvestable.worldPosition, self.harvestable.worldRotation )
+		sm.harvestable.destroy( self.harvestable )
+		self.harvested = true
+	end
+end
+
+
+if not MatureHarvestable then
+	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/MatureHarvestable.lua"
+end
+
+function MatureHarvestable:sv_onHit()
+	if sm.exists( self.harvestable ) and not self.harvestable.publicData.harvested then
+		sm.effect.playEffect( "Plants - Picked", self.harvestable:getPosition() )
+
+		local harvest = {
+			lootUid = sm.uuid.new( self.data.harvest ),
+			lootQuantity = self.data.amount
+		}
+		local seed = {
+			lootUid = sm.uuid.new( self.data.seed ),
+			lootQuantity = randomStackAmountAvg2()
+		}
+		local pos = self.harvestable:getPosition() + sm.vec3.new( 0, 0, 0.5 )
+		sm.projectile.harvestableCustomProjectileAttack( harvest, projectile_loot, 0, pos, sm.noise.gunSpread( sm.vec3.new( 0, 0, 1 ), 20 ) * 5, self.harvestable, 0 )
+		sm.projectile.harvestableCustomProjectileAttack( seed, projectile_loot, 0, pos, sm.noise.gunSpread( sm.vec3.new( 0, 0, 1 ), 20 ) * 5, self.harvestable, 0 )
+
+		sm.harvestable.createHarvestable( hvs_soil, self.harvestable:getPosition(), self.harvestable:getRotation() )
+		self.harvestable:destroy()
+		self.harvestable.publicData.harvested = true
+	end
+end
+
 for k, global in pairs(_G) do
 	if type(global) == "table" then
 		if global.server_onUnitUpdate then
@@ -68,26 +173,31 @@ for k, global in pairs(_G) do
 			end
 
 			print("[LASER TOOLS] HOOKED PLAYER CLASS", k)
+		elseif global.sv_onHit then
+			function global:sv_e_onHit(args)
+				self:sv_onHit(args.damage, args.position)
+			end
+
+			print("[LASER TOOLS] HOOKED HARVESTABLE CLASS", k)
 		end
 	end
 end
 
 
+-- if not WoodHarvestable then
+-- 	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/WoodHarvestable.lua"
+-- end
 
-if not WoodHarvestable then
-	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/WoodHarvestable.lua"
-end
-
-function WoodHarvestable:sv_e_onHit(args)
-	self:sv_onHit(args.damage, args.position)
-end
-
+-- function WoodHarvestable:sv_e_onHit(args)
+-- 	self:sv_onHit(args.damage, args.position)
+-- end
 
 
-if not StoneHarvestable then
-	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/StoneHarvestable.lua"
-end
 
-function StoneHarvestable:sv_e_onHit(args)
-	self:sv_onHit(args.damage, args.position)
-end
+-- if not StoneHarvestable then
+-- 	dofile "$SURVIVAL_DATA/Scripts/game/harvestable/StoneHarvestable.lua"
+-- end
+
+-- function StoneHarvestable:sv_e_onHit(args)
+-- 	self:sv_onHit(args.damage, args.position)
+-- end

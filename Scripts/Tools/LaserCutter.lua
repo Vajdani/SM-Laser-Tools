@@ -162,14 +162,14 @@ function Cutter:cl_cut( dt )
 		hit, result = sm.physics.raycast( raycastStart, raycastStart + playerDir * self.beamLength, playerChar )
 
 		if hit then
-			local shape = result:getShape()
-			if shape and ShouldSlip(shape.uuid) then
-				goto skip
-			end
-
-			target = shape or result:getCharacter() or result:getHarvestable() or result:getJoint()
-
+			target = result:getShape() or result:getCharacter() or result:getHarvestable() or result:getJoint()
 			if target and sm.exists(target) then
+				local uuid = type(target) == "Character" and target:getCharacterType() or target.uuid
+				if ShouldLaserSkipTarget(uuid) then
+					target = nil
+					goto skip
+				end
+
 				local beamEnd =  result.pointWorld
 				self.line:update( self:cl_getBeamStart(dt), beamEnd, dt, self.lineSpinSpeed, false )
 				self.lastPos = beamEnd
@@ -200,7 +200,7 @@ function Cutter:sv_cut( args )
 	if not sm.exists(shape) then return end
 
 	local uuid = shape.uuid
-	if ShouldSlip(uuid) then return end
+	if ShouldLaserSkipTarget(uuid) then return end
 
 	if sm.item.isHarvestablePart(uuid) then
 		sm.event.sendToInteractable(shape.interactable, "sv_onHit", 1000)
@@ -237,9 +237,7 @@ end
 
 function Cutter:sv_damageHarvestable( args )
 	local target, pos = args.target, args.pos
-	if (target:getData() or {}).blueprint ~= nil then
-		sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = pos })
-	else
+	if not sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = pos }) then
 		sm.physics.explode( pos, 3, 1, 1, 1 )
 	end
 

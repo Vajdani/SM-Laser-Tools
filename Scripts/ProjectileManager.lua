@@ -95,9 +95,8 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 
 	local pos = result.pointWorld
 	local type = type(target)
-	local uuid = target.uuid
-
-	if ShouldSlip(uuid) == true then
+	local uuid = type == "Character" and target:getCharacterType() or target.uuid
+	if ShouldLaserSkipTarget(uuid) == true then
 	 	return
 	end
 
@@ -126,9 +125,7 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 	elseif type == "Character" then
 		SendDamageEventToCharacter(target, { damage = self.laserDamage })
 	else
-		if (target:getData() or {}).blueprint ~= nil then
-			sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = pos })
-		else
+		if not sm.event.sendToHarvestable(target, "sv_e_onHit", { damage = 1000, position = pos }) then
 			sm.physics.explode( pos, 3, 1, 1, 1 )
 		end
 	end
@@ -222,7 +219,7 @@ function ProjectileManager:client_onUpdate(dt)
 		end
 
 		local target = result.type and (result:getShape() or result:getHarvestable())
-		if not shouldDelete and (not hit or result.type == "character" or (target and ShouldSlip(target.uuid)) or result:getLiftData()) then
+		if not shouldDelete and (not hit or result.type == "character" or (target and ShouldLaserSkipTarget(target.uuid)) or result:getLiftData()) then
 			if laser.strong then
 				laser.line:update(currentPos, currentPos + dir, dt)
 			else
