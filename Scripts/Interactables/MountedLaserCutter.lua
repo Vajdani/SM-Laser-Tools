@@ -99,9 +99,11 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 			return
 		end
 
-		local data = sm.item.getFeatureData(uuid)
-		if data and data.classname == "Package" then
+		local classname = (sm.item.getFeatureData(uuid) or {}).classname
+		if classname == "Package" then
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
+		elseif IsExplosiveClass(classname) then
+			sm.event.sendToInteractable( target.interactable, "server_tryExplode" )
 		else
 			sm.effect.playEffect(
 				"Sledgehammer - Destroy",

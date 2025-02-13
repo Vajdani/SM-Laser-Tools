@@ -207,9 +207,11 @@ function Cutter:sv_cut( args )
 		return
 	end
 
-	local data = sm.item.getFeatureData(uuid)
-	if data and data.classname == "Package" then
+	local classname = (sm.item.getFeatureData(uuid) or {}).classname
+	if classname == "Package" then
 		sm.event.sendToInteractable( shape.interactable, "sv_e_open" )
+	elseif IsExplosiveClass(classname) then
+		sm.event.sendToInteractable( shape.interactable, "server_tryExplode" )
 	else
 		---@type Vec3
 		local pos = args.pos

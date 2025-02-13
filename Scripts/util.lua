@@ -39,6 +39,14 @@ function ShouldLaserSkipTarget(uuid)
 	return slipOnContact[tostring(uuid)] == true
 end
 
+local explosiveClasses = {
+	CannonNuke = true,
+	Explosive = true
+}
+function IsExplosiveClass(classname)
+	--return explosiveClasses[classname] == true
+	return false
+end
 
 -- #region Functions
 ---@param char Character

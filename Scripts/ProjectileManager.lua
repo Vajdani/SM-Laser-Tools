@@ -106,9 +106,11 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 			return
 		end
 
-		local data = sm.item.getFeatureData(uuid)
-		if data and data.classname == "Package" then
+		local classname = (sm.item.getFeatureData(uuid) or {}).classname
+		if classname == "Package" then
 			sm.event.sendToInteractable( target.interactable, "sv_e_open" )
+		elseif IsExplosiveClass(classname) then
+			sm.event.sendToInteractable( target.interactable, "server_tryExplode" )
 		else
 			sm.effect.playEffect(
 				"Sledgehammer - Destroy", pos, vec3_zero,
@@ -219,7 +221,7 @@ function ProjectileManager:client_onUpdate(dt)
 		end
 
 		local target = result.type and (result:getShape() or result:getHarvestable())
-		if not shouldDelete and (not hit or result.type == "character" or (target and ShouldLaserSkipTarget(target.uuid)) or result:getLiftData()) then
+		if not shouldDelete and (not hit or result.type == "character" or result.type == "harvestable" or (target and ShouldLaserSkipTarget(target.uuid)) or result:getLiftData()) then
 			if laser.strong then
 				laser.line:update(currentPos, currentPos + dir, dt)
 			else
