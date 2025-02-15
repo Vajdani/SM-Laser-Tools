@@ -647,7 +647,10 @@ function Railgun:cl_onPrimaryUse( type )
 			end
 		end
 	elseif type == 2 then
-		self.network:sendToServer("sv_pierce", sm.localPlayer.getRaycastStart())
+		self.network:sendToServer("sv_pierce", {
+			start = sm.localPlayer.getRaycastStart(),
+			barrelPos = self.tool:isInFirstPersonView() and self.tool:getFpBonePos("pejnt_barrel") or self.tool:getTpBonePos("pejnt_barrel")
+		})
 
 		self:onShoot()
 		self.network:sendToServer( "sv_n_onShoot" )
@@ -710,13 +713,12 @@ function Railgun:cl_updateCharge( toggle )
 	]]
 end
 
----@param origin Vec3
-function Railgun:sv_pierce( origin )
+function Railgun:sv_pierce( args )
 	local player = self.tool:getOwner()
 	local playerChar = player.character
 	local dir = playerChar.direction
 	local rayLength = self.range
-	local rayStart = sm.vec3.new(origin.x, origin.y, origin.z)
+	local rayStart = args.start
 	local endPos
 	for i = 1, self.maxTries do
 		endPos = rayStart + dir * rayLength
@@ -768,7 +770,7 @@ function Railgun:sv_pierce( origin )
 		g_pManager,
 		"sv_createProjectile",
 		{
-			pos = "pejnt_barrel",
+			pos = args.barrelPos,
 			dir = dir,
 			hitPos = endPos,
 			strong = true,

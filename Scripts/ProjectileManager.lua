@@ -61,7 +61,7 @@ function ProjectileManager:sv_createProjectile(args)
 	local strong = args.strong
 	if strong and args.noHitscan ~= true then
 		local dir = args.dir
-		local pos = args.svpos
+		local pos = args.pos
 		local hit, result = sm.physics.raycast( pos, pos + dir * self.strongLength, args.owner )
 		if hit then
 			local hitPos = result.pointWorld
@@ -149,13 +149,7 @@ function ProjectileManager:cl_createProjectile(args)
 	local hitPos = args.hitPos
 	local overdrive = args.overdrive
 
-	local pos
-	if type(args.pos) == "string" then
-		pos = args.tool:isInFirstPersonView() and args.tool:getFpBonePos(args.pos) or args.tool:getTpBonePos(args.pos)
-	else
-		pos = args.pos
-	end
-
+	local pos = args.pos
 	local laser = {
 		line = Line_gun(),
 		pos = pos,
