@@ -66,7 +66,12 @@ function Cutter.client_onCreate( self )
 
 	self.cutVisualization = sm.effect.createEffect( "ShapeRenderable" )
 	self.cutVisualization:setParameter("visualization", true)
-	self.cutVisualization:setParameter("uuid", blk_plastic)
+end
+
+function Cutter:client_onDestroy()
+	if sm.exists(self.cutVisualization) then
+		self.cutVisualization:destroy()
+	end
 end
 
 function Cutter:server_onCreate()
@@ -329,6 +334,49 @@ function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
 		elseif not self.firing and self.fpAnimations.currentAnimation == "use_idle" then
 			setFpAnimation( self.fpAnimations, "idle", 0.5 )
 		end
+
+		local canAfford = not sm.game.getEnableAmmoConsumption() or self:cl_displayAmmo()
+		local canDisplay = false
+		if canAfford then
+			local hit, result = sm.localPlayer.getRaycast(self.beamLength)
+			local _target = result:getShape()
+			canDisplay = _target ~= nil
+
+			if canDisplay then
+				local normal = result.normalLocal
+				local uuid = _target.uuid
+				local isBlock = sm.item.isBlock(uuid)
+				if uuid ~= self.cutVisualizationUUID then
+					self.cutVisualization:stop()
+					if isBlock then
+						uuid = blk_plastic
+					end
+
+					self.cutVisualization:setParameter("uuid", uuid)
+					self.cutVisualizationUUID = uuid
+				end
+
+				if isBlock then
+					self.cutVisualization:setScale((vec3_one * self.cutSize - RoundVector(AbsVector(normal)) * (self.cutSize - 1)) * 0.25)
+					self.cutVisualization:setPosition(getClosestBlockGlobalPosition(_target, result.pointWorld))
+				else
+					if sm.item.isPart(uuid) then
+						self.cutVisualization:setScale(sm.vec3.one() * 0.25)
+					else
+						self.cutVisualization:setScale(_target:getBoundingBox())
+					end
+
+					self.cutVisualization:setPosition(_target:getInterpolatedWorldPosition() + _target.velocity * dt)
+				end
+				self.cutVisualization:setRotation(_target.worldRotation)
+
+				if not self.cutVisualization:isPlaying() then self.cutVisualization:start() end
+			end
+		end
+
+		if not (canAfford and canDisplay) and self.cutVisualization:isPlaying() then
+			self.cutVisualization:stop()
+		end
 	end
 	updateFpAnimations( self.fpAnimations, equipped, dt )
 
@@ -496,27 +544,6 @@ function Cutter:client_onEquippedUpdate( lmb )
 	local firing = lmb == 1 or lmb == 2
 	if firing ~= self.firing then
 		self.network:sendToServer("sv_updateFiring", firing)
-	end
-
-	local canAfford = not sm.game.getEnableAmmoConsumption() or self:cl_displayAmmo()
-	local canDisplay = false
-	if canAfford then
-		local hit, result = sm.localPlayer.getRaycast(self.beamLength)
-		local target = result:getShape()
-		canDisplay = target and sm.item.isBlock(target.uuid)
-
-		if canDisplay then
-			local normal = result.normalLocal
-			self.cutVisualization:setScale((vec3_one * self.cutSize - RoundVector(AbsVector(normal)) * (self.cutSize - 1)) * 0.25)
-			self.cutVisualization:setPosition(getClosestBlockGlobalPosition(target, result.pointWorld))
-			self.cutVisualization:setRotation(target.worldRotation) --* sm.vec3.getRotation(vec3_up, normal))
-
-			if not self.cutVisualization:isPlaying() then self.cutVisualization:start() end
-		end
-	end
-
-	if not (canAfford and canDisplay) and self.cutVisualization:isPlaying() then
-		self.cutVisualization:stop()
 	end
 
 	return true, true
