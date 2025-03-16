@@ -1,3 +1,5 @@
+![Mod Preview](https://github.com/Vajdani/SM-Laser-Tools/blob/main/preview.jpg)
+
 # This mod adds 4 new items which use lasers to unleash total annihilation!
 All of these items use Plasma Batteries as a power source, which can be crafted in the craftbot.
 
