@@ -5,6 +5,9 @@
          "mesh" : "$GAME_DATA/Objects/Mesh/fittings/small_2way_pipe.fbx",
          "subMeshList" : [
             {
+               "custom" : {
+                  "shadow" : false
+               },
                "material" : "DifAsg",
                "textureList" : [
                   "$GAME_DATA/Textures/transparent.tga",

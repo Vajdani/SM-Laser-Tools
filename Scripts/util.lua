@@ -124,9 +124,10 @@ function checkPipedNeighbours(parentShape, containers)
 end
 
 ---@param shape Shape
+---@param dt number
 ---@return Vec3
-function GetAccurateShapePosition(shape)
-    return shape:getInterpolatedWorldPosition() + shape.velocity * 0.0125
+function GetAccurateShapePosition(shape, dt)
+    return shape:getInterpolatedWorldPosition() + shape.velocity * dt
 end
 
 ---@param shape Shape
