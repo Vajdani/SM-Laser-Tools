@@ -117,11 +117,17 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 				sm.vec3.getRotation( vec3_up, result.normalWorld ), vec3_one,
 				{ Material = target.materialId, Color = target.color }
 			)
-
 			if sm.item.isBlock(uuid) then
 				target:destroyBlock( target:getClosestBlockLocalPosition(pos) )
 			else
-				target:destroyShape()
+				if not sm.event.sendToInteractable(target.interactable, "sv_e_onHit", {
+					damage = 45,
+					source = self.tool:getOwner(),
+					position = pos,
+					normal = args.normal
+				}) then
+					target:destroyShape()
+				end
 			end
 		end
 	elseif type == "Character" then

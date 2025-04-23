@@ -233,7 +233,14 @@ function Cutter:sv_cut( args )
 			local destroyPos = pos - (size + normal) * (1 / 12)
 			shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
 		else
-			shape:destroyShape()
+			if not sm.event.sendToInteractable(shape.interactable, "sv_e_onHit", {
+				damage = 45,
+				source = self.tool:getOwner(),
+				position = args.pos,
+				normal = args.normal
+			}) then
+				shape:destroyShape()
+			end
 		end
 
 		sm.effect.playEffect( "Sledgehammer - Destroy", pos, vec3_zero, effectRot, vec3_one, effectData )
