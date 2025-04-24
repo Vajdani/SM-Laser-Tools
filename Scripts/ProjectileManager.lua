@@ -120,7 +120,8 @@ function ProjectileManager:sv_onWeakLaserHit( args )
 			if sm.item.isBlock(uuid) then
 				target:destroyBlock( target:getClosestBlockLocalPosition(pos) )
 			else
-				if not sm.event.sendToInteractable(target.interactable, "sv_e_onHit", {
+				local int = target.interactable
+				if not int or int.type ~= "scripted" or not sm.event.sendToInteractable(int, "sv_e_onHit", {
 					damage = 45,
 					source = self.tool:getOwner(),
 					position = pos,

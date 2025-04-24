@@ -233,7 +233,8 @@ function Cutter:sv_cut( args )
 			local destroyPos = pos - (size + normal) * (1 / 12)
 			shape:destroyBlock(shape:getClosestBlockLocalPosition(destroyPos), size)
 		else
-			if not sm.event.sendToInteractable(shape.interactable, "sv_e_onHit", {
+			local int = shape.interactable
+			if not int or int.type ~= "scripted" or not sm.event.sendToInteractable(int, "sv_e_onHit", {
 				damage = 45,
 				source = self.tool:getOwner(),
 				position = args.pos,
