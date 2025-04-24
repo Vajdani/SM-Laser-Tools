@@ -222,7 +222,7 @@ function ProjectileManager:client_onUpdate(dt)
 		end
 
 		local target = result.type and (result:getShape() or result:getHarvestable())
-		if not shouldDelete and (not hit or result.type == "character" or result.type == "harvestable" or (target and ShouldLaserSkipTarget(target.uuid)) or result:getLiftData()) then
+		if not shouldDelete and (not hit or result.type == "character" or result.type == "harvestable" or (not sm.exists(target) or target and ShouldLaserSkipTarget(target.uuid)) or result:getLiftData()) then
 			if laser.strong then
 				laser.line:update(currentPos, currentPos + dir, dt)
 			else
