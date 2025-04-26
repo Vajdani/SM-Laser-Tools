@@ -117,7 +117,15 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 			if sm.item.isBlock( uuid ) then
 				target:destroyBlock( target:getClosestBlockLocalPosition(hitPos) )
 			else
-				target:destroyShape( 0 )
+				local int = target.interactable
+				if not int or int.type ~= "scripted" or not sm.event.sendToInteractable(int, "sv_e_onHit", {
+					damage = 45,
+					source = self.shape,
+					position = hitPos,
+					normal = result.normalWorld
+				}) then
+					target:destroyShape( 0 )
+				end
 			end
 		end
 	elseif isChar then
