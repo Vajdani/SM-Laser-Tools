@@ -312,9 +312,9 @@ end
 
 function Cutter:client_onUpdate(dt)
 	self.target = self:cl_cut(dt)
-	local isSprinting =  self.tool:isSprinting()
-	local isCrouching =  self.tool:isCrouching()
-	local equipped = self.tool:isEquipped()
+	local isSprinting = self.tool:isSprinting()
+	local isCrouching = self.tool:isCrouching()
+	local equipped    = self.tool:isEquipped()
 
 	if self.isLocal then
 		self:updateFP(dt, equipped, self.target, isSprinting, isCrouching)
@@ -329,7 +329,7 @@ function Cutter:client_onUpdate(dt)
 	self.tool:updateFpCamera( 0, camOffsetFp, 0, 1 )
 end
 
-function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
+function Cutter:updateFP(dt, equipped, target, isSprinting, isCrouching)
 	if equipped then
 		if isSprinting and self.fpAnimations.currentAnimation ~= "sprintInto" and self.fpAnimations.currentAnimation ~= "sprintIdle" then
 			swapFpAnimation( self.fpAnimations, "sprintExit", "sprintInto", 0.0 )
@@ -346,9 +346,10 @@ function Cutter:updateFP(dt, equipped,  target, isSprinting, isCrouching)
 		local canAfford = not sm.game.getEnableAmmoConsumption() or self:cl_displayAmmo()
 		local canDisplay = false
 		if canAfford then
-			local hit, result = sm.localPlayer.getRaycast(self.beamLength)
+			local rayStart, rayDir = sm.localPlayer.getRaycastStart(), sm.localPlayer.getDirection()
+			local hit, result = sm.physics.raycast(rayStart, rayStart + rayDir * self.beamLength, self.owner.character, sm.physics.filter.default + sm.physics.filter.areaTrigger) --sm.localPlayer.getRaycast(self.beamLength)
 			local _target = result:getShape()
-			canDisplay = _target ~= nil
+			canDisplay = _target ~= nil --and _target.erasable
 
 			if canDisplay then
 				local normal = result.normalLocal
