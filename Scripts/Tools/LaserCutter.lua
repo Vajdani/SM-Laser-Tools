@@ -598,7 +598,11 @@ function Cutter.loadAnimations( self )
 
 		crouchIdle = "connecttool_crouch_idle",
 		crouchFwd = "connecttool_crouch_fwd",
-		crouchBwd = "connecttool_crouch_bwd"
+		crouchBwd = "connecttool_crouch_bwd",
+
+		swimIdle = "connecttool_swim_idle",
+		swimFwd = "connecttool_swim_fwd",
+		swimBwd = "connecttool_swim_bwd",
 	}
 
 	for name, animation in pairs( movementAnimations ) do

@@ -100,6 +100,21 @@
 				{
 					"name": "spudgun_crouch_shoot",
 					"file": "$GAME_DATA/Character/Char_Male/Animations/Thirdperson/Spudgun/ani_char_male_spudgun_crouch_shoot.dae"
+				},
+				{
+					"name": "connecttool_swim_idle",
+					"file": "$GAME_DATA/Character/Char_Male/Animations/Thirdperson/Swim/ani_char_male_swim_idle.dae",
+					"looping": true
+				},
+				{
+					"name": "connecttool_swim_fwd",
+					"file": "$GAME_DATA/Character/Char_Male/Animations/Thirdperson/Swim/ani_char_male_swim_fwd.dae",
+					"looping": true
+				},
+				{
+					"name": "connecttool_swim_bwd",
+					"file": "$GAME_DATA/Character/Char_Male/Animations/Thirdperson/Swim/ani_char_male_swim_bwd.dae",
+					"looping": true
 				}
 			],
 			"maxViewDistance": 1000.0
