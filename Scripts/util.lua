@@ -12,6 +12,7 @@ defaultQuat = sm.quat.identity()
 projectile_railgun = sm.uuid.new("caccde30-8f1b-45ca-a4c3-e1a949724a9b")
 pistolcoil = sm.uuid.new("64f6e8ad-abe6-47c7-b924-f7593637dcc1")
 plasma = sm.uuid.new("69c063fe-385a-4135-8f5e-6247aec89769")
+physics_timestep = 1/40
 connectionType_plasma = 4096
 -- #endregion
 
@@ -33,6 +34,10 @@ for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/Harvestable
 	if not v.name:find("mature") then
 		slipOnContact[v.uuid] = true
 	end
+end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/survivalobject.json").partList) do
+	slipOnContact[v.uuid] = true
 end
 
 function ShouldLaserSkipTarget(uuid)

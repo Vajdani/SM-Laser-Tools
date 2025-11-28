@@ -349,7 +349,7 @@ function Cutter:updateFP(dt, equipped, target, isSprinting, isCrouching)
 			local rayStart, rayDir = sm.localPlayer.getRaycastStart(), sm.localPlayer.getDirection()
 			local hit, result = sm.physics.raycast(rayStart, rayStart + rayDir * self.beamLength, self.owner.character, sm.physics.filter.default + sm.physics.filter.areaTrigger) --sm.localPlayer.getRaycast(self.beamLength)
 			local _target = result:getShape()
-			canDisplay = _target ~= nil --and _target.erasable
+			canDisplay = _target ~= nil and not ShouldLaserSkipTarget(_target.uuid) --and _target.erasable
 
 			if canDisplay then
 				local normal = result.normalLocal
