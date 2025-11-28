@@ -106,7 +106,7 @@ function MountedLaserPistol:sv_fire(strong, quantity)
 		g_pManager,
 		"sv_createProjectile",
 		{
-			pos = self.shape:transformLocalPoint(barrelAdjust),
+			pos = self.shape:getInterpolatedWorldPosition() + self.shape.velocity * physics_timestep + self.shape.worldRotation * barrelAdjust,
 			dir = self.shape.up,
 			strong = strong,
 			overdrive = self.sv_overdriveActive,

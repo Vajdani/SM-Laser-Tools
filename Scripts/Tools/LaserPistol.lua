@@ -402,7 +402,9 @@ end
 ---@param args LaserProjectile
 function Pistol:sv_onShoot( args, caller )
 	local overdrive = self.overdriveActive
-	args.owner = caller.character
+	local char = caller.character
+	args.pos = args.pos + char.velocity * physics_timestep
+	args.owner = char
 	args.overdrive = overdrive
 	sm.event.sendToTool(g_pManager, "sv_createProjectile", args)
 	self.network:sendToClients("cl_onShoot", args)
