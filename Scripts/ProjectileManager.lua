@@ -165,6 +165,7 @@ function ProjectileManager:cl_createProjectile(args)
 		overdrive = overdrive,
 		owner = args.owner,
 		lifeTime = 15,
+		speed = self.laserSpeed + (sm.exists(args.owner) and args.owner.velocity:length() or 1)
 	}
 
 	local colour =  (strong or overdrive) and self.lineStats.colour_strong or self.lineStats.colour_weak
@@ -226,7 +227,7 @@ function ProjectileManager:client_onUpdate(dt)
 			if laser.strong then
 				laser.line:update(currentPos, currentPos + dir, dt)
 			else
-				local newPos = currentPos + dir * dt * self.laserSpeed
+				local newPos = currentPos + dir * dt * laser.speed
 				laser.pos = newPos
 				laser.line:update(newPos, newPos + dir * self.laserLength, dt)
 			end
