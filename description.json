@@ -1,10 +1,10 @@
 {
 	"allow_add_mods" : true,
-	"custom_icons" : false,
+	"custom_icons" : true,
 	"description" : "[h1]This mod adds 4 new items which use lasers to unleash total annihilation![/h1]\nAll of these items use Plasma Batteries as a power source, which can be crafted in the craftbot.\n\n[b]Thanks to [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2816900681]Questionable Mark's Modded Craftbot Recipes[/url], they're also craftable in survival![/b]\n\n[h1]Credits[/h1]\n[list]\n    [*][b]Vajdani[/b] - Scripting, animation\n    [*][b]Dart Frog[/b] - Handheld Laser Cutter model, thumbnail help\n    [*][b]DriVer[/b] - Laser Pistol model\n[/list]",
 	"fileId" : 2843905833,
 	"localId" : "a898c2c4-de95-4899-9442-697ced66b832",
 	"name" : "Laser Tools",
 	"type" : "Blocks and Parts",
-	"version" : 1
+	"version" : 2
 }
