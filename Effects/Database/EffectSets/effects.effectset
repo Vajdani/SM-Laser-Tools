@@ -108,7 +108,7 @@
 		[
 			{
 				"type": "particle",
-				"name": "p_tools_glowstick_bounce01",
+				"name": "p_pistol_projectile_hit",
 				"attached": false,
 				"delay": 0.0
 			},

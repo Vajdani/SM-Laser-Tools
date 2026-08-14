@@ -20,25 +20,51 @@ connectionType_plasma = 4096
 local slipOnContact = {
 	["97fe0cf2-0591-4e98-9beb-9186f4fd83c8"] = true --hvs_loot
 }
-for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests.json").partList) do
-	slipOnContact[v.uuid] = true
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests.shapeset").partList) do
+	slipOnContact[tostring(v.uuid)] = true
 end
 
-for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/HarvestableSets/hvs_farmables.json").harvestableList) do
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests_crystal.shapeset").partList) do
+	slipOnContact[tostring(v.uuid)] = true
+end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests_nonepart.shapeset").partList) do
+	slipOnContact[tostring(v.uuid)] = true
+end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests_shared.shapeset").partList) do
+	slipOnContact[tostring(v.uuid)] = true
+end
+
+-- for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests_stones.shapeset").partList) do
+-- 	slipOnContact[tostring(v.uuid)] = true
+-- end
+
+-- for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/harvests_trees.shapeset").partList) do
+-- 	slipOnContact[tostring(v.uuid)] = true
+-- end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/survivalobject.shapeset").partList) do
+	slipOnContact[tostring(v.uuid)] = true
+end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/survivalobject_lights.shapeset").partList) do
+	slipOnContact[tostring(v.uuid)] = true
+end
+
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/HarvestableSets/farmables.harvestableset").harvestableList) do
 	if v.name:find("broken") then
-		slipOnContact[v.uuid] = true
+		slipOnContact[tostring(v.uuid)] = true
 	end
 end
 
-for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/HarvestableSets/hvs_plantables.json").harvestableList) do
+for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/HarvestableSets/plantables.harvestableset").harvestableList) do
 	if not v.name:find("mature") then
-		slipOnContact[v.uuid] = true
+		slipOnContact[tostring(v.uuid)] = true
 	end
 end
 
-for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Objects/Database/ShapeSets/survivalobject.json").partList) do
-	slipOnContact[v.uuid] = true
-end
+print(slipOnContact)
 
 function ShouldLaserSkipTarget(uuid)
 	return slipOnContact[tostring(uuid)] == true
@@ -117,6 +143,8 @@ function ColourLerp(c1, c2, t)
     return sm.color.new(r,g,b)
 end
 
+---@param parentShape Shape
+---@param containers Container[]
 function checkPipedNeighbours(parentShape, containers)
 	for _k, shape in pairs(parentShape:getPipedNeighbours()) do
 		local int = shape.interactable

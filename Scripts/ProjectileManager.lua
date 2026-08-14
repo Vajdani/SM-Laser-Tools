@@ -22,32 +22,18 @@ ProjectileManager.explodeStats = {
 ProjectileManager.killTypes = {
 	terrainSurface = true,
 	terrainAsset = true,
+	voxelTerrain = true,
 	limiter = true
 }
 
---Hook
-local gameHooked = false
-local oldHud = sm.gui.createSurvivalHudGui
-function hudHook()
-    if not gameHooked then
+oldUuid = oldUuid or sm.uuid.new
+function sm.uuid.new(uuid)
+    if not sm.LaserTools_GameHooked then
         dofile("$CONTENT_a898c2c4-de95-4899-9442-697ced66b832/Scripts/vanilla_override.lua")
-        gameHooked = true
     end
 
-	return oldHud()
+	return oldUuid(uuid)
 end
-sm.gui.createSurvivalHudGui = hudHook
-
-local oldBind = sm.game.bindChatCommand
-function bindHook(command, params, callback, help)
-    if not gameHooked then
-        dofile("$CONTENT_a898c2c4-de95-4899-9442-697ced66b832/Scripts/vanilla_override.lua")
-        gameHooked = true
-    end
-
-	return oldBind(command, params, callback, help)
-end
-sm.game.bindChatCommand = bindHook
 
 function ProjectileManager:server_onCreate()
 	if g_pManager then return end

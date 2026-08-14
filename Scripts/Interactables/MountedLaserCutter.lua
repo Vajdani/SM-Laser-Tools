@@ -2,11 +2,12 @@ dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 dofile "$CONTENT_DATA/Scripts/util.lua"
+dofile "BaseMountedLaser.lua"
 
----@class MountedLaserCutter : ShapeClass
+---@class MountedLaserCutter : BaseMountedLaser
 ---@field sv table
 ---@field cl table
-MountedLaserCutter = class()
+MountedLaserCutter = class(BaseMountedLaser)
 MountedLaserCutter.maxParentCount = -1
 MountedLaserCutter.maxChildCount = 0
 MountedLaserCutter.connectionInput = sm.interactable.connectionType.logic + connectionType_plasma
@@ -28,7 +29,8 @@ local on = "#269e44On"
 local off = "#9e2626Off"
 
 function MountedLaserCutter:server_onCreate()
-	self.sv = {}
+	BaseMountedLaser.server_onCreate(self)
+
 	self.sv_data = self.storage:load()
 	if self.sv_data == nil then
 		self.sv_data = {}
@@ -43,12 +45,10 @@ function MountedLaserCutter:server_onCreate()
 	self.sv_unitDamageTimer:start( self.unitDamageTicks )
 
 	self.sv_parentCount = -1
-	self.sv_containers = {}
-	self:getInputs(false)
 end
 
 function MountedLaserCutter:server_onFixedUpdate(dt)
-	local active = self:getInputs(false)
+	local active, container = self:getInputs()
 	if not active then return end
 
 	local shape = self.shape
@@ -64,10 +64,10 @@ function MountedLaserCutter:server_onFixedUpdate(dt)
 	local target = result:getShape() or result:getCharacter() or result:getHarvestable() or joint and joint.shapeA
 	if not target or not sm.exists(target) then return end
 
-	self:sv_fire(target, hitPos, result)
+	self:sv_fire(target, hitPos, result, container)
 end
 
-function MountedLaserCutter:sv_fire(target, hitPos, result)
+function MountedLaserCutter:sv_fire(target, hitPos, result, container)
 	local _type = type(target)
 	local isChar = _type == "Character"
 	if (isChar or _type == "Harvestable") and not self.sv_unitDamageTimer:done() then
@@ -75,20 +75,7 @@ function MountedLaserCutter:sv_fire(target, hitPos, result)
 		return
 	end
 
-	if sm.game.getEnableAmmoConsumption() then
-		local spent = false
-		for k, container in pairs(self.sv_containers) do
-			if container:canSpend(plasma, 1) then
-				sm.container.beginTransaction()
-				sm.container.spend(container, plasma, 1)
-				sm.container.endTransaction()
-				spent = true
-				break
-			end
-		end
-
-		if not spent then return end
-	end
+	if not self:canShoot() then return end
 
 	local uuid = isChar and target:getCharacterType() or target.uuid
 	if ShouldLaserSkipTarget(uuid) then return end
@@ -223,7 +210,7 @@ function MountedLaserCutter:client_onInteract( char, state )
 end
 
 function MountedLaserCutter:client_onUpdate( dt )
-	local active = self:getInputs(true)
+	local active = self:getInputs()
 	local hit, result = false, nil
 	local shape = self.shape
 	local selfDir = shape:getInterpolatedUp()
@@ -279,24 +266,11 @@ end
 
 
 
-function MountedLaserCutter:getInputs(client)
+function MountedLaserCutter:getInputs()
 	local parents = self.interactable:getParents()
-	local active, hasChecked = false, false
-	local containers = {}
-
+	local active = false
 	for k, parent in pairs(parents) do
 		if parent.active then active = true end
-
-		if not client and parent:hasOutputType(connectionType_plasma)
-		   and (self.shape.body:hasChanged(sm.game.getServerTick() - 1) or #parents ~= self.sv_parentCount) and not hasChecked then
-			local parentShape = parent.shape
-			containers[parentShape.id] = parentShape.interactable:getContainer(0)
-			checkPipedNeighbours(parentShape, containers)
-
-			self.sv_containers = containers
-			self.sv_parentCount = #parents
-			hasChecked = true
-		end
 	end
 
 	return active

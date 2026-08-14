@@ -1,0 +1,767 @@
+{
+	"system" : 
+	{
+		"emitters" : 
+		[
+			{
+				"angle" : 2.0,
+				"category" : "1 - ",
+				"color" : 
+				[
+					0.0,
+					1.0,
+					0.67187,
+					1.0
+				],
+				"color_fraction" : 1.0,
+				"depth" : 
+				[
+					0.34999,
+					0.05
+				],
+				"direction_type" : "shape",
+				"duration" : 0.1,
+				"effects" : 
+				[
+					{
+						"control_point" : 
+						[
+							[
+								0.0,
+								0.59701
+							],
+							[
+								0.12019,
+								1.28287
+							],
+							[
+								0.2596,
+								1.5
+							],
+							[
+								0.49759,
+								1.4457
+							],
+							[
+								0.70673,
+								1.29276
+							],
+							[
+								0.81009,
+								0.90296
+							],
+							[
+								1.0,
+								0.0
+							]
+						],
+						"guid" : 1,
+						"max_scale" : 1.5,
+						"name" : "Scale"
+					}
+				],
+				"emission_mode" : "burst",
+				"emission_rate" : 1111,
+				"force_vector" : 
+				[
+					0.0,
+					0.0,
+					-5.0
+				],
+				"glow" : true,
+				"glow_strength" : 1.0,
+				"guid" : 0,
+				"height" : 
+				[
+					0.34999,
+					0.05
+				],
+				"keep_local" : true,
+				"max_particles" : 10,
+				"mesh_size" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"min_quality" : "high",
+				"name" : "Drops2 up (Medium)",
+				"params" : 2,
+				"particle" : "mesh",
+				"renderable" : "$CONTENT_DATA/Particles/Glowstick/eff_rendeble_glowstick_goop_drops.rend",
+				"rotation" : 
+				[
+					180.0,
+					180.0
+				],
+				"rotation_axis" : 
+				[
+					1.0,
+					0.0,
+					0.0
+				],
+				"time_to_live" : 
+				[
+					0.75,
+					0.2
+				],
+				"velocity" : 
+				[
+					3.0,
+					1.0
+				],
+				"water_mask" : "none",
+				"width" : 
+				[
+					0.34999,
+					0.05
+				]
+			},
+			{
+				"category" : "4",
+				"color" : 
+				[
+					0.3294,
+					0.83135,
+					0.04704,
+					1.0
+				],
+				"color_fraction" : 1.0,
+				"depth" : 0.300000012,
+				"direction_type" : "shape",
+				"duration" : 0.1,
+				"effects" : 
+				[
+					{
+						"control_point" : 
+						[
+							[
+								0.0,
+								1.08552
+							],
+							[
+								0.20611,
+								1.71703
+							],
+							[
+								0.51999,
+								2.26973
+							],
+							[
+								1.0,
+								2.61508
+							]
+						],
+						"guid" : 3,
+						"max_scale" : 3.0,
+						"name" : "Scale"
+					},
+					{
+						"graph" : 
+						[
+							[
+								0.0,
+								0.0
+							],
+							[
+								1.0,
+								1.0
+							]
+						],
+						"guid" : 4,
+						"name" : "Pose"
+					},
+					{
+						"graph" : 
+						[
+							[
+								0.0,
+								0.5
+							],
+							[
+								1.0,
+								1.0
+							]
+						],
+						"guid" : 5,
+						"index" : 2,
+						"name" : "Pose"
+					},
+					{
+						"animation" : "sheet",
+						"end_texture_coords_range" : 64,
+						"fps" : 30,
+						"guid" : 6,
+						"name" : "TextureAnimator"
+					}
+				],
+				"emission_mode" : "burst",
+				"emission_rate" : 3500,
+				"friction" : 1.0,
+				"guid" : 2,
+				"height" : 0.300000012,
+				"keep_local" : true,
+				"material_name" : "GlassWave",
+				"max_particles" : 1,
+				"mesh_size" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"name" : "Splatter sphere dissolve  [low]",
+				"params" : 2,
+				"particle" : "mesh",
+				"renderable" : "$CONTENT_DATA/Particles/Glowstick/p_rendeble_glowstick_splattersphere.rend",
+				"rotation" : 
+				[
+					0.0,
+					179.0
+				],
+				"rotation_axis" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"tiles" : 
+				[
+					6,
+					8
+				],
+				"time_to_live" : 0.400000006,
+				"velocity" : 0.0,
+				"water_mask" : "none",
+				"width" : 0.300000012
+			},
+			{
+				"category" : "4",
+				"color" : 
+				[
+					0.0,
+					0.45702,
+					0.07141,
+					1.0
+				],
+				"color_fraction" : 1.0,
+				"depth" : 0.5,
+				"direction_type" : "shape",
+				"duration" : 0.00999,
+				"effects" : 
+				[
+					{
+						"graph" : 
+						[
+							[
+								0.0,
+								0.01936
+							],
+							[
+								0.333,
+								1.0
+							],
+							[
+								0.666,
+								0.0
+							],
+							[
+								1.0,
+								0.0
+							]
+						],
+						"guid" : 8,
+						"name" : "Pose",
+						"time" : 0.75,
+						"toggle" : false
+					},
+					{
+						"graph" : 
+						[
+							[
+								0.0,
+								0.0
+							],
+							[
+								0.333,
+								0.0
+							],
+							[
+								0.666,
+								1.0
+							],
+							[
+								1.0,
+								0.0
+							]
+						],
+						"guid" : 9,
+						"index" : 1,
+						"name" : "Pose",
+						"time" : 0.75,
+						"toggle" : false
+					},
+					{
+						"animation" : "sheet",
+						"end_texture_coords_range" : 32,
+						"fps" : 30,
+						"graph" : 
+						[
+							[
+								0.0,
+								0.0
+							],
+							[
+								0.16347,
+								0.39171
+							],
+							[
+								0.26539,
+								0.55961
+							],
+							[
+								0.42675,
+								0.66666
+							],
+							[
+								1.0,
+								1.0
+							]
+						],
+						"guid" : 10,
+						"name" : "TextureAnimator",
+						"toggle" : false,
+						"use_graph" : true
+					},
+					{
+						"control_point" : 
+						[
+							[
+								0.0,
+								0.25396
+							],
+							[
+								0.47036,
+								1.69816
+							],
+							[
+								1.0,
+								2.5
+							]
+						],
+						"guid" : 11,
+						"max_scale" : 2.5,
+						"name" : "Scale",
+						"toggle" : false
+					},
+					{
+						"graph" : 
+						[
+							[
+								0.0,
+								0.68421
+							],
+							[
+								0.15384,
+								0.75985
+							],
+							[
+								1.0,
+								1.0
+							]
+						],
+						"guid" : 12,
+						"index" : 2,
+						"name" : "Pose"
+					}
+				],
+				"emission_mode" : "burst",
+				"emission_rate" : 200,
+				"guid" : 7,
+				"height" : 0.5,
+				"keep_local" : true,
+				"material_name" : "UVAnimDifAsgNorAlphaFlip",
+				"max_particles" : 1,
+				"mesh_size" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"name" : "SplatterShape  [low]",
+				"params" : 2,
+				"particle" : "mesh",
+				"renderable" : "$CONTENT_DATA/Particles/Glowstick/p_rendeble_glowstick_splattershape.rend",
+				"rotation" : 
+				[
+					0.0,
+					180.0
+				],
+				"rotation_axis" : 
+				[
+					-1.0,
+					1.0,
+					1.0
+				],
+				"tiles" : 
+				[
+					5,
+					5
+				],
+				"time_to_live" : 0.449999988,
+				"velocity" : 0.0,
+				"water_mask" : "none",
+				"width" : 0.5
+			},
+			{
+				"angle" : 75.0,
+				"category" : "4",
+				"color" : 
+				[
+					0.94531,
+					1.0,
+					0.0,
+					1.0
+				],
+				"color_fraction" : 1.0,
+				"depth" : 0.5,
+				"direction_type" : "shape",
+				"duration" : 0.1,
+				"effects" : 
+				[
+					{
+						"control_point" : 
+						[
+							[
+								0.0,
+								0.59701
+							],
+							[
+								0.12019,
+								1.28287
+							],
+							[
+								0.2596,
+								1.5
+							],
+							[
+								0.49759,
+								1.4457
+							],
+							[
+								0.70673,
+								1.29276
+							],
+							[
+								0.81009,
+								0.90296
+							],
+							[
+								1.0,
+								0.0
+							]
+						],
+						"guid" : 14,
+						"max_scale" : 1.5,
+						"name" : "Scale"
+					}
+				],
+				"emission_mode" : "burst",
+				"emission_rate" : 1111,
+				"force_vector" : 
+				[
+					0.0,
+					0.0,
+					-3.0
+				],
+				"glow" : true,
+				"glow_strength" : 1.0,
+				"guid" : 13,
+				"height" : 
+				[
+					0.5,
+					0.01999
+				],
+				"keep_local" : true,
+				"max_particles" : 5,
+				"mesh_size" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"min_quality" : "high",
+				"name" : "Drops1 (Medium)",
+				"params" : 2,
+				"particle" : "mesh",
+				"renderable" : "$CONTENT_DATA/Particles/Glowstick/eff_rendeble_glowstick_goop_drops.rend",
+				"rotation" : 
+				[
+					180.0,
+					180.0
+				],
+				"rotation_axis" : 
+				[
+					1.0,
+					0.0,
+					0.0
+				],
+				"time_to_live" : 
+				[
+					0.44999,
+					0.2
+				],
+				"velocity" : 
+				[
+					4.0,
+					1.0
+				],
+				"water_mask" : "none",
+				"width" : 
+				[
+					0.5,
+					0.01999
+				]
+			},
+			{
+				"ASG_map" : "$GAME_DATA/Particles/resources/glowstick/p_glowstick_splashcylinder_asg.tga",
+				"category" : "2",
+				"color" : 
+				[
+					0.03125,
+					0.0,
+					1.0,
+					1.0
+				],
+				"color_fraction" : 1.0,
+				"depth" : 
+				[
+					1.75,
+					0.05
+				],
+				"direction_type" : "constant",
+				"duration" : 0.00999,
+				"editorColor" : 
+				[
+					0.59715,
+					1.0,
+					0.48436,
+					1.0
+				],
+				"effects" : 
+				[
+					{
+						"control_point" : 
+						[
+							[
+								0.0,
+								0.75
+							],
+							[
+								1.0,
+								2.79274
+							]
+						],
+						"guid" : 16,
+						"max_scale" : 3.0,
+						"name" : "Scale",
+						"toggle" : false
+					},
+					{
+						"axis" : "y-scale",
+						"control_point" : 
+						[
+							[
+								0.0,
+								0.0
+							],
+							[
+								0.4,
+								0.68421
+							],
+							[
+								0.6769,
+								0.9671
+							],
+							[
+								1.0,
+								1.03287
+							]
+						],
+						"guid" : 17,
+						"max_scale" : 2.0,
+						"name" : "Scale",
+						"toggle" : false
+					},
+					{
+						"animation" : "sheet",
+						"end_texture_coords_range" : 40,
+						"fps" : 30,
+						"graph" : 
+						[
+							[
+								0.0,
+								0.0
+							],
+							[
+								0.29692,
+								0.12358
+							],
+							[
+								0.68923,
+								0.88761
+							],
+							[
+								1.0,
+								1.0
+							]
+						],
+						"guid" : 18,
+						"name" : "TextureAnimator",
+						"toggle" : false,
+						"use_graph" : true
+					}
+				],
+				"emission_mode" : "burst",
+				"emission_rate" : 1,
+				"guid" : 15,
+				"height" : 
+				[
+					1.75,
+					0.05
+				],
+				"keep_local" : false,
+				"material_name" : "FbrdfUvAnimApha",
+				"max_particles" : 1,
+				"mesh" : "$GAME_DATA/Particles/resources/watersplashes/p_mesh_watercylinder04.fbx",
+				"mesh_diffuse" : "$GAME_DATA/Textures/transparent.tga",
+				"mesh_size" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"mesh_type" : "projectile",
+				"min_quality" : "medium",
+				"name" : "Cylinder (Medium)",
+				"normal_map" : "$GAME_DATA/Particles/resources/trashbot/p_trashbot_splashcylinder01_nor.tga",
+				"params" : 2,
+				"particle" : "mesh",
+				"rotation" : 
+				[
+					0.0,
+					180.0
+				],
+				"rotation_speed" : 
+				[
+					0.0,
+					45.0
+				],
+				"tiles" : 
+				[
+					10,
+					4
+				],
+				"time_to_live" : 0.5,
+				"velocity" : 0.001,
+				"water_mask" : "none",
+				"width" : 
+				[
+					1.75,
+					0.05
+				]
+			},
+			{
+				"color" : 
+				[
+					0.07812,
+					0.0,
+					1.0,
+					1.0
+				],
+				"color_fraction" : 1.0,
+				"depth" : 0.5,
+				"direction_type" : "shape",
+				"duration" : 0.1,
+				"editorColor" : 
+				[
+					0.75686,
+					0.70586,
+					0.38431,
+					1.0
+				],
+				"effects" : 
+				[
+					{
+						"control_point" : 
+						[
+							[
+								0.0,
+								0.0
+							],
+							[
+								0.14461,
+								0.65789
+							],
+							[
+								0.41538,
+								1.36842
+							],
+							[
+								1.0,
+								3.01307
+							]
+						],
+						"guid" : 20,
+						"max_scale" : 4.0,
+						"name" : "Scale"
+					},
+					{
+						"animation" : "sheet",
+						"end_texture_coords_range" : 64,
+						"fps" : 30,
+						"guid" : 21,
+						"name" : "TextureAnimator"
+					}
+				],
+				"emission_mode" : "burst",
+				"emission_rate" : 3500,
+				"guid" : 19,
+				"height" : 0.5,
+				"keep_local" : true,
+				"material_name" : "GlassWave",
+				"max_particles" : 1,
+				"mesh_size" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"name" : "sphere Splash GlassSlime Big  [low]",
+				"params" : 2,
+				"particle" : "mesh",
+				"renderable" : "$CONTENT_DATA/Particles/Glowstick/p_rendeble_glowstick_splattersphere_glass.rend",
+				"rotation" : 
+				[
+					0.0,
+					179.0
+				],
+				"rotation_axis" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"tiles" : 
+				[
+					6,
+					8
+				],
+				"time_to_live" : 0.349999994,
+				"velocity" : 0.0,
+				"water_mask" : "none",
+				"width" : 0.5
+			}
+		],
+		"min_quality" : "low"
+	}
+}

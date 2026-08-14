@@ -1,0 +1,62 @@
+{
+	"lodList" : 
+	[
+		{
+			"mesh" : "$GAME_DATA/Particles/resources/trashbot/splatter/p_trashbot_splattershape.fbx",
+			"minViewSize" : 11,
+			"pose0" : "$GAME_DATA/Particles/resources/trashbot/splatter/p_trashbot_splattershape_pose0.fbx",
+			"pose1" : "$GAME_DATA/Particles/resources/trashbot/splatter/p_trashbot_splattershape_pose1.fbx",
+			"subMeshList" : 
+			[
+				{
+					"custom" : 
+					{
+						"dissolve" : 
+						{
+							"endColor" : 
+							[
+								0.003922,
+								0.549019992,
+								0.0,
+								1.0
+							],
+							"endGlow" : 0.0,
+							"fade" : 0.0,
+							"fadePower" : 0.0,
+							"length" : 0.5,
+							"loopSpeed" : 0.0,
+							"scale" : 1.0,
+							"scrollSpeed" : 
+							[
+								0.0,
+								0.0,
+								0.0
+							],
+							"startColor" : 
+							[
+								0.004303,
+								0.550781012,
+								0.0,
+								1.0
+							],
+							"startGlow" : 0.0
+						},
+						"uv0" : 
+						{
+							"u" : 0.125,
+							"v" : 0.25
+						}
+					},
+					"material" : "FbrdfAnimAphaPose2_DissolveUv2",
+					"textures" : 
+					{
+						"asg" : "$SURVIVAL_DATA/Effects/Textures/Glowstick/t_glowstick01_asg.tga",
+						"dissolve" : "$GAME_DATA/Particles/resources/trashbot/p_trashbot_splattershape_dissolve.tga",
+						"fbdrf" : "$GAME_DATA/Textures/transparent.tga",
+						"normalMap" : "$GAME_DATA/Particles/resources/trashbot/p_trashbot_dissolve03_nor.tga"
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,52 @@
+{
+	"lodList" : 
+	[
+		{
+			"mesh" : "$GAME_DATA/Particles/resources/trashbot/splatter/p_trashbot_splatter_sphere02.fbx",
+			"pose0" : "$GAME_DATA/Particles/resources/trashbot/splatter/p_trashbot_splatter_sphere02_pose0.fbx",
+			"subMeshList" : 
+			[
+				{
+					"custom" : 
+					{
+						"glass" : 
+						{
+							"ROI" : 0.01,
+							"blurriness" : 0.02,
+							"depthBlurDistance" : 1,
+							"depthBlurMin" : 0,
+							"magnification" : 0.519999981,
+							"magnificationDirection" : 
+							[
+								1.0,
+								1.0
+							],
+							"refraction" : 0.5,
+							"responsiveGlow" : 0.5,
+							"transmission" : 0.5,
+							"transparencyBack" : -1.24000001,
+							"transparencyFront" : -1.679999948
+						},
+						"uv0" : 
+						{
+							"u" : 0.125,
+							"v" : 0.125
+						},
+						"wave" : 
+						{
+							"speed" : 0.5,
+							"strength" : 0.5
+						}
+					},
+					"material" : "1pose_GlassFbdrfUvAnimAlphaFlipWave",
+					"textures" : 
+					{
+						"asg" : "$GAME_DATA/Particles/resources/trashbot/p_trashbot_dissolve02_asg.tga",
+						"fbdrf" : "$GAME_DATA/Particles/resources/misc/p_colorable_dif.tga",
+						"normalMap" : "$GAME_DATA/Particles/resources/trashbot/p_trashbot_dissolve02_nor.tga"
+					}
+				}
+			]
+		}
+	]
+}

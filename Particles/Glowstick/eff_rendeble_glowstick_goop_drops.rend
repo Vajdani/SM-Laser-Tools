@@ -1,0 +1,31 @@
+{
+	"lodList" : 
+	[
+		{
+			"mesh" : "$GAME_DATA/Particles/resources/watersplashes/p_mesh_waterdrop.fbx",
+			"minViewSize" : 11,
+			"subMeshMap" : 
+			{
+				"lambert1" : 
+				{
+					"custom" : 
+					{
+						"translucent" : 
+						{
+							"push" : 0.400000006,
+							"refraction" : -0.01,
+							"thickness" : 1.539999962
+						}
+					},
+					"material" : "TranslucentMap_DifAsgNor",
+					"textureList" : 
+					[
+						"$GAME_DATA/Textures/transparent.tga",
+						"$SURVIVAL_DATA/Effects/Textures/Glowstick/t_glowstick01_asg.tga",
+						"$GAME_DATA/Textures/Materialtextures/normal_nor.tga"
+					]
+				}
+			}
+		}
+	]
+}

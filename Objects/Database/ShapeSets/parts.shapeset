@@ -132,47 +132,7 @@
 				"durability": 6,
 				"friction": 4
 			},
-			"renderable": {
-				"lodList": [
-					{
-						"mesh": "$SURVIVAL_DATA/Objects/Mesh/containers/obj_containers_battery.fbx",
-						"pose0": "$SURVIVAL_DATA/Objects/Mesh/containers/obj_containers_battery_pose0.fbx",
-						"pose1": "$SURVIVAL_DATA/Objects/Mesh/containers/obj_containers_battery_pose1.fbx",
-						"subMeshMap": {
-							"connectionpoint": {
-								"material": "2PoseAnimDifAsgNor",
-								"textureList": [
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_interactive_container_connectorpoint_dif.tga",
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_interactive_container_connectorpoint_asg.tga",
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_interactive_container_connectorpoint_nor.tga"
-								]
-							},
-							"containerbattery": {
-								"material": "DifAsgNor",
-								"textureList": [
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_battery_dif.tga",
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_battery_asg.tga",
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_battery_nor.tga"
-								]
-							},
-							"screen": {
-								"custom": {
-									"uv0": {
-										"u": 1,
-										"v": 0.1670
-									}
-								},
-								"material": "UVAnimDifAsgNor",
-								"textureList": [
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_screen_dif.tga",
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_screen_asg.tga",
-									"$SURVIVAL_DATA/Objects/Textures/containers/obj_containers_screen_nor.tga"
-								]
-							}
-						}
-					}
-				]
-			},
+			"renderable": "$SURVIVAL_DATA/Objects/Renderable/Containers/obj_containers_battery.rend",
 			"restrictions": {
 				"usable": true
 			},

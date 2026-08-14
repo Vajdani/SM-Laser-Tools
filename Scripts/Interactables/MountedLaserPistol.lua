@@ -2,11 +2,12 @@ dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
 dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
 dofile "$CONTENT_DATA/Scripts/util.lua"
+dofile "BaseMountedLaser.lua"
 
----@class MountedLaserPistol : ShapeClass
+---@class MountedLaserPistol : BaseMountedLaser
 ---@field sv table
 ---@field cl table
-MountedLaserPistol = class()
+MountedLaserPistol = class(BaseMountedLaser)
 MountedLaserPistol.maxParentCount = -1
 MountedLaserPistol.maxChildCount = 0
 MountedLaserPistol.connectionInput = sm.interactable.connectionType.logic + connectionType_plasma
@@ -14,6 +15,8 @@ MountedLaserPistol.connectionOutput = sm.interactable.connectionType.none
 MountedLaserPistol.colorNormal = sm.color.new( 0xcb0a00ff )
 MountedLaserPistol.colorHighlight = sm.color.new( 0xee0a00ff )
 MountedLaserPistol.poseWeightCount = 1
+MountedLaserPistol.maxLogicParentCount = 3
+
 
 MountedLaserPistol.damage = 45
 MountedLaserPistol.primaryTicks = 0.25 * 40
@@ -30,6 +33,8 @@ local colour_strong = sm.color.new(0.75,0,0)
 local barrelAdjust = sm.vec3.new(0,0,0.45)
 
 function MountedLaserPistol:server_onCreate()
+	BaseMountedLaser.server_onCreate(self)
+
 	self.sv_primaryTimer = Timer()
 	self.sv_primaryTimer:start( self.primaryTicks )
 	self.sv_primaryTimer.count = self.sv_primaryTimer.ticks
@@ -47,8 +52,6 @@ function MountedLaserPistol:server_onCreate()
 	self.sv_overdriveActive = false
 
 	self.sv_parentCount = -1
-	self.sv_containers = {}
-	self:getInputs(false)
 end
 
 function MountedLaserPistol:server_onFixedUpdate()
@@ -59,7 +62,7 @@ function MountedLaserPistol:server_onFixedUpdate()
 	local primary, secondary, overdrive = self:getInputs()
 	if primary and self.sv_primaryTimer:done() then
 		self.sv_primaryTimer:reset()
-		self:sv_fire(false)
+		self:sv_fire(false, nil)
 	end
 
 	if secondary and not primary and self.sv_secondaryTimer:done() then
@@ -85,22 +88,8 @@ function MountedLaserPistol:server_onFixedUpdate()
 	end
 end
 
-function MountedLaserPistol:sv_fire(strong, quantity)
-	if sm.game.getEnableAmmoConsumption() then
-		local spent = false
-		local _quantity = quantity or (self.sv_overdriveActive and 2 or 1)
-		for k, container in pairs(self.sv_containers) do
-			if container:canSpend(plasma, _quantity) then
-				sm.container.beginTransaction()
-				sm.container.spend(container, plasma, _quantity)
-				sm.container.endTransaction()
-				spent = true
-				break
-			end
-		end
-
-		if not spent then return end
-	end
+function MountedLaserPistol:sv_fire(strong, quantity, container)
+	if not self:canShoot(quantity or (self.sv_overdriveActive and 2 or 1)) then return end
 
 	sm.event.sendToTool(
 		g_pManager,
@@ -142,7 +131,7 @@ function MountedLaserPistol:client_onCreate()
 end
 
 function MountedLaserPistol:client_onUpdate( dt )
-	local primary = self:getInputs(true)
+	local primary = self:getInputs()
 	local sound = self.cl_activeSound
 	local playing = sound:isPlaying()
 	if primary and not playing then
@@ -195,10 +184,9 @@ end
 
 
 
-function MountedLaserPistol:getInputs(client)
+function MountedLaserPistol:getInputs()
 	local parents = self.interactable:getParents()
 	local primary, secondary, overdrive, hasChecked = false, false, false, false
-	local containers = {}
 	for k, parent in pairs(parents) do
 		if parent:hasOutputType(1) and parent.active then
 			local colour = parent.shape.color:getHexStr():sub(1,6)
@@ -209,17 +197,6 @@ function MountedLaserPistol:getInputs(client)
 			elseif colour == input_overdrive then
 				overdrive = true
 			end
-		end
-
-		if not client and parent:hasOutputType(connectionType_plasma)
-		   and (self.shape.body:hasChanged(sm.game.getServerTick() - 1) or #parents ~= self.sv_parentCount) and not hasChecked then
-			local parentShape = parent.shape
-			containers[parentShape.id] = parentShape.interactable:getContainer(0)
-			checkPipedNeighbours(parentShape, containers)
-
-			self.sv_containers = containers
-			self.sv_parentCount = #parents
-			hasChecked = true
 		end
 	end
 
