@@ -1,5 +1,3 @@
-dofile( "$SURVIVAL_DATA/Scripts/game/survival_items.lua" )
-dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 dofile "$CONTENT_DATA/Scripts/util.lua"
 
 ---@class PlasmaContainer : ShapeClass

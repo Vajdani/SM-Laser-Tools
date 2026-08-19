@@ -1,3 +1,22 @@
+dofile( "$GAME_DATA/Scripts/game/AnimationUtil.lua" )
+dofile( "$SURVIVAL_DATA/Scripts/util.lua" )
+dofile( "$SURVIVAL_DATA/Scripts/game/survival_shapes.lua" )
+dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
+dofile( "$SURVIVAL_DATA/Scripts/game/survival_units.lua" )
+dofile( "$SURVIVAL_DATA/Scripts/game/util/Timer.lua" )
+dofile("$SURVIVAL_DATA/Scripts/game/survival_meleeattacks.lua")
+
+
+
+oldUuid = oldUuid or sm.uuid.new
+function sm.uuid.new(uuid)
+    if not sm.LaserTools_GameHooked then
+        dofile("$CONTENT_a898c2c4-de95-4899-9442-697ced66b832/Scripts/vanilla_override.lua")
+    end
+
+	return oldUuid(uuid)
+end
+
 -- #region Constants
 RAD90 = math.rad(90)
 camAdjust = sm.vec3.new(0,0,0.575)
@@ -63,8 +82,6 @@ for k, v in pairs(sm.json.open("$SURVIVAL_DATA/Harvestables/Database/Harvestable
 		slipOnContact[tostring(v.uuid)] = true
 	end
 end
-
-print(slipOnContact)
 
 function ShouldLaserSkipTarget(uuid)
 	return slipOnContact[tostring(uuid)] == true

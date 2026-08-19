@@ -26,15 +26,6 @@ ProjectileManager.killTypes = {
 	limiter = true
 }
 
-oldUuid = oldUuid or sm.uuid.new
-function sm.uuid.new(uuid)
-    if not sm.LaserTools_GameHooked then
-        dofile("$CONTENT_a898c2c4-de95-4899-9442-697ced66b832/Scripts/vanilla_override.lua")
-    end
-
-	return oldUuid(uuid)
-end
-
 function ProjectileManager:server_onCreate()
 	if g_pManager then return end
 

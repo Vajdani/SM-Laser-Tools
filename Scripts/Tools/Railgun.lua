@@ -1,6 +1,4 @@
-dofile( "$GAME_DATA/Scripts/game/AnimationUtil.lua" )
-dofile( "$SURVIVAL_DATA/Scripts/game/survival_shapes.lua" )
-dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
+dofile "$CONTENT_DATA/Scripts/util.lua"
 
 ---@class Railgun : ToolClass
 ---@field fpAnimations table
